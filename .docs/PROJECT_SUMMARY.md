@@ -7,6 +7,7 @@ Successfully built a modern, performant connector store for WSO2 Integrator that
 ## Key Achievements
 
 ### ✅ Performance
+
 - **Page Load Time**: < 2 seconds (Target: < 2s) ✓
 - **Initial Render**: 195ms
 - **Compile Time**: 1.7s
@@ -52,37 +53,43 @@ Successfully built a modern, performant connector store for WSO2 Integrator that
 
 ## Technology Stack
 
-| Category | Technology | Version |
-|----------|-----------|---------|
-| Framework | Next.js | 16.0.10 |
-| Language | TypeScript | 5.9.3 |
-| UI Library | Material-UI | 7.3.6 |
-| Styling | Emotion CSS-in-JS | 11.14.0 |
-| Data Fetching | graphql-request | 7.4.0 |
-| Icons | MUI Icons | 7.3.6 |
+| Category      | Technology        | Version |
+| ------------- | ----------------- | ------- |
+| Framework     | Next.js           | 16.0.10 |
+| Language      | TypeScript        | 5.9.3   |
+| UI Library    | Material-UI       | 7.3.6   |
+| Styling       | Emotion CSS-in-JS | 11.14.0 |
+| Data Fetching | graphql-request   | 7.4.0   |
+| Icons         | MUI Icons         | 7.3.6   |
 
 ## Architecture Decisions
 
 ### 1. Next.js App Router
+
 **Why**: Modern routing, better performance, React Server Components support
 **Trade-off**: Slightly steeper learning curve vs Pages router
 
 ### 2. Hybrid Data Loading
+
 **Why**: Fast initial load + complete dataset without pagination UI
 **Implementation**:
+
 - Load first 100 connectors immediately (< 2s)
 - Continue loading in background in batches of 100
 - UI stays responsive during background loading
 
 ### 3. Client-Side Filtering
+
 **Why**: Instant filter/search results without network calls
 **Trade-off**: All data must be in memory (acceptable for < 500 connectors)
 
 ### 4. CSS Grid for Layout
+
 **Why**: Better than Material-UI Grid v7 which has breaking API changes
 **Benefit**: More flexible, better performance, simpler code
 
 ### 5. Dynamic Filter Generation
+
 **Why**: Automatically adapts to new connector categories
 **Implementation**: Extract unique values from keywords at runtime
 
@@ -122,6 +129,7 @@ connector-store/
 ## Design System
 
 ### Colors
+
 ```typescript
 Primary: #ff7300 (WSO2 Orange)
 Background Light: #f7f8fb
@@ -133,6 +141,7 @@ Text Secondary Dark: #c6c6c6
 ```
 
 ### Typography
+
 ```typescript
 Font: 'Plus Jakarta Sans'
 Weights: 300, 400, 500, 600, 700, 800
@@ -142,6 +151,7 @@ Body: 1rem / 1.6rem line-height
 ```
 
 ### Spacing
+
 ```typescript
 Container max-width: xl (1280px)
 Grid gap: 24px (3 spacing units)
@@ -152,6 +162,7 @@ Sidebar width: 300px
 ## API Integration
 
 ### GraphQL API (Primary)
+
 ```
 Endpoint: https://api.central.ballerina.io/2.0/graphql
 Query: GetBallerinaxConnectors
@@ -160,12 +171,14 @@ Response: packages.packages[]
 ```
 
 **Fields Used**:
+
 - name, version, URL
 - summary, keywords
 - icon, createdDate
 - pullCount (per version)
 
 ### REST API (Optional Enhancement)
+
 ```
 Endpoint: https://api.central.ballerina.io/2.0/registry/packages
 Purpose: Get total pull count across all versions
@@ -175,6 +188,7 @@ Status: Implemented but can be enabled/disabled
 ## Testing Results
 
 ### ✅ Build
+
 ```bash
 npm run build
 # ✓ Compiled successfully in 1253.9ms
@@ -182,6 +196,7 @@ npm run build
 ```
 
 ### ✅ Development Server
+
 ```bash
 npm run dev
 # ✓ Ready in 568ms
@@ -189,6 +204,7 @@ npm run dev
 ```
 
 ### ✅ Type Safety
+
 - All TypeScript strict mode checks passing
 - No type errors in build
 - Proper type definitions for all components
@@ -230,12 +246,14 @@ npm run dev
 ## Performance Metrics
 
 ### Lighthouse Score (Estimated)
+
 - Performance: 90+
 - Accessibility: 85+
 - Best Practices: 95+
 - SEO: 75 (can improve with SSR)
 
 ### Bundle Size
+
 - First Load JS: ~200KB (gzipped)
 - CSS: ~50KB (gzipped)
 - Total: < 300KB (excellent for SPA)
@@ -243,23 +261,27 @@ npm run dev
 ## Next Steps
 
 ### Immediate (Ready to Deploy)
+
 1. ✅ Push to GitHub repository
 2. ✅ Deploy to Vercel/Netlify
 3. ✅ Link from WSO2 Integrator page
 
 ### Short Term (1-2 weeks)
+
 1. Add Server-Side Rendering for better SEO
 2. Implement sort options (popularity, name, date)
 3. Add connector comparison feature
 4. Analytics integration (Google Analytics)
 
 ### Medium Term (1-2 months)
+
 1. Bookmark/favorite connectors (requires backend)
 2. User reviews and ratings (requires backend)
 3. Advanced filters (pull count range, date range)
 4. Export functionality (CSV, JSON)
 
 ### Long Term (3+ months)
+
 1. Integration with WSO2 Integrator Studio
 2. Connector usage analytics dashboard
 3. Automated connector testing/health status
@@ -267,18 +289,18 @@ npm run dev
 
 ## Success Criteria
 
-| Criteria | Target | Achieved |
-|----------|--------|----------|
-| Page load time | < 2s | ✅ 1.9s |
-| WSO2 design language | Match exactly | ✅ Yes |
-| Dark/Light themes | Support both | ✅ Yes |
-| Filter by Area | Yes | ✅ Yes |
-| Filter by Vendor | Yes | ✅ Yes |
-| Filter by Type | Yes | ✅ Yes |
-| Search functionality | Real-time | ✅ Yes |
-| Responsive design | Mobile + Desktop | ✅ Yes |
-| Pull count display | Yes | ✅ Yes |
-| Link to docs | Yes | ✅ Yes |
+| Criteria             | Target           | Achieved |
+| -------------------- | ---------------- | -------- |
+| Page load time       | < 2s             | ✅ 1.9s  |
+| WSO2 design language | Match exactly    | ✅ Yes   |
+| Dark/Light themes    | Support both     | ✅ Yes   |
+| Filter by Area       | Yes              | ✅ Yes   |
+| Filter by Vendor     | Yes              | ✅ Yes   |
+| Filter by Type       | Yes              | ✅ Yes   |
+| Search functionality | Real-time        | ✅ Yes   |
+| Responsive design    | Mobile + Desktop | ✅ Yes   |
+| Pull count display   | Yes              | ✅ Yes   |
+| Link to docs         | Yes              | ✅ Yes   |
 
 **Overall**: 10/10 criteria met ✅
 
@@ -287,6 +309,7 @@ npm run dev
 The WSO2 Integrator Connector Store is complete and production-ready. All requirements have been met, performance targets achieved, and the codebase is well-structured for future enhancements.
 
 The application successfully:
+
 - Loads connectors from Ballerina Central via GraphQL
 - Provides intuitive filtering and search
 - Matches WSO2 design language perfectly

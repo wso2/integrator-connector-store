@@ -3,6 +3,7 @@
 ## 🎨 WSO2 Branding
 
 ### Header
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ [WSO2 Logo] │ Connector Store              [🌓 Theme]  │
@@ -10,12 +11,14 @@
 ```
 
 **Features:**
+
 - WSO2 official logo (links to wso2.com)
 - Clean separator line
 - "Connector Store" title
 - Theme toggle (light/dark mode)
 
 ### Colors (Exact from WSO2 Site)
+
 - **Primary Orange:** #ff7300 - Buttons, links, accents
 - **Background Light:** #f7f8fb - Page background
 - **Background Dark:** #000000 - Dark mode background (pure black)
@@ -25,6 +28,7 @@
 ## 📄 Pagination System
 
 ### Layout
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                    [Connector Grid]                       │
@@ -39,6 +43,7 @@
 ```
 
 ### Page Size Selector
+
 ```
 ┌─────────────────┐
 │ Per page     ▼  │
@@ -51,6 +56,7 @@
 ```
 
 **Options:**
+
 - **10 items** - Best for detailed browsing
 - **24 items** - Default balanced view (2x4 grid on desktop)
 - **50 items** - More connectors per page
@@ -59,11 +65,13 @@
 ### Pagination Controls
 
 **Previous/Next Buttons:**
+
 - Disabled when at first/last page
 - Icon + text for clarity
 - Keyboard accessible
 
 **Page Numbers:**
+
 - Smart ellipsis (e.g., `1 ... 3 4 5 ... 10`)
 - Current page highlighted
 - Always show first and last page
@@ -80,6 +88,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ## 🔍 Search & Filter
 
 ### Layout
+
 ```
 ┌─────────────┬──────────────────────────────────────┐
 │             │  🔍 Search connectors...             │
@@ -97,11 +106,13 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 **Filter Categories:**
+
 - **Area** - Finance, Communication, Health, etc.
 - **Vendor** - AWS, Salesforce, Google, etc.
 - **Type** - API, Database, Messaging, etc.
 
 **Smart Filtering:**
+
 - Instant client-side filtering
 - Combines with search
 - Shows active filter count
@@ -111,6 +122,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ## 🎴 Connector Cards
 
 ### Card Layout
+
 ```
 ┌────────────────────────────────────────┐
 │ [Icon]  Salesforce                     │
@@ -126,6 +138,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 **Card Features:**
+
 - Connector icon from Ballerina Central
 - Name and version
 - Summary (2 lines max with ellipsis)
@@ -137,6 +150,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ## 🌓 Theme Support
 
 ### Light Theme
+
 ```
 ┌────────────────────────────────────────┐
 │ Background: #f7f8fb (light gray)      │
@@ -147,6 +161,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 ### Dark Theme
+
 ```
 ┌────────────────────────────────────────┐
 │ Background: #000000 (pure black)      │
@@ -157,6 +172,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 **Toggle:**
+
 - Click moon/sun icon in header
 - Smooth transition
 - Maintains WSO2 branding in both modes
@@ -164,6 +180,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ## 📱 Responsive Design
 
 ### Desktop (> 1024px)
+
 ```
 ┌──────┬─────────────────────────┐
 │      │  [Card] [Card] [Card]   │
@@ -174,6 +191,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 ### Tablet (600-1024px)
+
 ```
 ┌──────┬────────────────┐
 │      │ [Card] [Card]  │
@@ -183,6 +201,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
 ### Mobile (< 600px)
+
 ```
 ┌─────────────┐
 │   Filters   │
@@ -196,6 +215,7 @@ Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ## ⚡ Performance Features
 
 ### Hybrid Loading Strategy
+
 ```
 User lands on page
     ↓
@@ -209,6 +229,7 @@ User can browse immediately!
 ```
 
 ### Optimization Techniques
+
 1. **Client-side pagination** - No network calls
 2. **Memoized filtering** - Only recalculate when needed
 3. **Lazy rendering** - Only render current page
@@ -218,6 +239,7 @@ User can browse immediately!
 ## 🎯 User Workflows
 
 ### Workflow 1: Browse All Connectors
+
 ```
 1. Land on page → See first 24 connectors
 2. Scroll down → Click [Next] or page number
@@ -227,6 +249,7 @@ User can browse immediately!
 ```
 
 ### Workflow 2: Find Specific Connector
+
 ```
 1. Type in search: "salesforce"
 2. Results filter instantly
@@ -236,6 +259,7 @@ User can browse immediately!
 ```
 
 ### Workflow 3: Filter by Category
+
 ```
 1. Open "Area" filter
 2. Select "Finance"
@@ -246,6 +270,7 @@ User can browse immediately!
 ```
 
 ### Workflow 4: Power User
+
 ```
 1. Change page size to 100 items
 2. Apply multiple filters (Area + Vendor + Type)
@@ -257,6 +282,7 @@ User can browse immediately!
 ## 🔧 Technical Highlights
 
 ### State Management
+
 ```typescript
 // Pagination
 const [currentPage, setCurrentPage] = useState(1);
@@ -270,6 +296,7 @@ const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 ```
 
 ### Smart Pagination
+
 ```typescript
 // Paginate filtered results
 const paginatedConnectors = useMemo(() => {
@@ -280,6 +307,7 @@ const paginatedConnectors = useMemo(() => {
 ```
 
 ### Auto-Reset to Page 1
+
 ```typescript
 // Reset when filters change
 useEffect(() => {
@@ -288,6 +316,7 @@ useEffect(() => {
 ```
 
 ### Scroll to Top
+
 ```typescript
 // Smooth scroll on page change
 useEffect(() => {
@@ -298,18 +327,21 @@ useEffect(() => {
 ## 📊 Metrics
 
 ### Performance
+
 - **Initial Load:** < 2 seconds ✅
 - **Page Change:** Instant (< 50ms) ✅
 - **Filter Change:** Instant (< 50ms) ✅
 - **Search:** Real-time (< 50ms) ✅
 
 ### UX
+
 - **Connectors per page:** 24 (default)
 - **Page size options:** 4 (10, 24, 50, 100)
 - **Filter categories:** 3 (Area, Vendor, Type)
 - **Theme modes:** 2 (Light, Dark)
 
 ### Accessibility
+
 - ✅ Keyboard navigation
 - ✅ ARIA labels
 - ✅ Color contrast (WCAG AA)

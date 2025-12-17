@@ -3,6 +3,7 @@
 ## Local Development
 
 The connector store is now running at:
+
 - **Local**: http://localhost:3000
 - **Network**: http://192.168.8.155:3000
 
@@ -109,6 +110,7 @@ No environment variables are required. The application uses public Ballerina Cen
 ## Performance Optimizations
 
 ### Current Optimizations
+
 - ✅ Hybrid data loading (first 100 connectors load immediately)
 - ✅ Background pagination for remaining connectors
 - ✅ Memoized filter calculations
@@ -118,10 +120,12 @@ No environment variables are required. The application uses public Ballerina Cen
 - ✅ Image optimization ready
 
 ### Build Time
+
 - Development server: ~500ms startup
 - Production build: ~2s
 
 ### Page Load Time
+
 - Initial load: < 2s (target achieved)
 - First meaningful paint: < 500ms
 - Time to interactive: < 1s
@@ -150,9 +154,7 @@ export default function RootLayout({ children }) {
 To link from the WSO2 Integrator page, add this HTML:
 
 ```html
-<a href="https://your-domain.com/connectors" class="cButton">
-  Explore Connectors
-</a>
+<a href="https://your-domain.com/connectors" class="cButton"> Explore Connectors </a>
 ```
 
 ## Customization
@@ -163,9 +165,9 @@ Edit `src/styles/theme.ts`:
 
 ```typescript
 const wso2Colors = {
-  primary: '#ff7300',      // Change primary color
+  primary: '#ff7300', // Change primary color
   // ...
-}
+};
 ```
 
 ### Add More Filter Categories
@@ -175,7 +177,8 @@ Edit `src/lib/connector-utils.ts` to add new filter types:
 ```typescript
 export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
   // Add new categories here
-  const platform = keywords.find((k) => k.startsWith('Platform/'))?.replace('Platform/', '') || 'Other';
+  const platform =
+    keywords.find((k) => k.startsWith('Platform/'))?.replace('Platform/', '') || 'Other';
   // ...
 }
 ```
@@ -196,6 +199,7 @@ npm install
 ### API Errors
 
 Check Ballerina Central API status:
+
 - GraphQL: https://api.central.ballerina.io/2.0/graphql
 - REST: https://api.central.ballerina.io/2.0/registry/packages
 

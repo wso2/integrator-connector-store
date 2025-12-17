@@ -3,16 +3,19 @@
 ## Get Started in 3 Steps
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Start Development Server
+
 ```bash
 npm run dev
 ```
 
 ### 3. Open Browser
+
 Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## What You'll See
@@ -53,13 +56,13 @@ src/
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **Hybrid Loading** | First batch loads fast, rest in background |
-| **Client Filtering** | Instant filter/search results |
-| **WSO2 Design** | Matches WSO2 Integrator branding |
-| **Responsive** | Works on mobile, tablet, and desktop |
-| **Dark Mode** | Full theme support |
+| Feature              | Description                                |
+| -------------------- | ------------------------------------------ |
+| **Hybrid Loading**   | First batch loads fast, rest in background |
+| **Client Filtering** | Instant filter/search results              |
+| **WSO2 Design**      | Matches WSO2 Integrator branding           |
+| **Responsive**       | Works on mobile, tablet, and desktop       |
+| **Dark Mode**        | Full theme support                         |
 
 ## Need Help?
 
@@ -70,12 +73,14 @@ src/
 ## Common Issues
 
 ### Port 3000 Already in Use?
+
 ```bash
 # Use a different port
 PORT=3001 npm run dev
 ```
 
 ### Build Errors?
+
 ```bash
 # Clear cache and reinstall
 rm -rf .next node_modules package-lock.json

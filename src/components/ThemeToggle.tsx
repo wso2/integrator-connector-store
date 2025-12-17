@@ -16,7 +16,7 @@ export default function ThemeToggle({ darkMode, onToggle }: ThemeToggleProps) {
         onClick={onToggle}
         sx={{
           color: '#000', // Always dark icon on white header
-          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
         }}
       >
         {darkMode ? <Brightness7 /> : <Brightness4 />}

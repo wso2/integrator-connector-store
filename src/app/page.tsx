@@ -1,16 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Container,
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { fetchConnectors } from '@/lib/graphql-client';
-import { extractFilterOptions, filterConnectors, sortConnectors, SortOption } from '@/lib/connector-utils';
+import {
+  extractFilterOptions,
+  filterConnectors,
+  sortConnectors,
+  SortOption,
+} from '@/lib/connector-utils';
 import ConnectorCard from '@/components/ConnectorCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import SearchBar from '@/components/SearchBar';
@@ -49,7 +48,7 @@ export default function HomePage() {
 
         // Fetch remaining connectors in background
         fetchRemainingConnectors(100);
-      } catch (err) {
+      } catch {
         setError('Failed to load connectors. Please try again later.');
         setLoading(false);
       }
@@ -167,7 +166,11 @@ export default function HomePage() {
                 letterSpacing: '0.008rem',
               }}
             >
-              WSO<Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'super' }}>2</Box> Integrator
+              WSO
+              <Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'super' }}>
+                2
+              </Box>{' '}
+              Integrator
             </Typography>
           </Box>
 
@@ -183,7 +186,7 @@ export default function HomePage() {
               sx={{
                 width: '1px',
                 height: '32px',
-                backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#444' : '#ddd',
+                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#444' : '#ddd'),
               }}
             />
             <Typography
@@ -290,7 +293,10 @@ export default function HomePage() {
                     }}
                   >
                     {paginatedConnectors.map((connector) => (
-                      <ConnectorCard connector={connector} key={`${connector.name}-${connector.version}`} />
+                      <ConnectorCard
+                        connector={connector}
+                        key={`${connector.name}-${connector.version}`}
+                      />
                     ))}
                   </Box>
 

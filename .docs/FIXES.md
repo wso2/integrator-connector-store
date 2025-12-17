@@ -5,14 +5,17 @@
 ### ✅ 1. Header Site Name
 
 **Problem:**
+
 - Header showed "Connector Store" instead of full name
 - Didn't match WSO2 branding expectations
 
 **Solution:**
+
 - Updated to show "WSO2 Integrator Connector Store"
 - Full branding in header (on larger screens)
 
 **Change:**
+
 ```typescript
 // Before
 <Box>Connector Store</Box>
@@ -28,16 +31,19 @@
 ### ✅ 2. Connector Card Links
 
 **Problem:**
+
 - Cards were linking to relative paths or version-specific URLs
 - Should link to main package page on Ballerina Central
 - Format should be: `https://central.ballerina.io/{org}/{package}`
 
 **Solution:**
+
 - Extract org name from existing URL
 - Construct proper Ballerina Central URL
 - Link directly to package (not version-specific)
 
 **Implementation:**
+
 ```typescript
 // Extract org from URL
 const urlParts = connector.URL.split('/');
@@ -48,6 +54,7 @@ const centralUrl = `https://central.ballerina.io/${org}/${connector.name}`;
 ```
 
 **Examples:**
+
 ```
 Before: /ballerinax/salesforce/2.1.0 (relative)
 After:  https://central.ballerina.io/ballerinax/salesforce
@@ -63,6 +70,7 @@ After:  https://central.ballerina.io/ballerinax/aws.lambda
 ### ✅ 3. Total Pull Count (Efficient Implementation)
 
 **Problem:**
+
 - GraphQL API returns `pullCount` for current version only
 - Not the total downloads across all versions
 - Making 700+ individual REST requests would be inefficient
@@ -70,12 +78,14 @@ After:  https://central.ballerina.io/ballerinax/aws.lambda
 **Solution: Batch Fetch with Aggregation**
 
 Instead of making individual requests per connector, we:
+
 1. Fetch ALL packages from REST API in batches of 100
 2. Build a lookup map: `package name → total pull count`
 3. Aggregate pull counts across all versions of same package
 4. Update connectors with accurate totals
 
 **Strategy:**
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ REST API Batch Fetch (Efficient)                │
@@ -99,6 +109,7 @@ Instead of making individual requests per connector, we:
 ```
 
 **Key Features:**
+
 - **Efficient**: ~20 requests instead of 700+
 - **Accurate**: Sums pull counts across all versions
 - **Fast**: Completes in 3-5 seconds
@@ -139,6 +150,7 @@ export async function fetchAllPullCounts(
 ```
 
 **Logging:**
+
 ```
 [Pull Count Fetch] Starting batch fetch for ballerinax packages...
 [Pull Count Fetch] Fetched 100/2062 packages
@@ -148,6 +160,7 @@ export async function fetchAllPullCounts(
 ```
 
 **Performance:**
+
 ```
 Before (Hypothetical 700+ individual requests):
 - Requests: 700+
@@ -165,6 +178,7 @@ After (Batch fetch):
 **File Modified:** `src/lib/rest-client.ts`
 
 **Function Renamed:**
+
 - `enrichConnectorsWithPullCounts()` → `enrichConnectorsWithTotalPullCounts()`
 - More accurate name reflecting aggregation logic
 
@@ -175,6 +189,7 @@ After (Batch fetch):
 ### Pull Count Aggregation Logic
 
 The REST API returns individual package versions:
+
 ```json
 [
   { "name": "salesforce", "version": "2.1.0", "pullCount": 500000 },
@@ -185,6 +200,7 @@ The REST API returns individual package versions:
 ```
 
 We aggregate these into totals:
+
 ```typescript
 // Map aggregation
 pullCountMap.set("salesforce", 500000 + 400000 + 334567 + ...)
@@ -194,15 +210,16 @@ pullCountMap.set("salesforce", 500000 + 400000 + 334567 + ...)
 ### URL Construction
 
 **Parsing Strategy:**
+
 ```typescript
 // Input URL from GraphQL
-connector.URL = "https://central.ballerina.io/ballerinax/salesforce/2.1.0"
+connector.URL = 'https://central.ballerina.io/ballerinax/salesforce/2.1.0';
 
 // Split and extract
 const parts = URL.split('/');
 // ["https:", "", "central.ballerina.io", "ballerinax", "salesforce", "2.1.0"]
 
-const org = parts[3];      // "ballerinax"
+const org = parts[3]; // "ballerinax"
 const name = connector.name; // "salesforce"
 
 // Construct clean URL (no version)
@@ -211,6 +228,7 @@ const centralUrl = `https://central.ballerina.io/${org}/${name}`;
 ```
 
 **Edge Cases Handled:**
+
 - Missing org → defaults to "ballerinax"
 - Malformed URLs → graceful fallback
 - Special characters in names → preserved
@@ -220,18 +238,21 @@ const centralUrl = `https://central.ballerina.io/${org}/${name}`;
 ## User-Facing Changes
 
 ### 1. Header
+
 ```
 Before: "Connector Store"
 After:  "WSO2 Integrator Connector Store"
 ```
 
 ### 2. Card Links
+
 ```
 Before: Click → Opens version-specific page
 After:  Click → Opens main package page
 ```
 
 ### 3. Pull Counts
+
 ```
 Before: Shows downloads for v2.1.0 only (500,000)
 After:  Shows total downloads all versions (1,234,567)
@@ -244,12 +265,14 @@ After:  Shows total downloads all versions (1,234,567)
 ### Manual Testing Steps
 
 1. **Header:**
+
    ```
    ✓ Check header shows "WSO2Integrator Connector Store"
    ✓ Verify it's visible on desktop (hidden on mobile)
    ```
 
 2. **Card Links:**
+
    ```
    ✓ Click any connector card
    ✓ Verify URL is https://central.ballerina.io/{org}/{name}
@@ -266,6 +289,7 @@ After:  Shows total downloads all versions (1,234,567)
    ```
 
 ### Console Output
+
 ```
 [Pull Count Fetch] Starting batch fetch for ballerinax packages...
 [Pull Count Fetch] Fetched 100/2062 packages
@@ -281,14 +305,16 @@ After:  Shows total downloads all versions (1,234,567)
 ## Performance Impact
 
 ### Network Requests
-| Metric | Before | After |
-|--------|--------|-------|
-| Initial connectors | 1-2 requests | 1-2 requests |
-| Pull count fetch | 700+ requests | ~20 requests |
-| Total requests | 700+ | ~22 |
-| Time to totals | Would timeout | 3-5 seconds |
+
+| Metric             | Before        | After        |
+| ------------------ | ------------- | ------------ |
+| Initial connectors | 1-2 requests  | 1-2 requests |
+| Pull count fetch   | 700+ requests | ~20 requests |
+| Total requests     | 700+          | ~22          |
+| Time to totals     | Would timeout | 3-5 seconds  |
 
 ### User Experience
+
 - Initial page load: No change (< 2s)
 - Pull counts appear: After 3-5 seconds
 - User can browse immediately
@@ -299,6 +325,7 @@ After:  Shows total downloads all versions (1,234,567)
 ## Files Summary
 
 ### Modified Files
+
 ```
 📝 src/components/WSO2Header.tsx      - Updated site name
 📝 src/components/ConnectorCard.tsx   - Fixed card links
@@ -307,6 +334,7 @@ After:  Shows total downloads all versions (1,234,567)
 ```
 
 ### New Files
+
 ```
 ✨ FIXES.md - This documentation
 ```
@@ -316,18 +344,18 @@ After:  Shows total downloads all versions (1,234,567)
 ## Comparison: Per-Request vs Batch Approach
 
 ### ❌ Per-Request Approach (Avoided)
+
 ```typescript
 // BAD: 700+ requests
 for (const connector of connectors) {
-  const response = await fetch(
-    `${REST_ENDPOINT}/${connector.org}/${connector.name}`
-  );
+  const response = await fetch(`${REST_ENDPOINT}/${connector.org}/${connector.name}`);
   const data = await response.json();
   connector.totalPullCount = data.pullCount;
 }
 ```
 
 **Problems:**
+
 - 700+ sequential requests
 - 30-60 seconds to complete
 - High risk of rate limiting
@@ -335,16 +363,18 @@ for (const connector of connectors) {
 - Poor user experience
 
 ### ✅ Batch Approach (Implemented)
+
 ```typescript
 // GOOD: ~20 batched requests
 const pullCounts = await fetchAllPullCounts('ballerinax');
 
-connectors.forEach(connector => {
+connectors.forEach((connector) => {
   connector.totalPullCount = pullCounts.get(connector.name);
 });
 ```
 
 **Benefits:**
+
 - ~20 paginated requests
 - 3-5 seconds to complete
 - No rate limiting risk

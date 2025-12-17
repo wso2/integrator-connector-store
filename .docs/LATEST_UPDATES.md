@@ -5,11 +5,13 @@
 ### ✅ 1. Improved WSO2 Header
 
 **Problems Fixed:**
+
 - Header looked different from WSO2 site (especially in dark mode)
 - Border and spacing didn't match
 - Layout was too rigid
 
 **Solutions:**
+
 - Removed Material-UI AppBar, using custom Box component
 - Made header sticky at top
 - Fixed dark mode styling (pure black background, no border)
@@ -17,6 +19,7 @@
 - Cleaner, more minimal design matching WSO2 site
 
 **Changes:**
+
 ```typescript
 // Before: Material-UI AppBar with border issues
 <AppBar position="static" elevation={0}>
@@ -37,17 +40,20 @@
 ### ✅ 2. Smaller, Better Search Bar
 
 **Problems Fixed:**
+
 - Search bar was too wide (full width)
 - Took up too much space
 - Not well positioned
 
 **Solutions:**
+
 - Reduced width to 400-450px (responsive)
 - Changed to `size="small"` for compact look
 - Positioned alongside sort dropdown
 - Better responsive behavior (full width on mobile)
 
 **Changes:**
+
 ```typescript
 // Before: Full width search
 <TextField fullWidth ... />
@@ -69,6 +75,7 @@
 **New Feature:** Sort connectors by multiple criteria!
 
 **Sort Options:**
+
 1. **Name (A-Z)** ↑ - Alphabetical ascending
 2. **Name (Z-A)** ↓ - Alphabetical descending
 3. **Most Popular** ↓ - Highest pull count first (default)
@@ -79,11 +86,13 @@
 **Implementation:**
 
 **New Component:** `src/components/SortSelector.tsx`
+
 ```typescript
 <SortSelector value={sortBy} onChange={setSortBy} />
 ```
 
 **New Utility Function:** `src/lib/connector-utils.ts`
+
 ```typescript
 export function sortConnectors(
   connectors: BallerinaPackage[],
@@ -94,6 +103,7 @@ export function sortConnectors(
 ```
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────┐
 │ [🔍 Search bar...]     [Sort by: ▼]        │
@@ -101,9 +111,11 @@ export function sortConnectors(
 ```
 
 **Files Created:**
+
 - `src/components/SortSelector.tsx` - Sort dropdown component
 
 **Files Modified:**
+
 - `src/lib/connector-utils.ts` - Added sort function
 - `src/app/page.tsx` - Integrated sort functionality
 
@@ -112,6 +124,7 @@ export function sortConnectors(
 ## New Layout Structure
 
 ### Search & Sort Bar
+
 ```
 Desktop:
 ┌────────────────────────────────────────────────────┐
@@ -127,6 +140,7 @@ Mobile:
 ```
 
 ### Header Design
+
 ```
 Light Mode:
 ┌────────────────────────────────────────┐
@@ -148,11 +162,13 @@ Dark Mode:
 ### Sort Implementation
 
 **State Management:**
+
 ```typescript
 const [sortBy, setSortBy] = useState<SortOption>('pullCount-desc');
 ```
 
 **Memoized Sorting:**
+
 ```typescript
 const filteredConnectors = useMemo(() => {
   const filtered = filterConnectors(connectors, { ... });
@@ -161,6 +177,7 @@ const filteredConnectors = useMemo(() => {
 ```
 
 **Sort Logic:**
+
 - **Name sorting:** Uses `localeCompare()` for proper alphabetical order
 - **Pull count:** Uses `totalPullCount` if available, falls back to `pullCount`
 - **Date sorting:** Converts to timestamp for comparison
@@ -168,15 +185,18 @@ const filteredConnectors = useMemo(() => {
 ### Responsive Behavior
 
 **Search Bar:**
+
 - Mobile (< 600px): 100% width
 - Tablet (600-900px): 400px width
 - Desktop (> 900px): 450px width
 
 **Sort Selector:**
+
 - Mobile: 100% width (stacked below search)
 - Tablet/Desktop: 200px width (inline with search)
 
 **Header:**
+
 - Sticky at top on all screen sizes
 - "Connector Store" title hidden on small screens
 - Theme toggle always visible
@@ -186,12 +206,14 @@ const filteredConnectors = useMemo(() => {
 ## Performance Impact
 
 ### Sorting Performance
+
 - ✅ **O(n log n)** complexity (JavaScript sort)
 - ✅ **Memoized** - Only re-sorts when needed
 - ✅ **Instant** for < 1000 items
 - ✅ **No network calls**
 
 ### Memory Usage
+
 - Minimal - creates copy only during sort
 - Original data unchanged
 
@@ -200,6 +222,7 @@ const filteredConnectors = useMemo(() => {
 ## User Workflows
 
 ### Workflow 1: Find Most Popular Connector
+
 ```
 1. Default sort is "Most Popular" ✓
 2. Browse connectors by popularity
@@ -207,6 +230,7 @@ const filteredConnectors = useMemo(() => {
 ```
 
 ### Workflow 2: Find Latest Connectors
+
 ```
 1. Click "Sort by" dropdown
 2. Select "Newest First"
@@ -215,6 +239,7 @@ const filteredConnectors = useMemo(() => {
 ```
 
 ### Workflow 3: Alphabetical Browsing
+
 ```
 1. Sort by "Name (A-Z)"
 2. Use search to jump to specific letter
@@ -222,6 +247,7 @@ const filteredConnectors = useMemo(() => {
 ```
 
 ### Workflow 4: Find Hidden Gems
+
 ```
 1. Sort by "Least Popular"
 2. Discover lesser-known but useful connectors
@@ -251,38 +277,43 @@ const filteredConnectors = useMemo(() => {
 ## Before & After Comparison
 
 ### Header
-| Aspect | Before | After |
-|--------|--------|-------|
+
+| Aspect    | Before                     | After                 |
+| --------- | -------------------------- | --------------------- |
 | Dark Mode | Border visible, looked off | No border, pure black |
-| Sticky | No | Yes |
-| Component | Material-UI AppBar | Custom Box |
-| Mobile | Same as desktop | Optimized |
+| Sticky    | No                         | Yes                   |
+| Component | Material-UI AppBar         | Custom Box            |
+| Mobile    | Same as desktop            | Optimized             |
 
 ### Search Bar
-| Aspect | Before | After |
-|--------|--------|-------|
-| Width | 100% (too wide) | 400-450px |
-| Size | Regular | Small |
-| Position | Full row | Inline with sort |
+
+| Aspect   | Before          | After            |
+| -------- | --------------- | ---------------- |
+| Width    | 100% (too wide) | 400-450px        |
+| Size     | Regular         | Small            |
+| Position | Full row        | Inline with sort |
 
 ### Sorting
-| Feature | Before | After |
-|---------|--------|-------|
-| Sort Options | None | 6 options |
-| Default Sort | None | Most Popular |
-| UI | N/A | Dropdown selector |
+
+| Feature      | Before | After             |
+| ------------ | ------ | ----------------- |
+| Sort Options | None   | 6 options         |
+| Default Sort | None   | Most Popular      |
+| UI           | N/A    | Dropdown selector |
 
 ---
 
 ## Files Summary
 
 ### New Files
+
 ```
 ✨ src/components/SortSelector.tsx     - Sort dropdown
 ✨ LATEST_UPDATES.md                   - This file
 ```
 
 ### Modified Files
+
 ```
 📝 src/components/WSO2Header.tsx       - Improved header
 📝 src/components/SearchBar.tsx        - Smaller search
@@ -309,14 +340,14 @@ npm run dev
 
 ## Sort Options Reference
 
-| Option | Icon | Description | Use Case |
-|--------|------|-------------|----------|
-| Name (A-Z) | ↑ | Alphabetical ascending | Browse alphabetically |
-| Name (Z-A) | ↓ | Alphabetical descending | Reverse alphabetical |
-| Most Popular | ↓ | Highest downloads | Find popular connectors |
-| Least Popular | ↑ | Lowest downloads | Discover hidden gems |
-| Newest First | ↓ | Recently added | See latest additions |
-| Oldest First | ↑ | Oldest connectors | Browse by age |
+| Option        | Icon | Description             | Use Case                |
+| ------------- | ---- | ----------------------- | ----------------------- |
+| Name (A-Z)    | ↑    | Alphabetical ascending  | Browse alphabetically   |
+| Name (Z-A)    | ↓    | Alphabetical descending | Reverse alphabetical    |
+| Most Popular  | ↓    | Highest downloads       | Find popular connectors |
+| Least Popular | ↑    | Lowest downloads        | Discover hidden gems    |
+| Newest First  | ↓    | Recently added          | See latest additions    |
+| Oldest First  | ↑    | Oldest connectors       | Browse by age           |
 
 **Default:** Most Popular (pullCount descending)
 

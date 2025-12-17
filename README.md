@@ -18,6 +18,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 ## ✨ Features
 
 ### 🎨 Professional WSO2 Branding
+
 - Official WSO2 header with logo
 - Exact color scheme from wso2.com/integrator
 - Plus Jakarta Sans font family
@@ -25,6 +26,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - Sticky header for better navigation
 
 ### 📄 Smart Pagination
+
 - Customizable page size: 10, 24, 50, or 100 items per page
 - Default: 24 connectors per page
 - Smart page navigation with ellipsis
@@ -33,6 +35,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - "Showing X-Y of Z" item counter
 
 ### 🔍 Advanced Search & Filtering
+
 - **Real-time Search**: Instant search across names, summaries, and keywords
 - **Dynamic Filters**:
   - Area (Finance, Communication, Health, etc.)
@@ -43,6 +46,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - One-click clear all filters
 
 ### 📊 Powerful Sorting
+
 - **Name (A-Z)** - Alphabetical ascending
 - **Name (Z-A)** - Alphabetical descending
 - **Most Popular** - Highest downloads first (default)
@@ -52,6 +56,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - All sorting works with filters and search
 
 ### ⚡ Optimized Performance
+
 - **Fast Initial Load**: < 2 seconds
 - **Hybrid Loading**: First 100 connectors load immediately, rest in background
 - **Accurate Download Counts**: Aggregated totals across all versions
@@ -60,6 +65,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - **Memoized Computations**: Efficient re-renders
 
 ### 📱 Responsive Design
+
 - Mobile-first approach
 - Adaptive grid: 1-3 columns based on screen width
 - Touch-friendly interface
@@ -100,6 +106,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ```bash
 npm run dev
 ```
+
 Starts the development server on `http://localhost:3000` with hot-reload.
 
 ### Production Build
@@ -107,6 +114,7 @@ Starts the development server on `http://localhost:3000` with hot-reload.
 ```bash
 npm run build
 ```
+
 Creates an optimized production build in `.next` folder.
 
 ### Production Server
@@ -114,6 +122,7 @@ Creates an optimized production build in `.next` folder.
 ```bash
 npm start
 ```
+
 Starts the production server (requires `npm run build` first).
 
 ### Type Checking
@@ -121,6 +130,7 @@ Starts the production server (requires `npm run build` first).
 ```bash
 npx tsc --noEmit
 ```
+
 Runs TypeScript type checking without emitting files.
 
 ### Linting
@@ -128,6 +138,7 @@ Runs TypeScript type checking without emitting files.
 ```bash
 npm run lint
 ```
+
 Runs Next.js ESLint checks.
 
 ---
@@ -195,7 +206,7 @@ module.exports = {
     ],
   },
   reactStrictMode: true,
-}
+};
 ```
 
 ### Theme Customization
@@ -203,6 +214,7 @@ module.exports = {
 **File:** `src/styles/theme.ts`
 
 WSO2 Brand Colors:
+
 - Primary Orange: `#ff7300`
 - Background Light: `#f7f8fb`
 - Background Dark: `#000000` (pure black)
@@ -220,12 +232,9 @@ Font: **Plus Jakarta Sans** (loaded from WSO2 CDN)
 **Endpoint:** `https://api.central.ballerina.io/2.0/graphql`
 
 **Query:**
+
 ```graphql
-query GetBallerinaxConnectors(
-  $orgName: String!
-  $limit: Int!
-  $offset: Int!
-) {
+query GetBallerinaxConnectors($orgName: String!, $limit: Int!, $offset: Int!) {
   packages(orgName: $orgName, limit: $limit, offset: $offset) {
     packages {
       name
@@ -276,12 +285,14 @@ User Browses with Full Data
 ## 🎨 Theming
 
 ### Light Mode
+
 - Background: `#f7f8fb` (light gray)
 - Cards: `#ffffff` (white)
 - Text: `#000000` (black)
 - Primary: `#ff7300` (WSO2 orange)
 
 ### Dark Mode
+
 - Background: `#000000` (pure black)
 - Cards: `#1a1a1a` (dark gray)
 - Text: `#ffffff` (white)
@@ -302,6 +313,7 @@ Connectors are filtered based on keywords with specific prefixes:
 Connectors without these keywords are categorized as "Other".
 
 **Example:**
+
 ```typescript
 keywords: ["Area/Finance", "Vendor/Salesforce", "Type/API", "CRM"]
 → Area: Finance, Vendor: Salesforce, Type: API
@@ -312,22 +324,26 @@ keywords: ["Area/Finance", "Vendor/Salesforce", "Type/API", "CRM"]
 ## 📈 Performance Metrics
 
 ### Load Times
+
 - Initial page load: **< 2 seconds** ✅
 - First meaningful paint: **< 500ms** ✅
 - Time to interactive: **< 1 second** ✅
 
 ### Network Efficiency
+
 - Initial GraphQL requests: **1**
 - Background GraphQL requests: **~8** (batches of 100)
 - **Total:** ~9 requests for complete data with accurate pull counts
 
 ### Client Performance
+
 - Page changes: **Instant** (< 50ms)
 - Filter changes: **Instant** (< 50ms)
 - Sort changes: **Instant** (< 50ms)
 - Search: **Real-time** (< 50ms)
 
 ### Bundle Size
+
 - First Load JS: ~200KB (gzipped)
 - CSS: ~50KB (gzipped)
 - **Total:** < 300KB ✅
@@ -349,6 +365,7 @@ vercel
 ### Docker
 
 **Dockerfile:**
+
 ```dockerfile
 FROM node:18-alpine
 
@@ -364,6 +381,7 @@ CMD ["npm", "start"]
 ```
 
 **Build and Run:**
+
 ```bash
 docker build -t connector-store .
 docker run -p 3000:3000 connector-store
@@ -405,6 +423,7 @@ Due to server-side features, static export is not recommended. Use Next.js serve
 ### Manual Testing Checklist
 
 #### Functionality
+
 - [ ] Connectors load correctly
 - [ ] Search works across all fields
 - [ ] All filters work (Area, Vendor, Type)
@@ -415,6 +434,7 @@ Due to server-side features, static export is not recommended. Use Next.js serve
 - [ ] Pull counts display accurately
 
 #### UI/UX
+
 - [ ] Header displays correctly
 - [ ] Dark/light mode toggle works
 - [ ] Responsive on mobile/tablet/desktop
@@ -423,6 +443,7 @@ Due to server-side features, static export is not recommended. Use Next.js serve
 - [ ] Empty states display correctly
 
 #### Performance
+
 - [ ] Page loads in < 2 seconds
 - [ ] No layout shift during load
 - [ ] Filters/sort are instant
@@ -444,11 +465,13 @@ npm run build
 ### API Errors
 
 **GraphQL API Issues:**
+
 - Check: https://api.central.ballerina.io/2.0/graphql
 - Verify query syntax
 - Check network tab for errors
 
 **REST API Issues:**
+
 - Check: https://api.central.ballerina.io/2.0/registry/packages
 - Verify pagination parameters
 - Check console for error logs
@@ -456,6 +479,7 @@ npm run build
 ### Image Loading Issues
 
 **Connector icons not loading:**
+
 - Verify `next.config.js` has correct remote patterns
 - Check network tab for blocked requests
 - Ensure `bcentral-packageicons.azureedge.net` is accessible
@@ -476,22 +500,26 @@ npm run build
 ## 📝 Changelog
 
 ### Version 1.2.1 (Latest)
+
 - ✅ Fixed header to show "WSO2 Integrator Connector Store"
 - ✅ Fixed card links to point to Ballerina Central package pages
 - ✅ Implemented efficient total pull count aggregation
 
 ### Version 1.2.0
+
 - ✅ Added sort functionality (6 options)
 - ✅ Improved header design (sticky, better dark mode)
 - ✅ Made search bar smaller and better positioned
 
 ### Version 1.1.0
+
 - ✅ Added pagination with page size selector
 - ✅ Added WSO2 branding (exact colors, fonts, logo)
 - ✅ Created WSO2 header component
 - ✅ Added scroll-to-top on pagination
 
 ### Version 1.0.0
+
 - ✅ Initial release with basic functionality
 - ✅ GraphQL integration
 - ✅ Filtering by Area, Vendor, Type
@@ -531,17 +559,20 @@ Part of the WSO2 ecosystem. Copyright © WSO2 Inc.
 ## 💡 Tips & Tricks
 
 ### Keyboard Shortcuts
+
 - **Tab**: Navigate through filters and controls
 - **Enter**: Activate selected filter/button
 - **Esc**: Clear search (when focused)
 
 ### Power User Features
+
 - Set page size to 100 for maximum browsing
 - Use search + filters together for precise results
 - Sort by "Least Popular" to discover hidden gems
 - Bookmark favorite connector URLs
 
 ### Development Tips
+
 ```bash
 # Watch for TypeScript errors
 npx tsc --watch

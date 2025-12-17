@@ -43,14 +43,11 @@ export async function fetchConnectors(
   offset: number = 0
 ): Promise<BallerinaPackage[]> {
   try {
-    const data = await client.request<GraphQLResponse>(
-      GET_BALLERINAX_CONNECTORS,
-      {
-        orgName,
-        limit,
-        offset,
-      }
-    );
+    const data = await client.request<GraphQLResponse>(GET_BALLERINAX_CONNECTORS, {
+      orgName,
+      limit,
+      offset,
+    });
     return data.packages.packages;
   } catch (error) {
     console.error('Error fetching connectors:', error);
@@ -124,19 +121,15 @@ export async function fetchAllPullCountsGraphQL(
     let offset = 0;
     const limit = 100;
     let hasMore = true;
-    let totalFetched = 0;
 
-    console.log(`[GraphQL Pull Count] Starting fetch for ${orgName} packages...`);
+    // Fetching pull counts for all packages
 
     while (hasMore) {
-      const data = await client.request<PullCountResponse>(
-        GET_PULL_COUNTS,
-        {
-          orgName,
-          limit,
-          offset,
-        }
-      );
+      const data = await client.request<PullCountResponse>(GET_PULL_COUNTS, {
+        orgName,
+        limit,
+        offset,
+      });
 
       const packages = data.packages.packages;
 
@@ -146,9 +139,6 @@ export async function fetchAllPullCountsGraphQL(
         pullCountMap.set(pkg.name, currentCount + pkg.pullCount);
       });
 
-      totalFetched += packages.length;
-      console.log(`[GraphQL Pull Count] Fetched ${totalFetched} package versions`);
-
       if (packages.length < limit) {
         hasMore = false;
       } else {
@@ -157,11 +147,11 @@ export async function fetchAllPullCountsGraphQL(
 
       // Small delay to avoid rate limiting
       if (hasMore) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
-    console.log(`[GraphQL Pull Count] Complete! Aggregated ${pullCountMap.size} unique packages`);
+    // Successfully aggregated pull counts
   } catch (error) {
     console.error('[GraphQL Pull Count] Error:', error);
   }

@@ -73,7 +73,9 @@ export function filterConnectors(
         metadata.area,
         metadata.vendor,
         metadata.type,
-      ].join(' ').toLowerCase();
+      ]
+        .join(' ')
+        .toLowerCase();
 
       if (!searchableText.includes(query)) {
         return false;
@@ -105,7 +107,7 @@ export function formatDate(dateString: string): string {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 }
 
@@ -162,16 +164,24 @@ export function sortConnectors(
       return sorted.sort((a, b) => b.name.localeCompare(a.name));
 
     case 'pullCount-desc':
-      return sorted.sort((a, b) => (b.totalPullCount || b.pullCount) - (a.totalPullCount || a.pullCount));
+      return sorted.sort(
+        (a, b) => (b.totalPullCount || b.pullCount) - (a.totalPullCount || a.pullCount)
+      );
 
     case 'pullCount-asc':
-      return sorted.sort((a, b) => (a.totalPullCount || a.pullCount) - (b.totalPullCount || b.pullCount));
+      return sorted.sort(
+        (a, b) => (a.totalPullCount || a.pullCount) - (b.totalPullCount || b.pullCount)
+      );
 
     case 'date-desc':
-      return sorted.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+      return sorted.sort(
+        (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+      );
 
     case 'date-asc':
-      return sorted.sort((a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime());
+      return sorted.sort(
+        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
+      );
 
     default:
       return sorted;

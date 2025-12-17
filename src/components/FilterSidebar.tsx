@@ -67,10 +67,7 @@ export default function FilterSidebar({
 
       {/* Area Filter */}
       <Accordion defaultExpanded disableGutters elevation={0}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ px: 0, minHeight: 48 }}
-        >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, minHeight: 48 }}>
           <Typography sx={{ fontWeight: 500 }}>
             Area {selectedAreas.length > 0 && `(${selectedAreas.length})`}
           </Typography>
@@ -87,11 +84,7 @@ export default function FilterSidebar({
                     size="small"
                   />
                 }
-                label={
-                  <Typography variant="body2">
-                    {area}
-                  </Typography>
-                }
+                label={<Typography variant="body2">{area}</Typography>}
               />
             ))}
           </FormGroup>
@@ -100,10 +93,7 @@ export default function FilterSidebar({
 
       {/* Vendor Filter */}
       <Accordion defaultExpanded disableGutters elevation={0}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ px: 0, minHeight: 48 }}
-        >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, minHeight: 48 }}>
           <Typography sx={{ fontWeight: 500 }}>
             Vendor {selectedVendors.length > 0 && `(${selectedVendors.length})`}
           </Typography>
@@ -120,11 +110,7 @@ export default function FilterSidebar({
                     size="small"
                   />
                 }
-                label={
-                  <Typography variant="body2">
-                    {vendor}
-                  </Typography>
-                }
+                label={<Typography variant="body2">{vendor}</Typography>}
               />
             ))}
           </FormGroup>
@@ -133,10 +119,7 @@ export default function FilterSidebar({
 
       {/* Type Filter */}
       <Accordion defaultExpanded disableGutters elevation={0}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ px: 0, minHeight: 48 }}
-        >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, minHeight: 48 }}>
           <Typography sx={{ fontWeight: 500 }}>
             Type {selectedTypes.length > 0 && `(${selectedTypes.length})`}
           </Typography>
@@ -153,11 +136,7 @@ export default function FilterSidebar({
                     size="small"
                   />
                 }
-                label={
-                  <Typography variant="body2">
-                    {type}
-                  </Typography>
-                }
+                label={<Typography variant="body2">{type}</Typography>}
               />
             ))}
           </FormGroup>
