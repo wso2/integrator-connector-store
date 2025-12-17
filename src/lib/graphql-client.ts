@@ -77,84 +77,87 @@ export async function fetchAllConnectors(
   return allConnectors;
 }
 
-// Lightweight query for fetching just pull counts
-const GET_PULL_COUNTS = `
-  query GetPullCounts(
-    $orgName: String!
-    $limit: Int!
-    $offset: Int!
-  ) {
-    packages(
-      orgName: $orgName
-      limit: $limit
-      offset: $offset
-    ) {
-      packages {
-        name
-        pullCount
-      }
-    }
+/**
+ * Fetches total pull counts for multiple packages in a single batched request using GraphQL aliases
+ */
+async function fetchBatchedPullCounts(
+  packageInfos: Array<{ name: string; version: string }>,
+  orgName: string = 'ballerinax'
+): Promise<Map<string, number>> {
+  if (packageInfos.length === 0) {
+    return new Map();
   }
-`;
 
-interface PullCountPackage {
-  name: string;
-  pullCount: number;
-}
+  // Build a query with aliases for each package
+  const aliases = packageInfos.map((pkg, index) => {
+    // Create a safe alias by replacing special characters
+    const safeAlias = `pkg${index}`;
+    return `${safeAlias}: package(orgName: "${orgName}", packageName: "${pkg.name}", version: "${pkg.version}") {
+      totalPullCount
+    }`;
+  });
 
-interface PullCountResponse {
-  packages: {
-    packages: PullCountPackage[];
-  };
+  const query = `query GetBatchedPullCounts {
+    ${aliases.join('\n    ')}
+  }`;
+
+  try {
+    const data = await client.request<Record<string, { totalPullCount: number }>>(query);
+
+    // Map the results back to package names
+    const pullCountMap = new Map<string, number>();
+    packageInfos.forEach((pkg, index) => {
+      const alias = `pkg${index}`;
+      const result = data[alias];
+      if (result) {
+        pullCountMap.set(pkg.name, result.totalPullCount);
+      }
+    });
+
+    return pullCountMap;
+  } catch (error) {
+    console.error('Error fetching batched pull counts:', error);
+    return new Map();
+  }
 }
 
 /**
- * Efficiently fetches pull counts for all package versions using GraphQL
- * Returns a map of package name to aggregated total pull count
+ * Enriches packages with correct total pull counts using batched GraphQL queries
+ * The packages query returns per-version data, but we need aggregated counts across all versions
  */
-export async function fetchAllPullCountsGraphQL(
+export async function enrichPackagesWithPullCounts(
+  packages: BallerinaPackage[],
   orgName: string = 'ballerinax'
-): Promise<Map<string, number>> {
+): Promise<BallerinaPackage[]> {
+  // Group packages by name to get unique packages with their versions
+  const uniquePackages = new Map<string, BallerinaPackage>();
+  packages.forEach((pkg) => {
+    if (!uniquePackages.has(pkg.name)) {
+      uniquePackages.set(pkg.name, pkg);
+    }
+  });
+
+  // Prepare batch requests (GraphQL has limits, so we batch in chunks of 50)
+  const uniquePackageArray = Array.from(uniquePackages.values());
+  const batchSize = 50;
   const pullCountMap = new Map<string, number>();
 
-  try {
-    let offset = 0;
-    const limit = 100;
-    let hasMore = true;
+  for (let i = 0; i < uniquePackageArray.length; i += batchSize) {
+    const batch = uniquePackageArray.slice(i, i + batchSize);
+    const batchInfos = batch.map((pkg) => ({
+      name: pkg.name,
+      version: pkg.version,
+    }));
 
-    // Fetching pull counts for all packages
-
-    while (hasMore) {
-      const data = await client.request<PullCountResponse>(GET_PULL_COUNTS, {
-        orgName,
-        limit,
-        offset,
-      });
-
-      const packages = data.packages.packages;
-
-      // Aggregate pull counts by package name
-      packages.forEach((pkg) => {
-        const currentCount = pullCountMap.get(pkg.name) || 0;
-        pullCountMap.set(pkg.name, currentCount + pkg.pullCount);
-      });
-
-      if (packages.length < limit) {
-        hasMore = false;
-      } else {
-        offset += limit;
-      }
-
-      // Small delay to avoid rate limiting
-      if (hasMore) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    }
-
-    // Successfully aggregated pull counts
-  } catch (error) {
-    console.error('[GraphQL Pull Count] Error:', error);
+    const batchResults = await fetchBatchedPullCounts(batchInfos, orgName);
+    batchResults.forEach((count, name) => {
+      pullCountMap.set(name, count);
+    });
   }
 
-  return pullCountMap;
+  // Enrich all packages with the fetched pull counts
+  return packages.map((pkg) => ({
+    ...pkg,
+    totalPullCount: pullCountMap.get(pkg.name) || pkg.pullCount || 0,
+  }));
 }

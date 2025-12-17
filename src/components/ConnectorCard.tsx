@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar } from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import { BallerinaPackage } from '@/types/connector';
@@ -18,11 +17,7 @@ interface ConnectorCardProps {
 export default function ConnectorCard({ connector }: ConnectorCardProps) {
   const metadata = parseConnectorMetadata(connector.keywords);
 
-  // Extract org from URL or default to ballerinax
-  // URL format: https://central.ballerina.io/ballerinax/package_name/version
-  const urlParts = connector.URL.split('/');
-  const org = urlParts[3] || 'ballerinax';
-  const centralUrl = `https://central.ballerina.io/${org}/${connector.name}`;
+  const centralUrl = `https://central.ballerina.io/${connector.URL}`;
 
   return (
     <Card

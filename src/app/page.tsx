@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
-import { fetchConnectors } from '@/lib/graphql-client';
+import { fetchConnectors, enrichPackagesWithPullCounts } from '@/lib/graphql-client';
 import {
   extractFilterOptions,
   filterConnectors,
@@ -43,7 +43,9 @@ export default function HomePage() {
         setLoading(true);
         // Fetch first batch (100 connectors)
         const initialBatch = await fetchConnectors('ballerinax', 100, 0);
-        setConnectors(initialBatch);
+        // Enrich with correct pull counts
+        const enrichedBatch = await enrichPackagesWithPullCounts(initialBatch);
+        setConnectors(enrichedBatch);
         setLoading(false);
 
         // Fetch remaining connectors in background
@@ -66,7 +68,9 @@ export default function HomePage() {
       while (hasMore) {
         const batch = await fetchConnectors('ballerinax', 100, currentOffset);
         if (batch.length > 0) {
-          setConnectors((prev) => [...prev, ...batch]);
+          // Enrich with correct pull counts using the package query
+          const enrichedBatch = await enrichPackagesWithPullCounts(batch);
+          setConnectors((prev) => [...prev, ...enrichedBatch]);
           currentOffset += 100;
           if (batch.length < 100) {
             hasMore = false;
@@ -75,8 +79,6 @@ export default function HomePage() {
           hasMore = false;
         }
       }
-
-      // No need to enrich - totalPullCount is already provided by GraphQL API!
     } catch (err) {
       console.error('Error fetching remaining connectors:', err);
     }
@@ -260,7 +262,9 @@ export default function HomePage() {
             <Box sx={{ flex: 1 }}>
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Showing {filteredConnectors.length} of {connectors.length} connectors
+                  Showing {paginatedConnectors.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-
+                  {Math.min(currentPage * pageSize, filteredConnectors.length)} of{' '}
+                  {filteredConnectors.length} connectors
                 </Typography>
               </Box>
 
@@ -281,6 +285,15 @@ export default function HomePage() {
                 </Box>
               ) : (
                 <>
+                  {/* Pagination - Top */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={filteredConnectors.length}
+                    pageSize={pageSize}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={setPageSize}
+                  />
+
                   <Box
                     sx={{
                       display: 'grid',
@@ -290,6 +303,7 @@ export default function HomePage() {
                         lg: 'repeat(3, 1fr)',
                       },
                       gap: 3,
+                      mt: 4,
                     }}
                   >
                     {paginatedConnectors.map((connector) => (
@@ -300,7 +314,7 @@ export default function HomePage() {
                     ))}
                   </Box>
 
-                  {/* Pagination */}
+                  {/* Pagination - Bottom */}
                   <Pagination
                     currentPage={currentPage}
                     totalItems={filteredConnectors.length}
