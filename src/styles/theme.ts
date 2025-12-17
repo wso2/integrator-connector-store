@@ -4,28 +4,29 @@ import { createTheme, ThemeOptions } from '@mui/material/styles';
 
 // WSO2 Design Tokens - Exact colors from wso2.com/integrator
 const wso2Colors = {
-  primary: '#ff7300',      // WSO2 Orange (primary brand color)
+  primary: '#ff7300', // WSO2 Orange (primary brand color)
   primaryHover: '#ff7300',
-  black: '#000000',        // Pure black for text and backgrounds
-  white: '#ffffff',        // Pure white
+  black: '#000000', // Pure black for text and backgrounds
+  white: '#ffffff', // Pure white
   background: {
-    light: '#f7f8fb',      // Light gray background (from body)
-    dark: '#000000',       // Black background for dark mode
-    paper: '#ffffff',      // White for cards
+    light: '#f7f8fb', // Light gray background (from body)
+    dark: '#000000', // Black background for dark mode
+    paper: '#ffffff', // White for cards
   },
   text: {
-    primary: '#000000',    // Black text (headings)
-    secondary: '#494848',  // Gray text (paragraphs)
-    light: '#ffffff',      // White text
-    dark: '#cccccc',       // Light gray for dark mode secondary text
+    primary: '#000000', // Black text (headings)
+    secondary: '#494848', // Gray text (paragraphs)
+    light: '#ffffff', // White text
+    dark: '#cccccc', // Light gray for dark mode secondary text
   },
   border: {
-    light: '#c6c6c6',      // Border color from site
+    light: '#c6c6c6', // Border color from site
     medium: '#ccc',
   },
 };
 
-const fontFamily = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+const fontFamily =
+  "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 
 const commonTheme: ThemeOptions = {
   typography: {
@@ -118,12 +119,12 @@ export const darkTheme = createTheme({
       main: wso2Colors.primary,
     },
     background: {
-      default: wso2Colors.background.dark,  // Pure black like WSO2 site
-      paper: '#1a1a1a',                     // Slightly lighter for cards
+      default: wso2Colors.background.dark, // Pure black like WSO2 site
+      paper: '#1a1a1a', // Slightly lighter for cards
     },
     text: {
-      primary: wso2Colors.text.light,       // White text
-      secondary: wso2Colors.text.dark,      // Light gray text
+      primary: wso2Colors.text.light, // White text
+      secondary: wso2Colors.text.dark, // Light gray text
     },
     divider: wso2Colors.border.medium,
   },

@@ -21,7 +21,7 @@ interface RestApiPackage {
   balaVersion: string;
   balaURL: string;
   digest: string;
-  modules: any[];
+  modules: unknown[];
 }
 
 interface RestApiResponse {
@@ -47,14 +47,14 @@ export async function fetchAllPullCounts(
     let hasMore = true;
     let totalCount = 0;
 
-    console.log(`[Pull Count Fetch] Starting batch fetch for ${orgName} packages...`);
+    // Fetching pull counts for packages
 
     while (hasMore) {
       const url = `${REST_ENDPOINT}?offset=${offset}&limit=${limit}&org=${orgName}`;
       const response = await fetch(url);
 
       if (!response.ok) {
-        console.error(`[Pull Count Fetch] API error: ${response.status}`);
+        console.warn(`[Pull Count Fetch] API error: ${response.status}`);
         break;
       }
 
@@ -68,7 +68,7 @@ export async function fetchAllPullCounts(
         pullCountMap.set(pkg.name, currentCount + pkg.pullCount);
       });
 
-      console.log(`[Pull Count Fetch] Fetched ${offset + data.packages.length}/${totalCount} packages`);
+      // Progress tracking removed to reduce console noise
 
       if (data.packages.length < limit || offset + limit >= totalCount) {
         hasMore = false;
@@ -78,11 +78,11 @@ export async function fetchAllPullCounts(
 
       // Small delay to avoid rate limiting
       if (hasMore) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
-    console.log(`[Pull Count Fetch] Complete! Loaded ${pullCountMap.size} unique packages`);
+    // Successfully loaded pull counts
   } catch (error) {
     console.error('[Pull Count Fetch] Error:', error);
   }

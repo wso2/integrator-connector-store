@@ -3,14 +3,11 @@ import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'WSO2 Integrator Connector Store',
-  description: 'Discover and integrate with 100+ pre-built Ballerina connectors for popular services and platforms.',
+  description:
+    'Discover and integrate with 100+ pre-built Ballerina connectors for popular services and platforms.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>

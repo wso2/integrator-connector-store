@@ -1,18 +1,15 @@
 'use client';
 
 import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardActionArea,
-  Typography,
-  Chip,
-  Box,
-  Avatar,
-} from '@mui/material';
+import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar } from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import { BallerinaPackage } from '@/types/connector';
-import { parseConnectorMetadata, formatPullCount, formatDate, formatDaysSince } from '@/lib/connector-utils';
+import {
+  parseConnectorMetadata,
+  formatPullCount,
+  formatDate,
+  formatDaysSince,
+} from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;

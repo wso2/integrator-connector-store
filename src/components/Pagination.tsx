@@ -1,15 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  Select,
-  MenuItem,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-} from '@mui/material';
+import { Box, Select, MenuItem, Typography, Button, FormControl, InputLabel } from '@mui/material';
 import {
   NavigateBefore as NavigateBeforeIcon,
   NavigateNext as NavigateNextIcon,
