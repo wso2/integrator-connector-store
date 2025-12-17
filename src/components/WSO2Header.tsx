@@ -13,8 +13,8 @@ export default function WSO2Header() {
     <Box
       component="header"
       sx={{
-        backgroundColor: darkMode ? '#000' : '#fff',
-        borderBottom: darkMode ? 'none' : '1px solid #e0e0e0',
+        backgroundColor: '#fff', // Always white, like WSO2 site
+        borderBottom: '1px solid #e0e0e0',
         position: 'sticky',
         top: 0,
         zIndex: 1100,
@@ -32,7 +32,7 @@ export default function WSO2Header() {
         }}
       >
         {/* Left side - WSO2 Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <a href="https://wso2.com/" aria-label="WSO2 Home">
             <Image
               src="/images/wso2-logo.webp"
@@ -43,34 +43,6 @@ export default function WSO2Header() {
               priority
             />
           </a>
-
-          {/* Connector Store Title - Only on larger screens */}
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Box
-              sx={{
-                width: '1px',
-                height: '32px',
-                backgroundColor: darkMode ? '#333' : '#ddd',
-              }}
-            />
-            <Box
-              sx={{
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                color: darkMode ? '#fff' : '#000',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                letterSpacing: '0.008rem',
-              }}
-            >
-              WSO2 Integrator Connector Store
-            </Box>
-          </Box>
         </Box>
 
         {/* Right side - Theme Toggle */}

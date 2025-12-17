@@ -98,6 +98,43 @@ export function formatPullCount(count: number): string {
 }
 
 /**
+ * Formats a date for display
+ */
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+/**
+ * Calculates days since a date
+ */
+export function getDaysSinceUpdate(dateString: string): number {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+
+/**
+ * Formats time since update in a human-readable way
+ */
+export function formatDaysSince(dateString: string): string {
+  const days = getDaysSinceUpdate(dateString);
+
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
+}
+
+/**
  * Sort options
  */
 export type SortOption =

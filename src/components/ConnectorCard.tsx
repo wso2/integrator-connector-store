@@ -10,9 +10,9 @@ import {
   Box,
   Avatar,
 } from '@mui/material';
-import { Download as DownloadIcon } from '@mui/icons-material';
+import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import { BallerinaPackage } from '@/types/connector';
-import { parseConnectorMetadata, formatPullCount } from '@/lib/connector-utils';
+import { parseConnectorMetadata, formatPullCount, formatDate, formatDaysSince } from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;
@@ -107,12 +107,20 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
             )}
           </Box>
 
-          {/* Pull Count */}
-          <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-            <DownloadIcon sx={{ fontSize: '1rem' }} />
-            <Typography variant="caption">
-              {formatPullCount(connector.pullCount)} downloads
-            </Typography>
+          {/* Pull Count and Last Updated */}
+          <Box display="flex" flexDirection="column" gap={0.5}>
+            <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
+              <DownloadIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption">
+                {formatPullCount(connector.totalPullCount || connector.pullCount)} downloads
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
+              <ClockIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption" title={formatDate(connector.createdDate)}>
+                {formatDaysSince(connector.createdDate)}
+              </Typography>
+            </Box>
           </Box>
         </CardContent>
       </CardActionArea>

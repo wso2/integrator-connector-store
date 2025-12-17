@@ -156,7 +156,6 @@ connector-store/
 │   │   └── WSO2Header.tsx           # Branded header component
 │   ├── lib/
 │   │   ├── graphql-client.ts        # GraphQL API integration
-│   │   ├── rest-client.ts           # REST API for total pull counts
 │   │   └── connector-utils.ts       # Utility functions (filter/sort)
 │   ├── styles/
 │   │   └── theme.ts                 # WSO2 theme configuration
@@ -244,19 +243,9 @@ query GetBallerinaxConnectors(
 
 **Usage:** Primary data source for connector information
 
-### Ballerina Central REST API
+### Total Pull Counts
 
-**Endpoint:** `https://api.central.ballerina.io/2.0/registry/packages`
-
-**Purpose:** Fetch accurate total pull counts across all versions
-
-**Strategy:**
-- Batch fetch all packages (100 per request)
-- Aggregate pull counts by package name
-- ~20 requests for ~2000 package versions
-- Completes in 3-5 seconds
-
-**Note:** The REST API returns `pullCount` per version, not a total. We aggregate these to calculate accurate totals.
+The GraphQL API provides a `totalPullCount` field that returns the aggregated download count across all versions of a package. This eliminates the need for additional API calls or client-side aggregation.
 
 ---
 
@@ -268,6 +257,7 @@ User Visits Page
 ┌─────────────────────────────────────┐
 │ 1. Initial Load (GraphQL)           │
 │    - Fetch first 100 connectors     │
+│    - Includes totalPullCount        │
 │    - Display immediately (< 2s)     │
 └─────────────────────────────────────┘
       ↓
@@ -275,13 +265,7 @@ User Visits Page
 │ 2. Background Load (GraphQL)        │
 │    - Fetch remaining connectors     │
 │    - Update state progressively     │
-└─────────────────────────────────────┘
-      ↓
-┌─────────────────────────────────────┐
-│ 3. Pull Count Enrichment (REST)     │
-│    - Batch fetch all versions       │
-│    - Aggregate by package name      │
-│    - Update with accurate totals    │
+│    - All data ready to use          │
 └─────────────────────────────────────┘
       ↓
 User Browses with Full Data
@@ -333,10 +317,9 @@ keywords: ["Area/Finance", "Vendor/Salesforce", "Type/API", "CRM"]
 - Time to interactive: **< 1 second** ✅
 
 ### Network Efficiency
-- Initial GraphQL requests: **1-2**
+- Initial GraphQL requests: **1**
 - Background GraphQL requests: **~8** (batches of 100)
-- REST API requests: **~20** (for pull counts)
-- **Total:** ~30 requests for complete data
+- **Total:** ~9 requests for complete data with accurate pull counts
 
 ### Client Performance
 - Page changes: **Instant** (< 50ms)
