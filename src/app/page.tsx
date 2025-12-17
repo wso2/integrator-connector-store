@@ -11,13 +11,13 @@ import {
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { fetchConnectors } from '@/lib/graphql-client';
 import { extractFilterOptions, filterConnectors, sortConnectors, SortOption } from '@/lib/connector-utils';
-import { enrichConnectorsWithTotalPullCounts } from '@/lib/rest-client';
 import ConnectorCard from '@/components/ConnectorCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import SearchBar from '@/components/SearchBar';
 import SortSelector from '@/components/SortSelector';
 import Pagination from '@/components/Pagination';
 import WSO2Header from '@/components/WSO2Header';
+import Image from 'next/image';
 
 export default function HomePage() {
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
@@ -77,12 +77,7 @@ export default function HomePage() {
         }
       }
 
-      // After all connectors are loaded, enrich with total pull counts from REST API
-      // This aggregates pull counts across all versions for accurate totals
-      setConnectors((prev) => {
-        enrichConnectorsWithTotalPullCounts(prev).then(setConnectors);
-        return prev;
-      });
+      // No need to enrich - totalPullCount is already provided by GraphQL API!
     } catch (err) {
       console.error('Error fetching remaining connectors:', err);
     }
@@ -153,14 +148,62 @@ export default function HomePage() {
       <WSO2Header />
 
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        {/* Hero Section */}
+        {/* WSO2 Integrator Brand Section */}
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          {/* WSO2 Integrator Logo with Icon + Text */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Image
+              src="/images/wso2-integrator-correct.svg"
+              alt=""
+              width={40}
+              height={40}
+              style={{ display: 'block' }}
+            />
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 600,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                letterSpacing: '0.008rem',
+              }}
+            >
+              WSO<Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'super' }}>2</Box> Integrator
+            </Typography>
+          </Box>
+
+          {/* Separator and Connector Store */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                width: '1px',
+                height: '32px',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#444' : '#ddd',
+              }}
+            />
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                letterSpacing: '0.008rem',
+              }}
+            >
+              Connector Store
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Description */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h2" component="h1" gutterBottom>
-            Ballerina Connectors
-          </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 800 }}>
             Discover and integrate with 100+ pre-built connectors for popular services and
-            platforms. Accelerate your integration development with Ballerina.
+            platforms. Accelerate your integration development with WSO2 Integrator.
           </Typography>
         </Box>
 

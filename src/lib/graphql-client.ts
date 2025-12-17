@@ -79,3 +79,92 @@ export async function fetchAllConnectors(
 
   return allConnectors;
 }
+
+// Lightweight query for fetching just pull counts
+const GET_PULL_COUNTS = `
+  query GetPullCounts(
+    $orgName: String!
+    $limit: Int!
+    $offset: Int!
+  ) {
+    packages(
+      orgName: $orgName
+      limit: $limit
+      offset: $offset
+    ) {
+      packages {
+        name
+        pullCount
+      }
+    }
+  }
+`;
+
+interface PullCountPackage {
+  name: string;
+  pullCount: number;
+}
+
+interface PullCountResponse {
+  packages: {
+    packages: PullCountPackage[];
+  };
+}
+
+/**
+ * Efficiently fetches pull counts for all package versions using GraphQL
+ * Returns a map of package name to aggregated total pull count
+ */
+export async function fetchAllPullCountsGraphQL(
+  orgName: string = 'ballerinax'
+): Promise<Map<string, number>> {
+  const pullCountMap = new Map<string, number>();
+
+  try {
+    let offset = 0;
+    const limit = 100;
+    let hasMore = true;
+    let totalFetched = 0;
+
+    console.log(`[GraphQL Pull Count] Starting fetch for ${orgName} packages...`);
+
+    while (hasMore) {
+      const data = await client.request<PullCountResponse>(
+        GET_PULL_COUNTS,
+        {
+          orgName,
+          limit,
+          offset,
+        }
+      );
+
+      const packages = data.packages.packages;
+
+      // Aggregate pull counts by package name
+      packages.forEach((pkg) => {
+        const currentCount = pullCountMap.get(pkg.name) || 0;
+        pullCountMap.set(pkg.name, currentCount + pkg.pullCount);
+      });
+
+      totalFetched += packages.length;
+      console.log(`[GraphQL Pull Count] Fetched ${totalFetched} package versions`);
+
+      if (packages.length < limit) {
+        hasMore = false;
+      } else {
+        offset += limit;
+      }
+
+      // Small delay to avoid rate limiting
+      if (hasMore) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    console.log(`[GraphQL Pull Count] Complete! Aggregated ${pullCountMap.size} unique packages`);
+  } catch (error) {
+    console.error('[GraphQL Pull Count] Error:', error);
+  }
+
+  return pullCountMap;
+}
