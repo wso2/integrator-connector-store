@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar } from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
+import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
 import {
   parseConnectorMetadata,
   formatPullCount,
   formatDate,
   formatDaysSince,
+  getDisplayName,
 } from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
@@ -16,6 +18,7 @@ interface ConnectorCardProps {
 
 export default function ConnectorCard({ connector }: ConnectorCardProps) {
   const metadata = parseConnectorMetadata(connector.keywords);
+  const displayName = getDisplayName(connector.name, metadata.vendor);
 
   const centralUrl = `https://central.ballerina.io/${connector.URL}`;
 
@@ -46,7 +49,7 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
             </Avatar>
             <Box flex={1}>
               <Typography variant="h6" component="h3" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
-                {connector.name}
+                {displayName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 v{connector.version}
@@ -55,9 +58,7 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
           </Box>
 
           {/* Summary */}
-          <Typography
-            variant="body2"
-            color="text.secondary"
+          <Box
             sx={{
               mb: 2,
               overflow: 'hidden',
@@ -66,10 +67,48 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               minHeight: '40px',
+              '& p': {
+                margin: 0,
+                fontSize: '0.875rem',
+                lineHeight: 1.43,
+                color: 'text.secondary',
+              },
+              '& code': {
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                fontSize: '0.8125rem',
+                fontFamily: 'monospace',
+              },
+              '& strong': {
+                fontWeight: 600,
+              },
+              '& em': {
+                fontStyle: 'italic',
+              },
+              '& a': {
+                color: 'primary.main',
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              },
             }}
           >
-            {connector.summary}
-          </Typography>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <span>{children}</span>,
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {connector.summary}
+            </ReactMarkdown>
+          </Box>
 
           {/* Metadata Chips */}
           <Box display="flex" gap={1} flexWrap="wrap" mb={2}>

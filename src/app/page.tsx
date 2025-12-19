@@ -169,7 +169,7 @@ export default function HomePage() {
               }}
             >
               WSO
-              <Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'super' }}>
+              <Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'sub' }}>
                 2
               </Box>{' '}
               Integrator
