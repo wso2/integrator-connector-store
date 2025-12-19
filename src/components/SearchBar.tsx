@@ -30,7 +30,7 @@ export default function SearchBar({
         ),
       }}
       sx={{
-        width: { xs: '100%', sm: '400px', md: '450px' },
+        width: '100%',
         '& .MuiOutlinedInput-root': {
           backgroundColor: 'background.paper',
         },

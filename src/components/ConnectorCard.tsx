@@ -99,11 +99,8 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
             <ReactMarkdown
               components={{
                 p: ({ children }) => <span>{children}</span>,
-                a: ({ href, children }) => (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {children}
-                  </a>
-                ),
+                // Don't render links - the whole card is already clickable
+                a: ({ children }) => <span>{children}</span>,
               }}
             >
               {connector.summary}
@@ -127,15 +124,6 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
                 sx={{ fontSize: '0.7rem', height: '24px' }}
               />
             )}
-            {metadata.type !== 'Other' && (
-              <Chip
-                label={metadata.type}
-                size="small"
-                color="primary"
-                variant="outlined"
-                sx={{ fontSize: '0.7rem', height: '24px' }}
-              />
-            )}
           </Box>
 
           {/* Pull Count and Last Updated */}
@@ -143,7 +131,9 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
             <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
               <DownloadIcon sx={{ fontSize: '1rem' }} />
               <Typography variant="caption">
-                {formatPullCount(connector.totalPullCount || connector.pullCount)} downloads
+                {connector.totalPullCount
+                  ? `${formatPullCount(connector.totalPullCount)} downloads`
+                  : 'Loading downloads...'}
               </Typography>
             </Box>
             <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">

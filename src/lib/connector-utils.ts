@@ -65,40 +65,47 @@ export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
 
 /**
  * Extracts all unique filter options from connectors
+ * Note: Only includes connectors with type "connector"
  */
 export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOptions {
   const areas = new Set<string>();
   const vendors = new Set<string>();
-  const types = new Set<string>();
 
   connectors.forEach((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
-    areas.add(metadata.area);
-    vendors.add(metadata.vendor);
-    types.add(metadata.type);
+    // Only include connectors with type "connector"
+    if (metadata.type.toLowerCase() === 'connector') {
+      areas.add(metadata.area);
+      vendors.add(metadata.vendor);
+    }
   });
 
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
-    types: Array.from(types).sort(),
   };
 }
 
+
 /**
  * Filters connectors based on selected criteria
+ * Note: Automatically filters to only show connectors with type "connector"
  */
 export function filterConnectors(
   connectors: BallerinaPackage[],
   filters: {
     selectedAreas: string[];
     selectedVendors: string[];
-    selectedTypes: string[];
     searchQuery: string;
   }
 ): BallerinaPackage[] {
   return connectors.filter((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
+
+    // Only show connectors with type "connector"
+    if (metadata.type.toLowerCase() !== 'connector') {
+      return false;
+    }
 
     // Area filter
     if (filters.selectedAreas.length > 0 && !filters.selectedAreas.includes(metadata.area)) {
@@ -107,11 +114,6 @@ export function filterConnectors(
 
     // Vendor filter
     if (filters.selectedVendors.length > 0 && !filters.selectedVendors.includes(metadata.vendor)) {
-      return false;
-    }
-
-    // Type filter
-    if (filters.selectedTypes.length > 0 && !filters.selectedTypes.includes(metadata.type)) {
       return false;
     }
 
@@ -126,7 +128,6 @@ export function filterConnectors(
         ...connector.keywords,
         metadata.area,
         metadata.vendor,
-        metadata.type,
       ]
         .join(' ')
         .toLowerCase();
