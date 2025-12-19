@@ -15,7 +15,7 @@ interface SortSelectorProps {
 
 export default function SortSelector({ value, onChange }: SortSelectorProps) {
   return (
-    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
+    <FormControl size="small" sx={{ width: { xs: '100%', sm: 240 } }}>
       <InputLabel>Sort by</InputLabel>
       <Select
         value={value}

@@ -19,12 +19,10 @@ export interface ConnectorMetadata {
 export interface FilterOptions {
   areas: string[];
   vendors: string[];
-  types: string[];
 }
 
 export interface ConnectorFilters {
   selectedAreas: string[];
   selectedVendors: string[];
-  selectedTypes: string[];
   searchQuery: string;
 }

@@ -50,32 +50,10 @@ export async function fetchConnectors(
     });
     return data.packages.packages;
   } catch (error) {
-    console.error('Error fetching connectors:', error);
     throw error;
   }
 }
 
-export async function fetchAllConnectors(
-  orgName: string = 'ballerinax'
-): Promise<BallerinaPackage[]> {
-  const allConnectors: BallerinaPackage[] = [];
-  let offset = 0;
-  const limit = 100;
-  let hasMore = true;
-
-  while (hasMore) {
-    const batch = await fetchConnectors(orgName, limit, offset);
-    allConnectors.push(...batch);
-
-    if (batch.length < limit) {
-      hasMore = false;
-    } else {
-      offset += limit;
-    }
-  }
-
-  return allConnectors;
-}
 
 /**
  * Fetches total pull counts for multiple packages in a single batched request using GraphQL aliases
@@ -116,7 +94,6 @@ async function fetchBatchedPullCounts(
 
     return pullCountMap;
   } catch (error) {
-    console.error('Error fetching batched pull counts:', error);
     return new Map();
   }
 }
@@ -138,10 +115,12 @@ export async function enrichPackagesWithPullCounts(
   });
 
   // Prepare batch requests (GraphQL has limits, so we batch in chunks of 50)
+  // Run batches in PARALLEL instead of sequential for faster loading
   const uniquePackageArray = Array.from(uniquePackages.values());
   const batchSize = 50;
   const pullCountMap = new Map<string, number>();
 
+  const batchPromises = [];
   for (let i = 0; i < uniquePackageArray.length; i += batchSize) {
     const batch = uniquePackageArray.slice(i, i + batchSize);
     const batchInfos = batch.map((pkg) => ({
@@ -149,11 +128,16 @@ export async function enrichPackagesWithPullCounts(
       version: pkg.version,
     }));
 
-    const batchResults = await fetchBatchedPullCounts(batchInfos, orgName);
+    batchPromises.push(fetchBatchedPullCounts(batchInfos, orgName));
+  }
+
+  // Wait for all batches in parallel
+  const allBatchResults = await Promise.all(batchPromises);
+  allBatchResults.forEach((batchResults) => {
     batchResults.forEach((count, name) => {
       pullCountMap.set(name, count);
     });
-  }
+  });
 
   // Enrich all packages with the fetched pull counts
   return packages.map((pkg) => ({

@@ -20,10 +20,8 @@ interface FilterSidebarProps {
   filterOptions: FilterOptions;
   selectedAreas: string[];
   selectedVendors: string[];
-  selectedTypes: string[];
   onAreaChange: (area: string) => void;
   onVendorChange: (vendor: string) => void;
-  onTypeChange: (type: string) => void;
   onClearAll: () => void;
 }
 
@@ -31,13 +29,11 @@ export default function FilterSidebar({
   filterOptions,
   selectedAreas,
   selectedVendors,
-  selectedTypes,
   onAreaChange,
   onVendorChange,
-  onTypeChange,
   onClearAll,
 }: FilterSidebarProps) {
-  const totalFiltersActive = selectedAreas.length + selectedVendors.length + selectedTypes.length;
+  const totalFiltersActive = selectedAreas.length + selectedVendors.length;
 
   return (
     <Paper
@@ -111,32 +107,6 @@ export default function FilterSidebar({
                   />
                 }
                 label={<Typography variant="body2">{vendor}</Typography>}
-              />
-            ))}
-          </FormGroup>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* Type Filter */}
-      <Accordion defaultExpanded disableGutters elevation={0}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, minHeight: 48 }}>
-          <Typography sx={{ fontWeight: 500 }}>
-            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`}
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ px: 0, pt: 0 }}>
-          <FormGroup>
-            {filterOptions.types.map((type) => (
-              <FormControlLabel
-                key={type}
-                control={
-                  <Checkbox
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => onTypeChange(type)}
-                    size="small"
-                  />
-                }
-                label={<Typography variant="body2">{type}</Typography>}
               />
             ))}
           </FormGroup>
