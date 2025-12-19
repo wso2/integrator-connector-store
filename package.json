@@ -28,6 +28,7 @@
     "next": "^16.0.10",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

@@ -1,6 +1,58 @@
 import { BallerinaPackage, ConnectorMetadata, FilterOptions } from '@/types/connector';
 
 /**
+ * Converts a package name to a display name using smart capitalization
+ *
+ * Strategy:
+ * 1. Uses vendor metadata (from keywords) for proper brand capitalization (e.g., Salesforce, GitHub)
+ * 2. Only hardcodes very common technical acronyms (API, SQL, HTTP, etc.)
+ * 3. Default: capitalize first letter of each part
+ *
+ * Examples:
+ * - aws.s3 => AWS S3 (technical acronyms)
+ * - salesforce.api => Salesforce API (uses Vendor keyword + technical acronym)
+ * - github.connector => GitHub Connector (uses Vendor keyword)
+ */
+export function getDisplayName(packageName: string, vendor?: string): string {
+  // Split by dot to get parts
+  const parts = packageName.split('.');
+
+  // Transform each part to capitalize properly
+  const transformedParts = parts.map((part, index) => {
+    const lowerPart = part.toLowerCase();
+
+    // Very common technical acronyms (minimal list of widely-used terms)
+    const technicalAcronyms = [
+      'api', 'http', 'https', 'ftp', 'sftp', 'ssh', 'sql',
+      'xml', 'json', 'html', 'css', 'rest', 'soap', 'smtp',
+      'imap', 'pop3', 'jwt', 'oauth', 'tcp', 'udp', 'ip',
+      'dns', 'url', 'uri', 'csv', 'rss', 'sms', 'mms', 'iot',
+      'aws', 'gcp', 's3', 'sqs', 'sns', 'ldap'
+    ];
+
+    // Check if it's a technical acronym
+    if (technicalAcronyms.includes(lowerPart)) {
+      return part.toUpperCase();
+    }
+
+    // If we have vendor info and this is the first part, try to match with vendor
+    if (index === 0 && vendor && vendor.toLowerCase() !== 'other') {
+      const vendorLower = vendor.toLowerCase();
+      // Check if the part matches or is contained in the vendor name
+      if (lowerPart === vendorLower || vendorLower.includes(lowerPart) || lowerPart.includes(vendorLower)) {
+        return vendor; // Use the vendor's proper capitalization
+      }
+    }
+
+    // Default: capitalize first letter
+    return part.charAt(0).toUpperCase() + part.slice(1);
+  });
+
+  // Join with space
+  return transformedParts.join(' ');
+}
+
+/**
  * Extracts metadata from connector keywords
  */
 export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
@@ -66,8 +118,10 @@ export function filterConnectors(
     // Search query
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
+      const displayName = getDisplayName(connector.name, metadata.vendor);
       const searchableText = [
         connector.name,
+        displayName,
         connector.summary,
         ...connector.keywords,
         metadata.area,
@@ -158,10 +212,18 @@ export function sortConnectors(
 
   switch (sortBy) {
     case 'name-asc':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(a.name, vendorA).localeCompare(getDisplayName(b.name, vendorB));
+      });
 
     case 'name-desc':
-      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
+      });
 
     case 'pullCount-desc':
       return sorted.sort(
