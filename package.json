@@ -37,15 +37,12 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
-    "ajv": "^8.17.1",
-    "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "globals": "^16.5.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
     "prettier": "^3.7.4",
     "react-app-rewired": "^2.2.1"
   },
@@ -62,7 +59,6 @@
     ]
   },
   "overrides": {
-    "eslint": "$eslint",
     "glob": "^10.3.10",
     "rimraf": "^5.0.5",
     "inflight": "npm:@aashutoshrathi/inflight@^1.0.3",
