@@ -1,5 +1,4 @@
-'use client';
-
+import { memo, useMemo } from 'react';
 import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar } from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
@@ -16,11 +15,34 @@ interface ConnectorCardProps {
   connector: BallerinaPackage;
 }
 
-export default function ConnectorCard({ connector }: ConnectorCardProps) {
-  const metadata = parseConnectorMetadata(connector.keywords);
-  const displayName = getDisplayName(connector.name, metadata.vendor);
+// Extract first sentence from summary (moved outside to avoid recreation)
+const getFirstSentence = (text: string): string => {
+  // Match first sentence (ending with . ! ? followed by space or end of string)
+  const match = text.match(/^[^.!?]+[.!?](?:\s|$)/);
+  return match ? match[0].trim() : text;
+};
 
-  const centralUrl = `https://central.ballerina.io/${connector.URL}`;
+function ConnectorCard({ connector }: ConnectorCardProps) {
+  // Memoize expensive computations
+  const metadata = useMemo(
+    () => parseConnectorMetadata(connector.keywords),
+    [connector.keywords]
+  );
+
+  const displayName = useMemo(
+    () => getDisplayName(connector.name, metadata.vendor),
+    [connector.name, metadata.vendor]
+  );
+
+  const centralUrl = useMemo(
+    () => `https://central.ballerina.io/${connector.URL}`,
+    [connector.URL]
+  );
+
+  const firstSentence = useMemo(
+    () => getFirstSentence(connector.summary),
+    [connector.summary]
+  );
 
   return (
     <Card
@@ -69,7 +91,7 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
               minHeight: '40px',
               '& p': {
                 margin: 0,
-                fontSize: '0.875rem',
+                fontSize: '0.8125rem',
                 lineHeight: 1.43,
                 color: 'text.secondary',
               },
@@ -103,25 +125,52 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
                 a: ({ children }) => <span>{children}</span>,
               }}
             >
-              {connector.summary}
+              {firstSentence}
             </ReactMarkdown>
           </Box>
 
           {/* Metadata Chips */}
           <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
+            {/* Type chip - always visible */}
+            <Chip
+              label={metadata.type}
+              size="small"
+              color="primary"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+
             {metadata.vendor !== 'Other' && (
               <Chip
                 label={metadata.vendor}
                 size="small"
-                sx={{ fontSize: '0.7rem', height: '24px' }}
+                sx={{
+                  fontSize: '0.7rem',
+                  height: '24px',
+                  '& .MuiChip-label': {
+                    textTransform: 'none',
+                  }
+                }}
               />
             )}
+
             {metadata.area !== 'Other' && (
               <Chip
                 label={metadata.area}
                 size="small"
                 variant="outlined"
-                sx={{ fontSize: '0.7rem', height: '24px' }}
+                sx={{
+                  fontSize: '0.7rem',
+                  height: '24px',
+                  '& .MuiChip-label': {
+                    textTransform: 'none',
+                  }
+                }}
               />
             )}
           </Box>
@@ -148,3 +197,6 @@ export default function ConnectorCard({ connector }: ConnectorCardProps) {
     </Card>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent re-renders
+export default memo(ConnectorCard);

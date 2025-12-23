@@ -1,6 +1,5 @@
-'use client';
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { fetchConnectors, enrichPackagesWithPullCounts } from '@/lib/graphql-client';
@@ -16,107 +15,199 @@ import SearchBar from '@/components/SearchBar';
 import SortSelector from '@/components/SortSelector';
 import Pagination from '@/components/Pagination';
 import WSO2Header from '@/components/WSO2Header';
-import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 export default function HomePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({ areas: [], vendors: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
+  // Initialize state from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(
+    searchParams.get('areas')?.split(',').filter(Boolean) || []
+  );
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(
+    searchParams.get('vendors')?.split(',').filter(Boolean) || []
+  );
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get('page') || '1', 10)
+  );
+  const [pageSize, setPageSize] = useState(
+    parseInt(searchParams.get('size') || '30', 10)
+  );
+  const [sortBy, setSortBy] = useState<SortOption>(
+    (searchParams.get('sort') as SortOption) || 'date-desc'
+  );
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(24);
+  // Raw connector data (loaded once, never changes)
+  const [rawConnectors, setRawConnectors] = useState<BallerinaPackage[]>([]);
 
-  // Sort state
-  const [sortBy, setSortBy] = useState<SortOption>('pullCount-desc');
+  // Track enrichment state with refs to avoid re-render loops
+  const enrichedItemsRef = useRef<Set<string>>(new Set());
+  const isEnrichingRef = useRef(false);
+  const lastSortRef = useRef<SortOption | null>(null);
 
-  // Progressive loading: show first batch immediately, enrich progressively
+  // Load data once on mount
   useEffect(() => {
     const loadConnectors = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         const batchSize = 100;
         const estimatedTotal = 800;
         const totalBatches = Math.ceil(estimatedTotal / batchSize);
 
-        // Fetch first batch and show page immediately
+        // STEP 1: Load FIRST batch quickly (2s)
         const firstBatch = await fetchConnectors('ballerinax', batchSize, 0);
 
-        // Build initial filter options from first batch
+        // Build initial filter options
         const initialFilterOpts = extractFilterOptions(firstBatch);
         setFilterOptions(initialFilterOpts);
-        setConnectors(firstBatch);
 
-        // Hide loading spinner immediately - show cards without pull counts
-        setLoading(false);
+        // Store raw data and show page immediately
+        setRawConnectors(firstBatch);
+        const preSorted = sortConnectors(firstBatch, sortBy);
+        setConnectors(preSorted);
+        setLoading(false); // Show page at ~2s! ✅
 
-        // Load remaining batches in parallel with first batch enrichment
-        const remainingBatchPromises = [];
-        for (let i = 1; i < totalBatches; i++) {
-          const offset = i * batchSize;
-          remainingBatchPromises.push(
-            (async () => {
-              const batch = await fetchConnectors('ballerinax', batchSize, offset);
-              return batch;
-            })()
-          );
+        // STEP 2: Load remaining batches in parallel (background, non-blocking)
+        const remainingBatchPromises = Array.from({ length: totalBatches - 1 }, (_, i) =>
+          fetchConnectors('ballerinax', batchSize, (i + 1) * batchSize)
+        );
+
+        const remainingResults = await Promise.allSettled(remainingBatchPromises);
+
+        // Collect successful batches
+        const successfulRemaining = remainingResults
+          .filter((result): result is PromiseFulfilledResult<BallerinaPackage[]> =>
+            result.status === 'fulfilled'
+          )
+          .map((result) => result.value);
+
+        const failedCount = remainingResults.filter((r) => r.status === 'rejected').length;
+        if (failedCount > 0) {
+          console.warn(`${failedCount} batches failed to load`);
         }
 
-        // Fetch all batches in parallel
-        const remainingBatches = await Promise.all(remainingBatchPromises);
-        const allConnectors = [firstBatch, ...remainingBatches].flat().filter((c) => c.name);
+        // Combine all batches
+        const allConnectors = [firstBatch, ...successfulRemaining].flat().filter((c) => c.name);
 
-        // Deduplicate
+        // Deduplicate by name-version
         const uniqueConnectors = Array.from(
           new Map(allConnectors.map((c) => [`${c.name}-${c.version}`, c])).values()
         );
 
-        // Update filter options with complete data
+        // Update filter options and raw data
         const completeFilterOpts = extractFilterOptions(uniqueConnectors);
         setFilterOptions(completeFilterOpts);
-        setConnectors(uniqueConnectors);
+        setRawConnectors(uniqueConnectors);
 
-        // Progressive enrichment: enrich first batch first (likely contains popular connectors)
-        const firstBatchToEnrich = uniqueConnectors.slice(0, batchSize);
-        const remainingToEnrich = uniqueConnectors.slice(batchSize);
+        // Update sorted view
+        const allSorted = sortConnectors(uniqueConnectors, sortBy);
+        setConnectors(allSorted);
 
-        // Enrich first batch first (100 items - visible cards are likely here)
-        const enrichedFirstBatch = await enrichPackagesWithPullCounts(firstBatchToEnrich);
+        // STEP 3: Enrich visible items
+        const visibleItems = allSorted.slice(0, pageSize);
+        const toEnrich = visibleItems.filter(item => !enrichedItemsRef.current.has(item.name));
 
-        // Update state with partially enriched data (first batch has pull counts, rest don't)
-        // Create a map for quick lookup
-        const enrichedMap = new Map(enrichedFirstBatch.map(c => [c.name, c]));
-        const partiallyEnriched = uniqueConnectors.map(c =>
-          enrichedMap.get(c.name) || c
-        );
-        setConnectors(partiallyEnriched);
+        if (toEnrich.length > 0) {
+          const enriched = await enrichPackagesWithPullCounts(toEnrich);
 
-        // Enrich remaining batches in background
-        if (remainingToEnrich.length > 0) {
-          const enrichedRemaining = await enrichPackagesWithPullCounts(remainingToEnrich);
+          // Mark as enriched
+          enriched.forEach(item => enrichedItemsRef.current.add(item.name));
 
-          // Update state with fully enriched data
-          const enrichedRemainingMap = new Map(enrichedRemaining.map(c => [c.name, c]));
-          const fullyEnriched = uniqueConnectors.map(c =>
-            enrichedMap.get(c.name) || enrichedRemainingMap.get(c.name) || c
-          );
-          setConnectors(fullyEnriched);
+          // Merge enriched data
+          const enrichedMap = new Map(enriched.map((c) => [c.name, c]));
+          const updated = uniqueConnectors.map((c) => enrichedMap.get(c.name) || c);
+          setRawConnectors(updated);
+          setConnectors(sortConnectors(updated, sortBy));
         }
+
+        // STEP 4: Background enrichment for remaining items
+        setTimeout(async () => {
+          const remaining = uniqueConnectors.filter(item => !enrichedItemsRef.current.has(item.name));
+          if (remaining.length > 0) {
+            try {
+              const enrichedRemaining = await enrichPackagesWithPullCounts(remaining);
+
+              const enrichedMap = new Map(enrichedRemaining.map((c) => [c.name, c]));
+              const fullyEnriched = uniqueConnectors.map((c) => enrichedMap.get(c.name) || c);
+
+              // Mark all as enriched
+              fullyEnriched.forEach(item => enrichedItemsRef.current.add(item.name));
+
+              setRawConnectors(fullyEnriched);
+              setConnectors(sortConnectors(fullyEnriched, sortBy));
+            } catch (error) {
+              console.error('Background enrichment failed:', error);
+            }
+          }
+        }, 100);
       } catch (error) {
-        setError('Failed to load connectors. Please try again later.');
+        console.error('Failed to load connectors:', error);
+        const errorMessage = error instanceof Error
+          ? error.message
+          : 'Failed to load connectors. Please refresh the page or try again later.';
+        setError(errorMessage);
         setLoading(false);
       }
     };
 
     loadConnectors();
-  }, []);
+  }, []); // Only run once!
+
+  // Handle sort changes - just re-sort existing data
+  useEffect(() => {
+    if (rawConnectors.length === 0) return; // Wait for data to load
+
+    // Only run if sort actually changed (not when rawConnectors updates from enrichment)
+    if (lastSortRef.current === sortBy) return;
+    lastSortRef.current = sortBy;
+
+    // For non-popularity sorts, just re-sort immediately
+    if (!sortBy.startsWith('pullCount')) {
+      setConnectors(sortConnectors(rawConnectors, sortBy));
+      return;
+    }
+
+    // For popularity sorts, check if we need enrichment
+    const first100 = rawConnectors.slice(0, 100);
+    const needsEnrichment = first100.filter(item => !enrichedItemsRef.current.has(item.name));
+
+    if (needsEnrichment.length === 0) {
+      // Already enriched, just sort
+      setConnectors(sortConnectors(rawConnectors, sortBy));
+    } else if (!isEnrichingRef.current) {
+      // Need enrichment and not currently enriching
+      isEnrichingRef.current = true;
+
+      (async () => {
+        try {
+          const enriched = await enrichPackagesWithPullCounts(needsEnrichment);
+
+          // Update enriched set
+          enriched.forEach(item => enrichedItemsRef.current.add(item.name));
+
+          // Merge and update
+          const enrichedMap = new Map(enriched.map((c) => [c.name, c]));
+          const updated = rawConnectors.map((c) => enrichedMap.get(c.name) || c);
+          setRawConnectors(updated);
+          setConnectors(sortConnectors(updated, sortBy));
+        } catch (error) {
+          console.error('Enrichment failed:', error);
+          setConnectors(sortConnectors(rawConnectors, sortBy));
+        } finally {
+          isEnrichingRef.current = false;
+        }
+      })();
+    }
+  }, [sortBy, rawConnectors]); // Depend on both, but guard with lastSortRef
 
   // Filter and sort connectors
   const filteredConnectors = useMemo(() => {
@@ -134,6 +225,21 @@ export default function HomePage() {
     const endIndex = startIndex + pageSize;
     return filteredConnectors.slice(startIndex, endIndex);
   }, [filteredConnectors, currentPage, pageSize]);
+
+  // Sync state with URL params
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    // Only add non-default params to keep URL clean
+    if (currentPage > 1) params.set('page', currentPage.toString());
+    if (pageSize !== 30) params.set('size', pageSize.toString());
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedAreas.length > 0) params.set('areas', selectedAreas.join(','));
+    if (selectedVendors.length > 0) params.set('vendors', selectedVendors.join(','));
+    if (sortBy !== 'date-desc') params.set('sort', sortBy);
+
+    setSearchParams(params, { replace: true });
+  }, [currentPage, pageSize, searchQuery, selectedAreas, selectedVendors, sortBy, setSearchParams]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -174,11 +280,12 @@ export default function HomePage() {
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
           {/* WSO2 Integrator Logo with Icon + Text */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Image
+            <LazyLoadImage
               src="/images/wso2-integrator-correct.svg"
               alt=""
               width={40}
               height={40}
+              effect="opacity"
               style={{ display: 'block' }}
             />
             <Typography
@@ -241,12 +348,13 @@ export default function HomePage() {
             mb: 3,
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: 'space-between',
           }}
         >
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, maxWidth: { xs: '100%', sm: '500px' } }}>
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
           </Box>
-          <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+          <Box sx={{ flexShrink: 0 }}>
             <SortSelector value={sortBy} onChange={setSortBy} />
           </Box>
         </Box>

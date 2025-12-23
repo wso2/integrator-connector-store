@@ -1,4 +1,3 @@
-'use client';
 
 import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
@@ -15,16 +14,14 @@ interface SortSelectorProps {
 
 export default function SortSelector({ value, onChange }: SortSelectorProps) {
   return (
-    <FormControl size="small" sx={{ width: { xs: '100%', sm: 240 } }}>
+    <FormControl size="medium" sx={{ minWidth: { xs: '100%', sm: 240 } }}>
       <InputLabel>Sort by</InputLabel>
       <Select
         value={value}
         label="Sort by"
         onChange={(e) => onChange(e.target.value as SortOption)}
         sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'background.paper',
-          },
+          backgroundColor: 'background.paper',
         }}
       >
         <MenuItem value="name-asc">

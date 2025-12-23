@@ -7,7 +7,6 @@ export interface BallerinaPackage {
   icon: string;
   createdDate: string;
   totalPullCount?: number;
-  pullCount: number;
 }
 
 export interface ConnectorMetadata {

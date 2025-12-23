@@ -1,8 +1,7 @@
-'use client';
-
 import React from 'react';
 import { Box } from '@mui/material';
-import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import ThemeToggle from './ThemeToggle';
 import { useThemeContext } from './ThemeProvider';
 
@@ -34,13 +33,13 @@ export default function WSO2Header() {
         {/* Left side - WSO2 Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <a href="https://wso2.com/" aria-label="WSO2 Home">
-            <Image
+            <LazyLoadImage
               src="/images/wso2-logo.webp"
               alt="WSO2"
               width={100}
               height={39}
+              effect="opacity"
               style={{ display: 'block' }}
-              priority
             />
           </a>
         </Box>

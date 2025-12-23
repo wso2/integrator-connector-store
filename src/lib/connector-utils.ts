@@ -1,17 +1,134 @@
 import { BallerinaPackage, ConnectorMetadata, FilterOptions } from '@/types/connector';
 
 /**
+ * Dictionary for proper brand/term capitalization
+ * Maps lowercase to proper capitalization
+ */
+const CAPITALIZATION_DICTIONARY: Record<string, string> = {
+  // AI/ML Services
+  'openai': 'OpenAI',
+  'ai': 'AI',
+  'ml': 'ML',
+
+  // Cloud Providers & Services
+  'aws': 'AWS',
+  'gcp': 'GCP',
+  'azure': 'Azure',
+  's3': 'S3',
+  'sqs': 'SQS',
+  'sns': 'SNS',
+  'dynamodb': 'DynamoDB',
+
+  // Protocols & Standards
+  'api': 'API',
+  'http': 'HTTP',
+  'https': 'HTTPS',
+  'ftp': 'FTP',
+  'sftp': 'SFTP',
+  'ssh': 'SSH',
+  'sql': 'SQL',
+  'nosql': 'NoSQL',
+  'graphql': 'GraphQL',
+  'grpc': 'gRPC',
+  'rest': 'REST',
+  'soap': 'SOAP',
+  'smtp': 'SMTP',
+  'imap': 'IMAP',
+  'pop3': 'POP3',
+  'tcp': 'TCP',
+  'udp': 'UDP',
+  'ip': 'IP',
+  'dns': 'DNS',
+  'ldap': 'LDAP',
+
+  // Data Formats
+  'xml': 'XML',
+  'json': 'JSON',
+  'html': 'HTML',
+  'css': 'CSS',
+  'csv': 'CSV',
+  'yaml': 'YAML',
+  'toml': 'TOML',
+
+  // Auth & Security
+  'jwt': 'JWT',
+  'oauth': 'OAuth',
+  'saml': 'SAML',
+  'openid': 'OpenID',
+
+  // Messaging
+  'rss': 'RSS',
+  'sms': 'SMS',
+  'mms': 'MMS',
+  'mqtt': 'MQTT',
+  'amqp': 'AMQP',
+
+  // Databases
+  'mysql': 'MySQL',
+  'postgresql': 'PostgreSQL',
+  'mongodb': 'MongoDB',
+  'redis': 'Redis',
+  'mssql': 'MSSQL',
+  'mariadb': 'MariaDB',
+
+  // Platforms & Companies (common ones)
+  'github': 'GitHub',
+  'gitlab': 'GitLab',
+  'bitbucket': 'Bitbucket',
+  'salesforce': 'Salesforce',
+  'workday': 'Workday',
+  'servicenow': 'ServiceNow',
+  'shopify': 'Shopify',
+  'stripe': 'Stripe',
+  'paypal': 'PayPal',
+  'twilio': 'Twilio',
+  'sendgrid': 'SendGrid',
+  'hubspot': 'HubSpot',
+  'zendesk': 'Zendesk',
+  'jira': 'Jira',
+  'confluence': 'Confluence',
+  'linkedin': 'LinkedIn',
+  'facebook': 'Facebook',
+  'instagram': 'Instagram',
+  'youtube': 'YouTube',
+  'twitter': 'Twitter',
+  'slack': 'Slack',
+  'discord': 'Discord',
+  'dropbox': 'Dropbox',
+  'onedrive': 'OneDrive',
+  'googledrive': 'GoogleDrive',
+  'googleapis': 'GoogleAPIs',
+
+  // Technologies
+  'iot': 'IoT',
+  'sdk': 'SDK',
+  'cli': 'CLI',
+  'ui': 'UI',
+  'ux': 'UX',
+  'url': 'URL',
+  'uri': 'URI',
+  'uuid': 'UUID',
+  'pdf': 'PDF',
+  'gif': 'GIF',
+  'png': 'PNG',
+  'jpg': 'JPG',
+  'jpeg': 'JPEG',
+  'svg': 'SVG',
+};
+
+/**
  * Converts a package name to a display name using smart capitalization
  *
  * Strategy:
- * 1. Uses vendor metadata (from keywords) for proper brand capitalization (e.g., Salesforce, GitHub)
- * 2. Only hardcodes very common technical acronyms (API, SQL, HTTP, etc.)
+ * 1. Uses capitalization dictionary for known brands/terms (OpenAI, GitHub, etc.)
+ * 2. Uses vendor metadata for proper brand capitalization
  * 3. Default: capitalize first letter of each part
  *
  * Examples:
- * - aws.s3 => AWS S3 (technical acronyms)
- * - salesforce.api => Salesforce API (uses Vendor keyword + technical acronym)
- * - github.connector => GitHub Connector (uses Vendor keyword)
+ * - openai => OpenAI (dictionary)
+ * - aws.s3 => AWS S3 (dictionary)
+ * - salesforce.api => Salesforce API (vendor + dictionary)
+ * - github.connector => GitHub Connector (dictionary)
  */
 export function getDisplayName(packageName: string, vendor?: string): string {
   // Split by dot to get parts
@@ -21,18 +138,9 @@ export function getDisplayName(packageName: string, vendor?: string): string {
   const transformedParts = parts.map((part, index) => {
     const lowerPart = part.toLowerCase();
 
-    // Very common technical acronyms (minimal list of widely-used terms)
-    const technicalAcronyms = [
-      'api', 'http', 'https', 'ftp', 'sftp', 'ssh', 'sql',
-      'xml', 'json', 'html', 'css', 'rest', 'soap', 'smtp',
-      'imap', 'pop3', 'jwt', 'oauth', 'tcp', 'udp', 'ip',
-      'dns', 'url', 'uri', 'csv', 'rss', 'sms', 'mms', 'iot',
-      'aws', 'gcp', 's3', 'sqs', 'sns', 'ldap'
-    ];
-
-    // Check if it's a technical acronym
-    if (technicalAcronyms.includes(lowerPart)) {
-      return part.toUpperCase();
+    // Check dictionary first
+    if (CAPITALIZATION_DICTIONARY[lowerPart]) {
+      return CAPITALIZATION_DICTIONARY[lowerPart];
     }
 
     // If we have vendor info and this is the first part, try to match with vendor
@@ -73,11 +181,9 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
 
   connectors.forEach((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
-    // Only include connectors with type "connector"
-    if (metadata.type.toLowerCase() === 'connector') {
-      areas.add(metadata.area);
-      vendors.add(metadata.vendor);
-    }
+    // Include ALL connectors regardless of type
+    areas.add(metadata.area);
+    vendors.add(metadata.vendor);
   });
 
   return {
@@ -101,11 +207,6 @@ export function filterConnectors(
 ): BallerinaPackage[] {
   return connectors.filter((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
-
-    // Only show connectors with type "connector"
-    if (metadata.type.toLowerCase() !== 'connector') {
-      return false;
-    }
 
     // Area filter
     if (filters.selectedAreas.length > 0 && !filters.selectedAreas.includes(metadata.area)) {
@@ -228,12 +329,12 @@ export function sortConnectors(
 
     case 'pullCount-desc':
       return sorted.sort(
-        (a, b) => (b.totalPullCount || b.pullCount) - (a.totalPullCount || a.pullCount)
+        (a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0)
       );
 
     case 'pullCount-asc':
       return sorted.sort(
-        (a, b) => (a.totalPullCount || a.pullCount) - (b.totalPullCount || b.pullCount)
+        (a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0)
       );
 
     case 'date-desc':
