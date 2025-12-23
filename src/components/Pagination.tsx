@@ -1,4 +1,3 @@
-'use client';
 
 import React from 'react';
 import { Box, Select, MenuItem, Typography, Button, FormControl, InputLabel } from '@mui/material';
@@ -22,7 +21,7 @@ export default function Pagination({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 24, 50, 100],
+  pageSizeOptions = [10, 30, 50, 100],
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / pageSize);
   const startItem = (currentPage - 1) * pageSize + 1;

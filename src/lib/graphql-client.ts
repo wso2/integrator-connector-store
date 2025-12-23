@@ -5,6 +5,35 @@ const GRAPHQL_ENDPOINT = 'https://api.central.ballerina.io/2.0/graphql';
 
 const client = new GraphQLClient(GRAPHQL_ENDPOINT);
 
+/**
+ * Retry helper for network requests
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`Attempt ${attempt + 1}/${maxRetries} failed:`, error);
+
+      // Don't retry on last attempt
+      if (attempt < maxRetries - 1) {
+        // Exponential backoff
+        const delay = delayMs * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 const GET_BALLERINAX_CONNECTORS = `
   query GetBallerinaxConnectors(
     $orgName: String!
@@ -25,7 +54,6 @@ const GET_BALLERINAX_CONNECTORS = `
         icon
         createdDate
         totalPullCount
-        pullCount
       }
     }
   }
@@ -42,16 +70,14 @@ export async function fetchConnectors(
   limit: number = 100,
   offset: number = 0
 ): Promise<BallerinaPackage[]> {
-  try {
+  return withRetry(async () => {
     const data = await client.request<GraphQLResponse>(GET_BALLERINAX_CONNECTORS, {
       orgName,
       limit,
       offset,
     });
     return data.packages.packages;
-  } catch (error) {
-    throw error;
-  }
+  });
 }
 
 
@@ -79,7 +105,7 @@ async function fetchBatchedPullCounts(
     ${aliases.join('\n    ')}
   }`;
 
-  try {
+  return withRetry(async () => {
     const data = await client.request<Record<string, { totalPullCount: number }>>(query);
 
     // Map the results back to package names
@@ -93,9 +119,11 @@ async function fetchBatchedPullCounts(
     });
 
     return pullCountMap;
-  } catch (error) {
-    return new Map();
-  }
+  }, 2, 500).catch((error) => {
+    // If all retries fail, return empty map (graceful degradation)
+    console.error('Failed to fetch pull counts after retries:', error);
+    return new Map<string, number>();
+  });
 }
 
 /**
@@ -142,6 +170,6 @@ export async function enrichPackagesWithPullCounts(
   // Enrich all packages with the fetched pull counts
   return packages.map((pkg) => ({
     ...pkg,
-    totalPullCount: pullCountMap.get(pkg.name) || pkg.pullCount || 0,
+    totalPullCount: pullCountMap.get(pkg.name) || 0,
   }));
 }

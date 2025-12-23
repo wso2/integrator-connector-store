@@ -1,4 +1,3 @@
-'use client';
 
 import React from 'react';
 import { TextField, InputAdornment } from '@mui/material';
@@ -21,16 +20,16 @@ export default function SearchBar({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       variant="outlined"
-      size="small"
+      size="medium"
+      fullWidth
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <SearchIcon fontSize="small" />
+            <SearchIcon fontSize="small" color="action" />
           </InputAdornment>
         ),
       }}
       sx={{
-        width: '100%',
         '& .MuiOutlinedInput-root': {
           backgroundColor: 'background.paper',
         },
