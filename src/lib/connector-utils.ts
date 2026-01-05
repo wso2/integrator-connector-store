@@ -178,17 +178,20 @@ export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
 export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOptions {
   const areas = new Set<string>();
   const vendors = new Set<string>();
+  const types = new Set<string>();
 
   connectors.forEach((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
     // Include ALL connectors regardless of type
     areas.add(metadata.area);
     vendors.add(metadata.vendor);
+    types.add(metadata.type);
   });
 
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
+    types: Array.from(types).sort(),
   };
 }
 

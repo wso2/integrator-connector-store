@@ -128,8 +128,8 @@ jobs:
           if [ "${{ needs.lint.result }}" = "failure" ] || \
              [ "${{ needs.typecheck.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ]; then
-            echo "❌ CI failed - please fix the errors above"
+            echo " CI failed - please fix the errors above"
             exit 1
           else
-            echo "✅ All CI checks passed!"
+            echo " All CI checks passed!"
           fi
