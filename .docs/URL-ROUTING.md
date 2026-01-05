@@ -88,7 +88,7 @@ https://connector-store.com/?size=100
 
 ## Key Features
 
-### ✅ Bookmarkable
+###  Bookmarkable
 Users can bookmark any page with their specific filters and return to it later.
 
 **Example:**
@@ -97,7 +97,7 @@ Bookmark: https://connector-store.com/?areas=Finance&vendors=Stripe,PayPal&sort=
 ```
 Opening this bookmark shows Finance connectors from Stripe/PayPal, sorted by popularity.
 
-### ✅ Shareable
+###  Shareable
 Users can share links with colleagues to show specific connectors or results.
 
 **Example:**
@@ -105,13 +105,13 @@ Users can share links with colleagues to show specific connectors or results.
 Email: "Check out these AWS connectors: https://connector-store.com/?vendors=AWS&page=1"
 ```
 
-### ✅ Browser Back/Forward
+###  Browser Back/Forward
 Browser navigation buttons work as expected:
 - Back button: Returns to previous filter/page state
 - Forward button: Goes to next state
 - Full history preserved
 
-### ✅ Direct Access
+###  Direct Access
 Users can manually craft URLs to jump to specific views:
 
 ```
@@ -119,7 +119,7 @@ https://connector-store.com/?page=5&size=10
 ```
 Goes directly to page 5 with 10 items per page.
 
-### ✅ Clean URLs
+###  Clean URLs
 The implementation keeps URLs clean by only adding non-default parameters:
 
 **Default view:**
@@ -239,14 +239,14 @@ const [searchParams, setSearchParams] = useSearchParams();
 ```
 URL: https://connector-store.com/
 State: Page 3, Finance filter, 50 items per page
-Refresh: ❌ Returns to page 1, loses filters
+Refresh:  Returns to page 1, loses filters
 ```
 
 ### After (With URL Routing)
 ```
 URL: https://connector-store.com/?page=3&areas=Finance&size=50
 State: Page 3, Finance filter, 50 items per page
-Refresh: ✅ Stays on page 3 with Finance filter and 50 items
+Refresh:  Stays on page 3 with Finance filter and 50 items
 ```
 
 ## Best Practices
@@ -275,10 +275,10 @@ Potential improvements:
 
 URL-based routing transforms the connector store from a stateful app into a fully linkable, shareable, and bookmarkable platform. Every interaction is captured in the URL, making it:
 
-- ✅ More professional
-- ✅ More user-friendly
-- ✅ Better for collaboration
-- ✅ Easier to support
-- ✅ More accessible
+-  More professional
+-  More user-friendly
+-  Better for collaboration
+-  Easier to support
+-  More accessible
 
 Users can now share exactly what they're seeing with a simple link!

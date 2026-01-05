@@ -1,14 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
-import { fetchConnectors, enrichPackagesWithPullCounts } from '@/lib/graphql-client';
-import {
-  extractFilterOptions,
-  filterConnectors,
-  sortConnectors,
-  SortOption,
-} from '@/lib/connector-utils';
+import { searchPackages, fetchFiltersProgressively, SortOption } from '@/lib/rest-client';
 import ConnectorCard from '@/components/ConnectorCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import SearchBar from '@/components/SearchBar';
@@ -22,9 +16,11 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({ areas: [], vendors: [] });
-  const [loading, setLoading] = useState(true);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({ areas: [], vendors: [], types: [] });
+  const [loading, setLoading] = useState(false); // For filter/pagination changes
+  const [initialLoading, setInitialLoading] = useState(true); // For first page load
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Initialize state from URL params
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -34,6 +30,9 @@ export default function HomePage() {
   const [selectedVendors, setSelectedVendors] = useState<string[]>(
     searchParams.get('vendors')?.split(',').filter(Boolean) || []
   );
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    searchParams.get('types')?.split(',').filter(Boolean) || []
+  );
   const [currentPage, setCurrentPage] = useState(
     parseInt(searchParams.get('page') || '1', 10)
   );
@@ -41,190 +40,74 @@ export default function HomePage() {
     parseInt(searchParams.get('size') || '30', 10)
   );
   const [sortBy, setSortBy] = useState<SortOption>(
-    (searchParams.get('sort') as SortOption) || 'date-desc'
+    (searchParams.get('sort') as SortOption) || 'pullCount-desc'
   );
 
-  // Raw connector data (loaded once, never changes)
-  const [rawConnectors, setRawConnectors] = useState<BallerinaPackage[]>([]);
+  // Fetch page data from REST API
+  const fetchPageData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Track enrichment state with refs to avoid re-render loops
-  const enrichedItemsRef = useRef<Set<string>>(new Set());
-  const isEnrichingRef = useRef(false);
-  const lastSortRef = useRef<SortOption | null>(null);
+      const response = await searchPackages({
+        query: searchQuery,
+        areas: selectedAreas,
+        vendors: selectedVendors,
+        types: selectedTypes,
+        offset: (currentPage - 1) * pageSize,
+        limit: pageSize,
+        sort: sortBy,
+      });
 
-  // Load data once on mount
-  useEffect(() => {
-    const loadConnectors = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const batchSize = 100;
-        const estimatedTotal = 800;
-        const totalBatches = Math.ceil(estimatedTotal / batchSize);
-
-        // STEP 1: Load FIRST batch quickly (2s)
-        const firstBatch = await fetchConnectors('ballerinax', batchSize, 0);
-
-        // Build initial filter options
-        const initialFilterOpts = extractFilterOptions(firstBatch);
-        setFilterOptions(initialFilterOpts);
-
-        // Store raw data and show page immediately
-        setRawConnectors(firstBatch);
-        const preSorted = sortConnectors(firstBatch, sortBy);
-        setConnectors(preSorted);
-        setLoading(false); // Show page at ~2s! ✅
-
-        // STEP 2: Load remaining batches in parallel (background, non-blocking)
-        const remainingBatchPromises = Array.from({ length: totalBatches - 1 }, (_, i) =>
-          fetchConnectors('ballerinax', batchSize, (i + 1) * batchSize)
-        );
-
-        const remainingResults = await Promise.allSettled(remainingBatchPromises);
-
-        // Collect successful batches
-        const successfulRemaining = remainingResults
-          .filter((result): result is PromiseFulfilledResult<BallerinaPackage[]> =>
-            result.status === 'fulfilled'
-          )
-          .map((result) => result.value);
-
-        const failedCount = remainingResults.filter((r) => r.status === 'rejected').length;
-        if (failedCount > 0) {
-          console.warn(`${failedCount} batches failed to load`);
-        }
-
-        // Combine all batches
-        const allConnectors = [firstBatch, ...successfulRemaining].flat().filter((c) => c.name);
-
-        // Deduplicate by name-version
-        const uniqueConnectors = Array.from(
-          new Map(allConnectors.map((c) => [`${c.name}-${c.version}`, c])).values()
-        );
-
-        // Update filter options and raw data
-        const completeFilterOpts = extractFilterOptions(uniqueConnectors);
-        setFilterOptions(completeFilterOpts);
-        setRawConnectors(uniqueConnectors);
-
-        // Update sorted view
-        const allSorted = sortConnectors(uniqueConnectors, sortBy);
-        setConnectors(allSorted);
-
-        // STEP 3: Enrich visible items
-        const visibleItems = allSorted.slice(0, pageSize);
-        const toEnrich = visibleItems.filter(item => !enrichedItemsRef.current.has(item.name));
-
-        if (toEnrich.length > 0) {
-          const enriched = await enrichPackagesWithPullCounts(toEnrich);
-
-          // Mark as enriched
-          enriched.forEach(item => enrichedItemsRef.current.add(item.name));
-
-          // Merge enriched data
-          const enrichedMap = new Map(enriched.map((c) => [c.name, c]));
-          const updated = uniqueConnectors.map((c) => enrichedMap.get(c.name) || c);
-          setRawConnectors(updated);
-          setConnectors(sortConnectors(updated, sortBy));
-        }
-
-        // STEP 4: Background enrichment for remaining items
-        setTimeout(async () => {
-          const remaining = uniqueConnectors.filter(item => !enrichedItemsRef.current.has(item.name));
-          if (remaining.length > 0) {
-            try {
-              const enrichedRemaining = await enrichPackagesWithPullCounts(remaining);
-
-              const enrichedMap = new Map(enrichedRemaining.map((c) => [c.name, c]));
-              const fullyEnriched = uniqueConnectors.map((c) => enrichedMap.get(c.name) || c);
-
-              // Mark all as enriched
-              fullyEnriched.forEach(item => enrichedItemsRef.current.add(item.name));
-
-              setRawConnectors(fullyEnriched);
-              setConnectors(sortConnectors(fullyEnriched, sortBy));
-            } catch (error) {
-              console.error('Background enrichment failed:', error);
-            }
-          }
-        }, 100);
-      } catch (error) {
-        console.error('Failed to load connectors:', error);
-        const errorMessage = error instanceof Error
+      setConnectors(response.packages);
+      setTotalCount(response.count);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch page data:', error);
+      const errorMessage =
+        error instanceof Error
           ? error.message
           : 'Failed to load connectors. Please refresh the page or try again later.';
+      setError(errorMessage);
+      setLoading(false);
+    }
+  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes, currentPage, pageSize, sortBy]);
+
+  // Load filter options once on mount, then load first page
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        setInitialLoading(true);
+
+        // Phase 1: Load first page immediately (fast)
+        await fetchPageData();
+
+        // Phase 2: Get filter options (cached or progressive)
+        const filters = await fetchFiltersProgressively('ballerinax', (updatedFilters) => {
+          // Background update when complete filters are fetched
+          setFilterOptions(updatedFilters);
+        });
+        setFilterOptions(filters);
+
+        setInitialLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize:', error);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to load filters.';
         setError(errorMessage);
-        setLoading(false);
+        setInitialLoading(false);
       }
     };
 
-    loadConnectors();
-  }, []); // Only run once!
+    initialize();
+  }, []);
 
-  // Handle sort changes - just re-sort existing data
+  // Trigger server-side fetch when filters/sort/page change
   useEffect(() => {
-    if (rawConnectors.length === 0) return; // Wait for data to load
-
-    // Only run if sort actually changed (not when rawConnectors updates from enrichment)
-    if (lastSortRef.current === sortBy) return;
-    lastSortRef.current = sortBy;
-
-    // For non-popularity sorts, just re-sort immediately
-    if (!sortBy.startsWith('pullCount')) {
-      setConnectors(sortConnectors(rawConnectors, sortBy));
-      return;
+    if (!initialLoading) {
+      fetchPageData();
     }
-
-    // For popularity sorts, check if we need enrichment
-    const first100 = rawConnectors.slice(0, 100);
-    const needsEnrichment = first100.filter(item => !enrichedItemsRef.current.has(item.name));
-
-    if (needsEnrichment.length === 0) {
-      // Already enriched, just sort
-      setConnectors(sortConnectors(rawConnectors, sortBy));
-    } else if (!isEnrichingRef.current) {
-      // Need enrichment and not currently enriching
-      isEnrichingRef.current = true;
-
-      (async () => {
-        try {
-          const enriched = await enrichPackagesWithPullCounts(needsEnrichment);
-
-          // Update enriched set
-          enriched.forEach(item => enrichedItemsRef.current.add(item.name));
-
-          // Merge and update
-          const enrichedMap = new Map(enriched.map((c) => [c.name, c]));
-          const updated = rawConnectors.map((c) => enrichedMap.get(c.name) || c);
-          setRawConnectors(updated);
-          setConnectors(sortConnectors(updated, sortBy));
-        } catch (error) {
-          console.error('Enrichment failed:', error);
-          setConnectors(sortConnectors(rawConnectors, sortBy));
-        } finally {
-          isEnrichingRef.current = false;
-        }
-      })();
-    }
-  }, [sortBy, rawConnectors]); // Depend on both, but guard with lastSortRef
-
-  // Filter and sort connectors
-  const filteredConnectors = useMemo(() => {
-    const filtered = filterConnectors(connectors, {
-      selectedAreas,
-      selectedVendors,
-      searchQuery,
-    });
-    return sortConnectors(filtered, sortBy);
-  }, [connectors, selectedAreas, selectedVendors, searchQuery, sortBy]);
-
-  // Paginate filtered connectors
-  const paginatedConnectors = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredConnectors.slice(startIndex, endIndex);
-  }, [filteredConnectors, currentPage, pageSize]);
+  }, [initialLoading, fetchPageData]);
 
   // Sync state with URL params
   useEffect(() => {
@@ -236,15 +119,16 @@ export default function HomePage() {
     if (searchQuery) params.set('search', searchQuery);
     if (selectedAreas.length > 0) params.set('areas', selectedAreas.join(','));
     if (selectedVendors.length > 0) params.set('vendors', selectedVendors.join(','));
-    if (sortBy !== 'date-desc') params.set('sort', sortBy);
+    if (selectedTypes.length > 0) params.set('types', selectedTypes.join(','));
+    if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
     setSearchParams(params, { replace: true });
-  }, [currentPage, pageSize, searchQuery, selectedAreas, selectedVendors, sortBy, setSearchParams]);
+  }, [currentPage, pageSize, searchQuery, selectedAreas, selectedVendors, selectedTypes, sortBy, setSearchParams]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedAreas, selectedVendors, searchQuery, pageSize]);
+  }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -264,9 +148,16 @@ export default function HomePage() {
     );
   };
 
+  const handleTypeChange = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
   const handleClearAll = () => {
     setSelectedAreas([]);
     setSelectedVendors([]);
+    setSelectedTypes([]);
     setSearchQuery('');
   };
 
@@ -359,38 +250,40 @@ export default function HomePage() {
           </Box>
         </Box>
 
-        {/* Loading State */}
-        {loading && (
+        {/* Initial Loading State */}
+        {initialLoading && (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
             <CircularProgress />
           </Box>
         )}
 
-        {/* Error State */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
         {/* Main Content */}
-        {!loading && !error && (
+        {!initialLoading && (
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-            {/* Filter Sidebar */}
+            {/* Filter Sidebar - Always visible */}
             <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
               <FilterSidebar
                 filterOptions={filterOptions}
                 selectedAreas={selectedAreas}
                 selectedVendors={selectedVendors}
+                selectedTypes={selectedTypes}
                 onAreaChange={handleAreaChange}
                 onVendorChange={handleVendorChange}
+                onTypeChange={handleTypeChange}
                 onClearAll={handleClearAll}
               />
             </Box>
 
             {/* Connector Grid */}
             <Box sx={{ flex: 1 }}>
-              {filteredConnectors.length === 0 ? (
+              {/* Error State */}
+              {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {error}
+                </Alert>
+              )}
+
+              {totalCount === 0 && !loading ? (
                 <Box
                   display="flex"
                   flexDirection="column"
@@ -406,11 +299,35 @@ export default function HomePage() {
                   </Typography>
                 </Box>
               ) : (
-                <>
+                <Box sx={{ position: 'relative' }}>
+                  {/* Loading Overlay */}
+                  {loading && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(0, 0, 0, 0.7)'
+                            : 'rgba(255, 255, 255, 0.7)',
+                        zIndex: 10,
+                        minHeight: 300,
+                      }}
+                    >
+                      <CircularProgress />
+                    </Box>
+                  )}
+
                   {/* Pagination - Top */}
                   <Pagination
                     currentPage={currentPage}
-                    totalItems={filteredConnectors.length}
+                    totalItems={totalCount}
                     pageSize={pageSize}
                     onPageChange={setCurrentPage}
                     onPageSizeChange={setPageSize}
@@ -426,9 +343,11 @@ export default function HomePage() {
                       },
                       gap: 3,
                       mt: 4,
+                      opacity: loading ? 0.5 : 1,
+                      transition: 'opacity 0.2s',
                     }}
                   >
-                    {paginatedConnectors.map((connector) => (
+                    {connectors.map((connector) => (
                       <ConnectorCard
                         connector={connector}
                         key={`${connector.name}-${connector.version}`}
@@ -439,12 +358,12 @@ export default function HomePage() {
                   {/* Pagination - Bottom */}
                   <Pagination
                     currentPage={currentPage}
-                    totalItems={filteredConnectors.length}
+                    totalItems={totalCount}
                     pageSize={pageSize}
                     onPageChange={setCurrentPage}
                     onPageSizeChange={setPageSize}
                   />
-                </>
+                </Box>
               )}
             </Box>
           </Box>

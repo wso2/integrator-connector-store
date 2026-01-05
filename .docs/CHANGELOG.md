@@ -4,7 +4,7 @@ All notable changes to the WSO2 Integrator Connector Store.
 
 ## [1.1.0] - 2025-12-17
 
-### ✨ Added
+###  Added
 
 #### Pagination System
 
@@ -33,20 +33,20 @@ All notable changes to the WSO2 Integrator Connector Store.
 - Improved responsive design
 - Enhanced dark mode with pure black background
 
-### 📝 Changed
+###  Changed
 
 - Replaced generic header with WSO2-branded header
 - Updated theme with exact WSO2 design tokens
 - Modified connector display to show paginated results only
 - Enhanced pagination component with better UX
 
-### 🐛 Fixed
+###  Fixed
 
 - Material-UI Grid compatibility issues (switched to CSS Grid)
 - Theme consistency between light and dark modes
 - Responsive layout on mobile devices
 
-### 📦 Files Added
+###  Files Added
 
 ```
 public/images/wso2-logo.webp
@@ -58,7 +58,7 @@ FEATURES.md
 CHANGELOG.md
 ```
 
-### 📝 Files Modified
+###  Files Modified
 
 ```
 src/app/page.tsx           - Added pagination logic
@@ -70,7 +70,7 @@ src/components/ThemeProvider.tsx  - Enhanced theme context
 
 ## [1.0.0] - 2025-12-16
 
-### ✨ Initial Release
+###  Initial Release
 
 #### Core Features
 
@@ -121,14 +121,14 @@ src/components/ThemeProvider.tsx  - Enhanced theme context
 
 | Feature                | v1.0.0  | v1.1.0 |
 | ---------------------- | ------- | ------ |
-| Pagination             | ❌      | ✅     |
-| Page Size Selector     | ❌      | ✅     |
-| WSO2 Header            | ❌      | ✅     |
-| WSO2 Logo              | ❌      | ✅     |
-| Exact WSO2 Colors      | Partial | ✅     |
-| Scroll to Top          | ❌      | ✅     |
-| Smart Page Navigation  | ❌      | ✅     |
-| Dark Mode (Pure Black) | ❌      | ✅     |
+| Pagination             |       |      |
+| Page Size Selector     |       |      |
+| WSO2 Header            |       |      |
+| WSO2 Logo              |       |      |
+| Exact WSO2 Colors      | Partial |      |
+| Scroll to Top          |       |      |
+| Smart Page Navigation  |       |      |
+| Dark Mode (Pure Black) |       |      |
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Issues Fixed (December 17, 2025)
 
-### ✅ 1. Header Site Name
+###  1. Header Site Name
 
 **Problem:**
 
@@ -28,7 +28,7 @@
 
 ---
 
-### ✅ 2. Connector Card Links
+###  2. Connector Card Links
 
 **Problem:**
 
@@ -67,7 +67,7 @@ After:  https://central.ballerina.io/ballerinax/aws.lambda
 
 ---
 
-### ✅ 3. Total Pull Count (Efficient Implementation)
+###  3. Total Pull Count (Efficient Implementation)
 
 **Problem:**
 
@@ -327,23 +327,23 @@ After:  Shows total downloads all versions (1,234,567)
 ### Modified Files
 
 ```
-📝 src/components/WSO2Header.tsx      - Updated site name
-📝 src/components/ConnectorCard.tsx   - Fixed card links
-📝 src/lib/rest-client.ts             - Efficient pull count fetch
-📝 src/app/page.tsx                   - Updated function call
+ src/components/WSO2Header.tsx      - Updated site name
+ src/components/ConnectorCard.tsx   - Fixed card links
+ src/lib/rest-client.ts             - Efficient pull count fetch
+ src/app/page.tsx                   - Updated function call
 ```
 
 ### New Files
 
 ```
-✨ FIXES.md - This documentation
+ FIXES.md - This documentation
 ```
 
 ---
 
 ## Comparison: Per-Request vs Batch Approach
 
-### ❌ Per-Request Approach (Avoided)
+###  Per-Request Approach (Avoided)
 
 ```typescript
 // BAD: 700+ requests
@@ -362,7 +362,7 @@ for (const connector of connectors) {
 - Server overload
 - Poor user experience
 
-### ✅ Batch Approach (Implemented)
+###  Batch Approach (Implemented)
 
 ```typescript
 // GOOD: ~20 batched requests
@@ -387,12 +387,12 @@ connectors.forEach((connector) => {
 
 All issues have been resolved efficiently:
 
-1. ✅ **Header** - Shows full "WSO2 Integrator Connector Store"
-2. ✅ **Links** - Direct to Ballerina Central package pages
-3. ✅ **Pull Counts** - Accurate totals via efficient batch fetch
+1.  **Header** - Shows full "WSO2 Integrator Connector Store"
+2.  **Links** - Direct to Ballerina Central package pages
+3.  **Pull Counts** - Accurate totals via efficient batch fetch
 
 The connector store now displays accurate, aggregated download counts without overwhelming the API or degrading performance!
 
 **Version:** 1.2.1
-**Status:** ✅ Ready for testing
+**Status:**  Ready for testing
 **Date:** December 17, 2025

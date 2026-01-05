@@ -6,7 +6,7 @@
 
 ---
 
-## 🔍 Root Cause Analysis
+##  Root Cause Analysis
 
 ### Critical Bottleneck: GraphQL Enrichment Process
 
@@ -32,7 +32,7 @@ Enrich remaining 700 (14 sequential batches of 50) → Update page ← 8-10 seco
 
 ---
 
-## 🎯 High-Impact Optimizations (Ranked by Impact)
+##  High-Impact Optimizations (Ranked by Impact)
 
 ### 1. ⚡ **ON-DEMAND ENRICHMENT** (Critical - 80% improvement)
 
@@ -153,7 +153,7 @@ export function setCachedPullCounts(pullCounts: Map<string, number>) {
 
 ---
 
-### 4. 🎨 **MEMOIZE CONNECTOR CARD** (Low-Medium - Reduces re-renders)
+### 4.  **MEMOIZE CONNECTOR CARD** (Low-Medium - Reduces re-renders)
 
 **Impact**: Faster filtering/sorting/pagination
 **Effort**: Low
@@ -194,7 +194,7 @@ export default memo(function ConnectorCard({ connector }: ConnectorCardProps) {
 
 ---
 
-### 5. ✂️ **REMOVE REACTMARKDOWN OVERHEAD** (Low - Minor improvement)
+### 5. ✂ **REMOVE REACTMARKDOWN OVERHEAD** (Low - Minor improvement)
 
 **Impact**: Faster initial render
 **Effort**: Low
@@ -221,7 +221,7 @@ const renderSimpleMarkdown = (text: string) => {
 
 ---
 
-## 🚀 Advanced Optimizations (Long-term)
+##  Advanced Optimizations (Long-term)
 
 ### 6. **API-Level Fix** (Best long-term solution)
 
@@ -245,7 +245,7 @@ query GetBallerinaxConnectors {
 }
 ```
 
-**Impact**: Eliminate 10-12 seconds entirely ✅
+**Impact**: Eliminate 10-12 seconds entirely 
 
 ---
 
@@ -275,23 +275,23 @@ Move filtering/sorting/parsing to Web Worker to avoid blocking main thread.
 ## 📊 Recommended Implementation Plan
 
 ### Phase 1: Quick Wins (1-2 hours)
-1. ✅ **Parallel enrichment** (Optimization #2) - Easy, 40% improvement
-2. ✅ **Memoize ConnectorCard** (Optimization #4) - Easy, better perceived performance
-3. ✅ **Remove ReactMarkdown** (Optimization #5) - Easy, minor improvement
+1.  **Parallel enrichment** (Optimization #2) - Easy, 40% improvement
+2.  **Memoize ConnectorCard** (Optimization #4) - Easy, better perceived performance
+3.  **Remove ReactMarkdown** (Optimization #5) - Easy, minor improvement
 
 **Expected Result**: 6-7 second load time (down from 10-12s)
 
 ---
 
 ### Phase 2: Critical Fix (2-4 hours)
-4. ✅ **On-demand enrichment** (Optimization #1) - Medium effort, 80% improvement
+4.  **On-demand enrichment** (Optimization #1) - Medium effort, 80% improvement
 
-**Expected Result**: 2-3 second load time ✅ **TARGET MET**
+**Expected Result**: 2-3 second load time  **TARGET MET**
 
 ---
 
 ### Phase 3: Polish (1-2 hours)
-5. ✅ **LocalStorage caching** (Optimization #3) - Medium effort, instant repeat loads
+5.  **LocalStorage caching** (Optimization #3) - Medium effort, instant repeat loads
 
 **Expected Result**: Instant loads on subsequent visits
 
@@ -300,11 +300,11 @@ Move filtering/sorting/parsing to Web Worker to avoid blocking main thread.
 ### Phase 4: Long-term (Optional)
 6. 📧 **Contact API team** for server-side fix
 7. 🔬 **Test larger batch sizes**
-8. 🎨 **Consider virtual scrolling**
+8.  **Consider virtual scrolling**
 
 ---
 
-## 🐛 Other Issues Found
+##  Other Issues Found
 
 ### Minor Performance Issues:
 
@@ -324,26 +324,26 @@ Move filtering/sorting/parsing to Web Worker to avoid blocking main thread.
 ## 📈 Performance Metrics
 
 ### Current:
-- Initial page render: ~2s ✅
-- Download counts load: **10-12s** ❌
+- Initial page render: ~2s 
+- Download counts load: **10-12s** 
 - Total interactive: **12-14s**
 
 ### After Phase 1 (Parallel + Memoization):
-- Initial page render: ~2s ✅
+- Initial page render: ~2s 
 - Download counts load: **6-7s** 🟡
 - Total interactive: **8-9s**
 
 ### After Phase 2 (On-demand enrichment):
-- Initial page render: ~2s ✅
-- Download counts load: **2-3s** ✅ **TARGET**
+- Initial page render: ~2s 
+- Download counts load: **2-3s**  **TARGET**
 - Total interactive: **4-5s**
 
 ### After Phase 3 (Caching):
-- Repeat visits: **< 1s** ✅✅✅
+- Repeat visits: **< 1s** 
 
 ---
 
-## 🔧 Implementation Files to Modify
+##  Implementation Files to Modify
 
 1. **src/pages/HomePage.tsx** (Lines 94-119) - Enrichment logic
 2. **src/lib/graphql-client.ts** (Lines 105-147) - Batching strategy
@@ -352,7 +352,7 @@ Move filtering/sorting/parsing to Web Worker to avoid blocking main thread.
 
 ---
 
-## ✅ Success Criteria
+##  Success Criteria
 
 - [ ] Download counts load in < 3 seconds on first visit
 - [ ] Page navigation shows pull counts in < 1 second
@@ -362,7 +362,7 @@ Move filtering/sorting/parsing to Web Worker to avoid blocking main thread.
 
 ---
 
-## 📝 Summary
+##  Summary
 
 The 10-12 second delay is caused by **16 sequential GraphQL requests** to fetch pull counts for all 800 connectors. The most impactful fix is **on-demand enrichment** (only enrich visible items), which will reduce this to 2-3 seconds. Combined with parallel processing and caching, we can achieve sub-second performance on repeat visits.
 

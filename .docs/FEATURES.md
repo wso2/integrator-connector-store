@@ -1,6 +1,6 @@
 # Feature Overview - WSO2 Integrator Connector Store
 
-## 🎨 WSO2 Branding
+##  WSO2 Branding
 
 ### Header
 
@@ -25,7 +25,7 @@
 - **Text Primary:** #000000 - Headings (black)
 - **Text Secondary:** #494848 - Paragraphs (dark gray)
 
-## 📄 Pagination System
+##  Pagination System
 
 ### Layout
 
@@ -85,13 +85,13 @@ Page 5 of 10:    [← Prev] [1] ... [4] [5] [6] ... [10] [Next →]
 Page 10 of 10:   [← Prev] [1] ... [8] [9] [10] [Next →]
 ```
 
-## 🔍 Search & Filter
+##  Search & Filter
 
 ### Layout
 
 ```
 ┌─────────────┬──────────────────────────────────────┐
-│             │  🔍 Search connectors...             │
+│             │   Search connectors...             │
 │   FILTERS   ├──────────────────────────────────────┤
 │             │  Showing 24 of 156 connectors        │
 │ ☑ Finance   ├──────────────────────────────────────┤
@@ -236,7 +236,7 @@ User can browse immediately!
 4. **Smooth scrolling** - Better UX on page change
 5. **Background loading** - Non-blocking data fetch
 
-## 🎯 User Workflows
+##  User Workflows
 
 ### Workflow 1: Browse All Connectors
 
@@ -279,7 +279,7 @@ User can browse immediately!
 5. Quick navigation
 ```
 
-## 🔧 Technical Highlights
+##  Technical Highlights
 
 ### State Management
 
@@ -328,10 +328,10 @@ useEffect(() => {
 
 ### Performance
 
-- **Initial Load:** < 2 seconds ✅
-- **Page Change:** Instant (< 50ms) ✅
-- **Filter Change:** Instant (< 50ms) ✅
-- **Search:** Real-time (< 50ms) ✅
+- **Initial Load:** < 2 seconds 
+- **Page Change:** Instant (< 50ms) 
+- **Filter Change:** Instant (< 50ms) 
+- **Search:** Real-time (< 50ms) 
 
 ### UX
 
@@ -342,13 +342,13 @@ useEffect(() => {
 
 ### Accessibility
 
-- ✅ Keyboard navigation
-- ✅ ARIA labels
-- ✅ Color contrast (WCAG AA)
-- ✅ Focus indicators
-- ✅ Screen reader friendly
+-  Keyboard navigation
+-  ARIA labels
+-  Color contrast (WCAG AA)
+-  Focus indicators
+-  Screen reader friendly
 
-## 🎉 Summary
+##  Summary
 
 The WSO2 Integrator Connector Store now includes:
 

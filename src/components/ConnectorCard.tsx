@@ -1,5 +1,5 @@
-import { memo, useMemo } from 'react';
-import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar } from '@mui/material';
+import { memo, useMemo, useState } from 'react';
+import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar, Button } from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
@@ -15,14 +15,9 @@ interface ConnectorCardProps {
   connector: BallerinaPackage;
 }
 
-// Extract first sentence from summary (moved outside to avoid recreation)
-const getFirstSentence = (text: string): string => {
-  // Match first sentence (ending with . ! ? followed by space or end of string)
-  const match = text.match(/^[^.!?]+[.!?](?:\s|$)/);
-  return match ? match[0].trim() : text;
-};
-
 function ConnectorCard({ connector }: ConnectorCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Memoize expensive computations
   const metadata = useMemo(
     () => parseConnectorMetadata(connector.keywords),
@@ -39,10 +34,8 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
     [connector.URL]
   );
 
-  const firstSentence = useMemo(
-    () => getFirstSentence(connector.summary),
-    [connector.summary]
-  );
+  // Check if summary is long enough to need truncation
+  const needsTruncation = connector.summary.length > 120;
 
   return (
     <Card
@@ -83,11 +76,6 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
           <Box
             sx={{
               mb: 2,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
               minHeight: '40px',
               '& p': {
                 margin: 0,
@@ -118,15 +106,50 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
               },
             }}
           >
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => <span>{children}</span>,
-                // Don't render links - the whole card is already clickable
-                a: ({ children }) => <span>{children}</span>,
+            <Box
+              sx={{
+                ...(!isExpanded && needsTruncation && {
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }),
               }}
             >
-              {firstSentence}
-            </ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                  // Don't render links - the whole card is already clickable
+                  a: ({ children }) => <span>{children}</span>,
+                }}
+              >
+                {connector.summary}
+              </ReactMarkdown>
+            </Box>
+            {needsTruncation && (
+              <Button
+                size="small"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsExpanded(!isExpanded);
+                }}
+                sx={{
+                  minWidth: 'auto',
+                  padding: 0,
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  mt: 0.5,
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                {isExpanded ? 'Show less' : 'Show more'}
+              </Button>
+            )}
           </Box>
 
           {/* Metadata Chips */}

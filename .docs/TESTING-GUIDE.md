@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 What Was Implemented
+##  What Was Implemented
 
 **Default Sort**: Changed to **"Newest First" (date-desc)**
 
@@ -22,17 +22,17 @@
 
 | Metric | Expected Time | What You Should See |
 |--------|---------------|---------------------|
-| **Page Visible** | ~4s | Connectors appear in "Newest First" order ✅ |
-| **Download Counts** | ~5s | "1.2M downloads" appears on cards ✅ |
-| **Zero Layout Shift** | ✅ | Cards stay in same order (newest first) ✅ |
-| **Total Interactive** | ~5s | Can browse, filter, search immediately ✅ |
+| **Page Visible** | ~4s | Connectors appear in "Newest First" order  |
+| **Download Counts** | ~5s | "1.2M downloads" appears on cards  |
+| **Zero Layout Shift** |  | Cards stay in same order (newest first)  |
+| **Total Interactive** | ~5s | Can browse, filter, search immediately  |
 
 ### **When User Switches to "Most Popular"**:
 | Metric | Expected Time | What You Should See |
 |--------|---------------|---------------------|
-| **Enrichment** | 1-2s | Brief loading, then cards re-sort ✅ |
+| **Enrichment** | 1-2s | Brief loading, then cards re-sort  |
 | **Layout Shift** | ONE shift | Cards re-arrange to popularity order |
-| **Total** | ~2s | Much faster than 10-12s before! ✅ |
+| **Total** | ~2s | Much faster than 10-12s before!  |
 
 ---
 
@@ -55,7 +55,7 @@ The app should open at `http://localhost:3000`
 2. Go to **Network** tab
 3. Check **Disable cache**
 4. Go to **Performance** tab
-5. Click **Record** (⏺️)
+5. Click **Record** (⏺)
 6. Refresh the page (Cmd+R or Ctrl+R)
 7. Wait until page is fully loaded
 8. Stop recording
@@ -74,11 +74,11 @@ The app should open at `http://localhost:3000`
 | Time | What You Should See |
 |------|---------------------|
 | **0s** | WSO2 Integrator logo + Loading spinner |
-| **~4s** | ✅ Connectors appear in "Newest First" order |
+| **~4s** |  Connectors appear in "Newest First" order |
 | | Cards show "Loading downloads..." |
-| **~5s** | ✅ Download counts appear: "1.2M downloads" |
+| **~5s** |  Download counts appear: "1.2M downloads" |
 | | **No cards should move or shift!** |
-| **5s+** | ✅ Fully interactive - can scroll, filter, search |
+| **5s+** |  Fully interactive - can scroll, filter, search |
 
 **Critical Check**: Cards should **NOT jump around** during load!
 
@@ -172,7 +172,7 @@ Test each sort option:
 | **Largest Contentful Paint** | ? | ? | < 4s |
 | **Time to Interactive** | ? | ? | < 5s |
 | **Speed Index** | ? | ? | < 5s |
-| **Cumulative Layout Shift** | ? | ? | **< 0.1** ✅ |
+| **Cumulative Layout Shift** | ? | ? | **< 0.1**  |
 | **Total Blocking Time** | ? | ? | < 300ms |
 
 ---
@@ -187,7 +187,7 @@ Test each sort option:
 
 ---
 
-## ✅ Success Criteria
+##  Success Criteria
 
 ### **Performance**:
 - [ ] Page visible at ~4 seconds
@@ -213,11 +213,11 @@ Test each sort option:
 
 ---
 
-## 🐛 Known Behaviors
+##  Known Behaviors
 
 ### **Expected Layout Shift**:
-- **Zero shifts** on initial load ✅
-- **ONE shift** when user switches to "Most Popular" ✅
+- **Zero shifts** on initial load 
+- **ONE shift** when user switches to "Most Popular" 
 
 ### **"Loading downloads..." Text**:
 - Appears briefly on initial load (~4-5s)
@@ -231,7 +231,7 @@ Test each sort option:
 
 ---
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### **If Page Loads Slowly (> 6s)**:
 - Check Network tab for slow requests
@@ -256,7 +256,7 @@ Test each sort option:
 
 ---
 
-## 📝 What to Report Back
+##  What to Report Back
 
 After testing, please share:
 
@@ -285,10 +285,10 @@ After testing, please share:
 
 ---
 
-## 🎯 Next Steps Based on Results
+##  Next Steps Based on Results
 
 ### **If Performance is Good** (< 5s load, zero shift):
-✅ We're done! Ready to deploy.
+ We're done! Ready to deploy.
 
 ### **If "Most Popular" Should Be Default**:
 We have two options:
@@ -304,7 +304,7 @@ Investigate:
 
 ---
 
-## 🚀 Quick Start Test Commands
+##  Quick Start Test Commands
 
 ```bash
 # Start dev server

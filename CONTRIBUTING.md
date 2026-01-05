@@ -11,7 +11,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 - [Submitting Changes](#submitting-changes)
 - [Code Review Process](#code-review-process)
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -65,7 +65,7 @@ git checkout feature/your-feature-name
 git rebase main
 ```
 
-## 📝 Code Standards
+##  Code Standards
 
 ### TypeScript
 
@@ -252,7 +252,7 @@ Before committing, ensure:
 - All CI checks must pass
 - No unresolved conversations
 
-## 🔧 Development Tips
+##  Development Tips
 
 ### Hot Reload
 
@@ -291,7 +291,7 @@ Use React DevTools Profiler to identify performance bottlenecks.
 - Review the [README](./README.md) for project overview
 - Contact the WSO2 development team
 
-## 📄 License
+##  License
 
 By contributing, you agree that your contributions will be licensed under the same license as the project.
 

@@ -111,13 +111,13 @@ No environment variables are required. The application uses public Ballerina Cen
 
 ### Current Optimizations
 
-- ✅ Hybrid data loading (first 100 connectors load immediately)
-- ✅ Background pagination for remaining connectors
-- ✅ Memoized filter calculations
-- ✅ Client-side filtering (no network calls during filter/search)
-- ✅ CSS-in-JS with Emotion
-- ✅ Next.js automatic code splitting
-- ✅ Image optimization ready
+-  Hybrid data loading (first 100 connectors load immediately)
+-  Background pagination for remaining connectors
+-  Memoized filter calculations
+-  Client-side filtering (no network calls during filter/search)
+-  CSS-in-JS with Emotion
+-  Next.js automatic code splitting
+-  Image optimization ready
 
 ### Build Time
 

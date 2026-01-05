@@ -20,7 +20,7 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## What You'll See
 
-- 🔍 **Search Bar**: Search across all connector names and descriptions
+-  **Search Bar**: Search across all connector names and descriptions
 - 📊 **Filters**: Left sidebar with Area, Vendor, and Type filters
 - 🎴 **Connector Cards**: Grid of connector cards with icons and metadata
 - 🌓 **Theme Toggle**: Switch between dark and light modes (top right)
@@ -67,7 +67,7 @@ src/
 ## Need Help?
 
 - 📖 **Full Documentation**: See [README.md](README.md)
-- 🚀 **Deployment Guide**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+-  **Deployment Guide**: See [DEPLOYMENT.md](DEPLOYMENT.md)
 - 📊 **Project Summary**: See [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)
 
 ## Common Issues
@@ -90,10 +90,10 @@ npm run build
 
 ## Next Steps
 
-1. ✅ Explore the application locally
-2. ✅ Customize theme in `src/styles/theme.ts`
-3. ✅ Add more features as needed
-4. ✅ Deploy to production
+1.  Explore the application locally
+2.  Customize theme in `src/styles/theme.ts`
+3.  Add more features as needed
+4.  Deploy to production
 
 ---
 
