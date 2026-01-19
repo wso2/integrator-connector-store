@@ -1,0 +1,67 @@
+{
+  "name": "connector-store",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "react-app-rewired start",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.6",
+    "@mui/material": "^7.3.6",
+    "@types/node": "^25.0.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-lazy-load-image-component": "^1.6.5",
+    "@types/react-router-dom": "^5.3.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-lazy-load-image-component": "^1.6.3",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.30.2",
+    "react-scripts": "^5.0.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "prettier": "^3.7.4",
+    "react-app-rewired": "^2.2.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "overrides": {
+    "glob": "^10.3.10",
+    "rimraf": "^5.0.5",
+    "inflight": "npm:@aashutoshrathi/inflight@^1.0.3",
+    "rollup-plugin-terser": "npm:@rollup/plugin-terser@^0.4.4",
+    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
+    "svgo": "^3.2.0"
+  }
+}
