@@ -1,3 +1,21 @@
+/*
+ Copyright (c) 2026 WSO2 LLC. (http://www.wso2.com) All Rights Reserved.
+
+ WSO2 LLC. licenses this file to you under the Apache License,
+ Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+*/
+
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { extractFilterOptions } from './connector-utils';
 
@@ -154,6 +172,12 @@ function buildSolrQuery(
 }
 
 /**
+ * Maximum number of filter combinations before falling back to single query
+ * to avoid making too many parallel API calls
+ */
+const MAX_COMBINATIONS = 50;
+
+/**
  * Generate all combinations of filter values for OR queries
  * Since Solr doesn't support parenthetical grouping, we need to make multiple queries
  */
@@ -166,11 +190,21 @@ function generateFilterCombinations(params: SearchParams): SearchParams[] {
   }
 
   // Generate combinations - treat single values as one-element arrays
-  const combinations: SearchParams[] = [];
-
   const areaList = areas.length > 0 ? areas : [undefined];
   const vendorList = vendors.length > 0 ? vendors : [undefined];
   const typeList = types.length > 0 ? types : [undefined];
+
+  // Check if Cartesian product would exceed threshold
+  const comboCount = areaList.length * vendorList.length * typeList.length;
+  if (comboCount > MAX_COMBINATIONS) {
+    console.warn(
+      `Filter combination count (${comboCount}) exceeds MAX_COMBINATIONS (${MAX_COMBINATIONS}). ` +
+        `Falling back to single query to avoid excessive API calls.`
+    );
+    return [params];
+  }
+
+  const combinations: SearchParams[] = [];
 
   for (const area of areaList) {
     for (const vendor of vendorList) {
@@ -244,8 +278,15 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
   }
 
   // Multiple combinations - execute in parallel and merge results
+  // Use offset=0 for each query to get full slices, then paginate merged results once
   const results = await Promise.all(
-    combinations.map((combo) => executeSingleSearch(combo))
+    combinations.map((combo) =>
+      executeSingleSearch({
+        ...combo,
+        offset: 0,
+        limit: params.offset + params.limit, // Fetch enough to cover requested page
+      })
+    )
   );
 
   // Merge packages and deduplicate by name-version
@@ -261,10 +302,10 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Calculate total count (sum of all unique packages across queries)
-  const totalCount = results.reduce((sum, result) => sum + result.count, 0);
+  // Total count is the deduplicated set size
+  const totalCount = mergedPackages.length;
 
-  // Apply pagination to merged results
+  // Apply pagination once to the merged results
   const startIndex = params.offset;
   const endIndex = startIndex + params.limit;
   const paginatedPackages = mergedPackages.slice(startIndex, endIndex);

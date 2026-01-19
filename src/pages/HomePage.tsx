@@ -1,4 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+/*
+ Copyright (c) 2026 WSO2 LLC. (http://www.wso2.com) All Rights Reserved.
+
+ WSO2 LLC. licenses this file to you under the Apache License,
+ Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+*/
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
@@ -43,6 +61,10 @@ export default function HomePage() {
     (searchParams.get('sort') as SortOption) || 'pullCount-desc'
   );
 
+  // Refs to prevent effects from running on initial mount
+  const isInitialMountRef = useRef(true);
+  const initialFetchDoneRef = useRef(false);
+
   // Fetch page data from REST API
   const fetchPageData = useCallback(async () => {
     try {
@@ -82,6 +104,9 @@ export default function HomePage() {
         // Phase 1: Load first page immediately (fast)
         await fetchPageData();
 
+        // Mark initial fetch as done to prevent duplicate fetch in the other effect
+        initialFetchDoneRef.current = true;
+
         // Phase 2: Get filter options (cached or progressive)
         const filters = await fetchFiltersProgressively('ballerinax', (updatedFilters) => {
           // Background update when complete filters are fetched
@@ -102,11 +127,13 @@ export default function HomePage() {
     initialize();
   }, []);
 
-  // Trigger server-side fetch when filters/sort/page change
+  // Trigger server-side fetch when filters/sort/page change (skip on initial load)
   useEffect(() => {
-    if (!initialLoading) {
-      fetchPageData();
+    // Skip if initial fetch hasn't been done yet or if we're still in initial loading
+    if (!initialFetchDoneRef.current || initialLoading) {
+      return;
     }
+    fetchPageData();
   }, [initialLoading, fetchPageData]);
 
   // Sync state with URL params
@@ -125,8 +152,12 @@ export default function HomePage() {
     setSearchParams(params, { replace: true });
   }, [currentPage, pageSize, searchQuery, selectedAreas, selectedVendors, selectedTypes, sortBy, setSearchParams]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (skip on initial mount to preserve URL page)
   useEffect(() => {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
     setCurrentPage(1);
   }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 
