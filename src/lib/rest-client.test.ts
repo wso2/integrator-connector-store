@@ -138,7 +138,8 @@ describe('rest-client', () => {
       await searchPackages(params);
 
       const calledUrl = mockFetch.mock.calls[0][0];
-      expect(calledUrl).toContain('keyword%3AArea%2FFinance');
+      // Values are now escaped and wrapped in quotes for Solr
+      expect(calledUrl).toContain('keyword%3A%22Area%2FFinance%22');
     });
 
     it('should handle multiple filter combinations', async () => {
