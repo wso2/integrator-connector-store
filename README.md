@@ -169,7 +169,7 @@ Runs Prettier formatting.
 
 ## Project Structure
 
-```
+```text
 wso2-integrator-connector-store/
 ├── public/
 │   ├── index.html                   # HTML entry point
@@ -227,7 +227,7 @@ No environment variables required. The application uses public Ballerina Central
 
 **File:** `.npmrc`
 
-```
+```text
 legacy-peer-deps=true
 ```
 
@@ -282,7 +282,7 @@ Font: **Plus Jakarta Sans** (loaded from WSO2 CDN)
 
 **Query Parameters:**
 
-```
+```text
 q:      Solr query string (e.g., "org:ballerinax AND keyword:Area/Finance")
 offset: Pagination offset (0-based)
 limit:  Items per page (10, 30, 50, 100)
@@ -336,7 +336,7 @@ curl 'https://api.central.ballerina.io/2.0/registry/search-packages?q=org:baller
 
 **Example Queries:**
 
-```
+```text
 # Single filter
 org:ballerinax AND keyword:Area/Finance
 
@@ -386,7 +386,7 @@ See `.docs/LATEST_UPDATES.md` for migration details.
 
 ## Data Flow
 
-```
+```text
 User Visits Page
       ↓
 ┌─────────────────────────────────────┐
@@ -564,7 +564,7 @@ The application uses URL-based navigation for bookmarkable, shareable links.
 
 **Base URL:**
 
-```
+```text
 https://your-domain.com/
 ```
 
@@ -582,7 +582,7 @@ https://your-domain.com/
 
 **Example URLs:**
 
-```
+```text
 # Page 2, default settings
 /?page=2
 
@@ -720,7 +720,7 @@ See `.docs/VERCEL-BUILD-WARNINGS.md` for detailed explanation.
 
 **GraphQL API Issues:**
 
-- Check: https://api.central.ballerina.io/2.0/graphql
+- Check: [https://api.central.ballerina.io/2.0/graphql](https://api.central.ballerina.io/2.0/graphql)
 - Verify query syntax
 - Check network tab for errors
 - Look for retry attempts in console
@@ -763,7 +763,7 @@ npx source-map-explorer build/static/js/*.js
 
 **Layout shifts during load:**
 
-- Verify default sort is "Newest First"
+- Verify default sort is "Most Popular"
 - Check that API returns items in date-desc order
 - Review console for unexpected state updates
 

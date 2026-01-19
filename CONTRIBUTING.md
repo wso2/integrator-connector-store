@@ -115,7 +115,7 @@ npm run format:check
 
 ```
 src/
-├── app/          # Next.js app router pages
+├── pages/        # CRA/React pages
 ├── components/   # Reusable React components
 ├── lib/          # Utility functions and API clients
 ├── styles/       # Theme and global styles

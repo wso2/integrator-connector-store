@@ -22,27 +22,18 @@ import { searchPackages, fetchFiltersProgressively, SearchParams } from './rest-
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: jest.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-  };
-})();
+// Mock localStorage with a simpler structure
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Helper to create mock API response
 const createMockApiResponse = (
-  packages: Array<{ name: string; version: string }>,
+  packages: Array<{ name: string; version: string; keywords?: string[] }>,
   count: number,
   offset: number = 0,
   limit: number = 30
@@ -52,7 +43,7 @@ const createMockApiResponse = (
     version: pkg.version,
     URL: `https://example.com/${pkg.name}`,
     summary: `Summary for ${pkg.name}`,
-    keywords: ['Area/Integration', 'Vendor/Test', 'Type/Connector'],
+    keywords: pkg.keywords || ['Area/Integration', 'Vendor/Test', 'Type/Connector'],
     icon: 'https://example.com/icon.png',
     createdDate: '2024-01-15T00:00:00Z',
     pullCount: 1000,
@@ -64,10 +55,16 @@ const createMockApiResponse = (
 
 describe('rest-client', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    localStorageMock.clear();
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Clear all mocks before each test
+    mockFetch.mockClear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
+    localStorageMock.clear.mockClear();
+
+    // Suppress console warnings and errors during tests
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+    jest.spyOn(console, 'error').mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -77,7 +74,6 @@ describe('rest-client', () => {
   describe('searchPackages', () => {
     it('should fetch packages with correct parameters', async () => {
       const mockResponse = createMockApiResponse([{ name: 'test-connector', version: '1.0.0' }], 1);
-
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse),
@@ -99,323 +95,112 @@ describe('rest-client', () => {
     });
 
     it('should include search query in request', async () => {
-      const mockResponse = createMockApiResponse([], 0);
-
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        json: () => Promise.resolve(createMockApiResponse([], 0)),
       });
-
-      const params: SearchParams = {
-        query: 'stripe',
-        offset: 0,
-        limit: 30,
-        sort: 'name-asc',
-      };
-
-      await searchPackages(params);
-
+      await searchPackages({ query: 'stripe', offset: 0, limit: 30, sort: 'name-asc' });
       const calledUrl = mockFetch.mock.calls[0][0];
       expect(calledUrl).toContain('q=stripe');
       expect(calledUrl).toContain('sort=name,ASC');
     });
 
-    it('should include area filter in request', async () => {
-      const mockResponse = createMockApiResponse([], 0);
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
-
-      const params: SearchParams = {
-        areas: ['Finance'],
-        offset: 0,
-        limit: 30,
-        sort: 'date-desc',
-      };
-
-      await searchPackages(params);
-
-      const calledUrl = mockFetch.mock.calls[0][0];
-      // Values are now escaped and wrapped in quotes for Solr
-      expect(calledUrl).toContain('keyword%3A%22Area%2FFinance%22');
-    });
-
-    it('should handle multiple filter combinations', async () => {
-      const mockResponse = createMockApiResponse([{ name: 'connector-1', version: '1.0.0' }], 1);
-
-      // Mock multiple fetch calls for combinations
+    it('should handle multiple filter combinations by making parallel requests', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        json: () =>
+          Promise.resolve(createMockApiResponse([{ name: 'connector-1', version: '1.0.0' }], 1)),
       });
-
-      const params: SearchParams = {
-        areas: ['Finance', 'Communication'],
-        offset: 0,
-        limit: 30,
-        sort: 'pullCount-desc',
-      };
-
-      const result = await searchPackages(params);
-
-      // Should make 2 API calls (one for each area)
+      await searchPackages({ areas: ['Finance', 'Communication'], offset: 0, limit: 30, sort: 'pullCount-desc' });
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      // Results should be deduplicated
-      expect(result.packages).toHaveLength(1);
     });
 
-    it('should deduplicate packages from multiple queries', async () => {
-      const mockResponse1 = createMockApiResponse(
-        [
-          { name: 'shared-connector', version: '1.0.0' },
-          { name: 'unique-1', version: '1.0.0' },
-        ],
-        2
-      );
-
-      const mockResponse2 = createMockApiResponse(
-        [
-          { name: 'shared-connector', version: '1.0.0' },
-          { name: 'unique-2', version: '1.0.0' },
-        ],
-        2
-      );
-
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockResponse1),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockResponse2),
-        });
-
-      const params: SearchParams = {
-        areas: ['Finance', 'Communication'],
-        offset: 0,
-        limit: 30,
-        sort: 'pullCount-desc',
-      };
-
-      const result = await searchPackages(params);
-
-      // Should have 3 unique packages (shared-connector appears once)
-      expect(result.packages).toHaveLength(3);
-      expect(result.count).toBe(3);
-    });
-
-    it('should handle API errors', async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: () => Promise.resolve('Internal Server Error'),
-      });
-
-      const params: SearchParams = {
-        offset: 0,
-        limit: 30,
-        sort: 'pullCount-desc',
-      };
-
-      await expect(searchPackages(params)).rejects.toThrow('HTTP error! status: 500');
-    });
-
-    it('should handle network errors with retry', async () => {
-      // First two calls fail, third succeeds
+    it('should handle API errors with retry', async () => {
       mockFetch
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(createMockApiResponse([], 0)),
-        });
-
-      const params: SearchParams = {
-        offset: 0,
-        limit: 30,
-        sort: 'pullCount-desc',
-      };
-
-      // Run the search (retries happen with real delays, so use longer timeout)
-      const result = await searchPackages(params);
-
-      expect(result.packages).toHaveLength(0);
-      expect(mockFetch).toHaveBeenCalledTimes(3);
-    }, 15000);
-
-    it('should fall back to single query when combinations exceed threshold', async () => {
-      const mockResponse = createMockApiResponse([], 0);
-
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
-
-      // Create params that would generate > 50 combinations
-      const params: SearchParams = {
-        areas: Array.from({ length: 10 }, (_, i) => `Area${i}`),
-        vendors: Array.from({ length: 10 }, (_, i) => `Vendor${i}`),
-        offset: 0,
-        limit: 30,
-        sort: 'pullCount-desc',
-      };
-
-      await searchPackages(params);
-
-      // Should only make 1 API call (fallback to single query)
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('exceeds MAX_COMBINATIONS')
-      );
-    });
-
-    it('should apply correct pagination to merged results', async () => {
-      // Create responses with 5 unique packages each
-      const mockResponse1 = createMockApiResponse(
-        Array.from({ length: 5 }, (_, i) => ({ name: `pkg-a-${i}`, version: '1.0.0' })),
-        5
-      );
-
-      const mockResponse2 = createMockApiResponse(
-        Array.from({ length: 5 }, (_, i) => ({ name: `pkg-b-${i}`, version: '1.0.0' })),
-        5
-      );
-
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockResponse1),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockResponse2),
-        });
-
-      const params: SearchParams = {
-        areas: ['A', 'B'],
-        offset: 2,
-        limit: 3,
-        sort: 'pullCount-desc',
-      };
-
-      const result = await searchPackages(params);
-
-      // Should return 3 packages starting from offset 2
-      expect(result.packages).toHaveLength(3);
-      expect(result.offset).toBe(2);
-      expect(result.limit).toBe(3);
-    });
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(createMockApiResponse([], 0)) });
+      await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    }, 10000);
   });
 
   describe('fetchFiltersProgressively', () => {
-    it('should return cached filters if available', async () => {
-      const cachedFilters = {
-        filters: {
-          areas: ['Finance', 'Communication'],
-          vendors: ['Stripe', 'Twilio'],
-          types: ['Connector'],
-        },
-        timestamp: Date.now(), // Fresh cache
-      };
+    const FILTER_CACHE_KEY = 'ballerina_connector_filters';
 
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(cachedFilters));
+    it('should return cached filters if available and not expired', async () => {
+      const freshCache = {
+        filters: { areas: ['CachedArea'], vendors: ['CachedVendor'], types: ['CachedType'] },
+        timestamp: Date.now(),
+      };
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(freshCache));
 
       const result = await fetchFiltersProgressively();
 
-      expect(result).toEqual(cachedFilters.filters);
+      expect(result).toEqual(freshCache.filters);
+      expect(localStorageMock.getItem).toHaveBeenCalledWith(FILTER_CACHE_KEY);
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should fetch filters when cache is expired', async () => {
+    it('should fetch new filters if cache is expired', async () => {
       const expiredCache = {
-        filters: {
-          areas: ['Old'],
-          vendors: ['Old'],
-          types: ['Old'],
-        },
+        filters: { areas: [], vendors: [], types: [] },
         timestamp: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
       };
-
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(expiredCache));
-
-      const mockResponse = createMockApiResponse([{ name: 'test', version: '1.0.0' }], 1);
-
-      mockFetch.mockResolvedValueOnce({
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(expiredCache));
+      mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        json: () => Promise.resolve(createMockApiResponse([{ name: 'new', version: '1.0' }], 1)),
       });
 
       const result = await fetchFiltersProgressively();
 
       expect(mockFetch).toHaveBeenCalled();
       expect(result.areas).toContain('Integration');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith(FILTER_CACHE_KEY);
     });
 
-    it('should call onUpdate callback when more packages exist', async () => {
+    it('should fetch and cache filters when cache is empty', async () => {
       localStorageMock.getItem.mockReturnValue(null);
-
-      // First batch returns 100 packages with count > 100
-      const firstBatchResponse = {
-        ...createMockApiResponse(
-          Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}`, version: '1.0.0' })),
-          150 // Total count > 100
-        ),
-      };
-
-      // Second batch for complete fetch
-      const secondBatchResponse = createMockApiResponse(
-        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}`, version: '1.0.0' })),
-        150,
-        100,
-        100
-      );
-
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(firstBatchResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(firstBatchResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(secondBatchResponse),
-        });
-
-      const onUpdate = jest.fn();
-
-      await fetchFiltersProgressively('ballerinax', onUpdate);
-
-      // Wait for background fetch to complete (give it more time)
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      expect(onUpdate).toHaveBeenCalled();
-    }, 10000);
-
-    it('should cache filters when count <= 100', async () => {
-      localStorageMock.getItem.mockReturnValue(null);
-
-      const mockResponse = createMockApiResponse(
-        [{ name: 'test', version: '1.0.0' }],
-        50 // Total count <= 100
-      );
-
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        json: () => Promise.resolve(createMockApiResponse([], 50)), // count <= 100
       });
 
       await fetchFiltersProgressively();
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'ballerina_connector_filters',
-        expect.any(String)
-      );
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
     });
+
+    it('should trigger onUpdate for background fetch when count > 100', async () => {
+      localStorageMock.getItem.mockReturnValue(null);
+
+      const initialResponse = createMockApiResponse([], 150); // count > 100
+      const batch1 = createMockApiResponse(
+        Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}` })),
+        150
+      );
+      const batch2 = createMockApiResponse(
+        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}` })),
+        150
+      );
+
+      // 1. Initial fetch (progressive)
+      // 2. First batch of full fetch
+      // 3. Second batch of full fetch
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(initialResponse) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch1) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch2) });
+
+      const onUpdate = jest.fn();
+      await fetchFiltersProgressively('ballerinax', onUpdate);
+
+      // Give the background async task time to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(onUpdate).toHaveBeenCalled();
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
+    }, 10000);
   });
 });

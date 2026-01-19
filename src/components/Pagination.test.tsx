@@ -137,7 +137,7 @@ describe('Pagination', () => {
   });
 
   it('should render custom page size options', () => {
-    render(<Pagination {...defaultProps} pageSizeOptions={[5, 10, 15]} />);
+    render(<Pagination {...defaultProps} pageSize={10} pageSizeOptions={[5, 10, 15]} />);
 
     const select = screen.getByRole('combobox');
     fireEvent.mouseDown(select);
