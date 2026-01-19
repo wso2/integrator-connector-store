@@ -24,114 +24,114 @@ import { BallerinaPackage, ConnectorMetadata, FilterOptions } from '@/types/conn
  */
 const CAPITALIZATION_DICTIONARY: Record<string, string> = {
   // AI/ML Services
-  'openai': 'OpenAI',
-  'ai': 'AI',
-  'ml': 'ML',
+  openai: 'OpenAI',
+  ai: 'AI',
+  ml: 'ML',
 
   // Cloud Providers & Services
-  'aws': 'AWS',
-  'gcp': 'GCP',
-  'azure': 'Azure',
-  's3': 'S3',
-  'sqs': 'SQS',
-  'sns': 'SNS',
-  'dynamodb': 'DynamoDB',
+  aws: 'AWS',
+  gcp: 'GCP',
+  azure: 'Azure',
+  s3: 'S3',
+  sqs: 'SQS',
+  sns: 'SNS',
+  dynamodb: 'DynamoDB',
 
   // Protocols & Standards
-  'api': 'API',
-  'http': 'HTTP',
-  'https': 'HTTPS',
-  'ftp': 'FTP',
-  'sftp': 'SFTP',
-  'ssh': 'SSH',
-  'sql': 'SQL',
-  'nosql': 'NoSQL',
-  'graphql': 'GraphQL',
-  'grpc': 'gRPC',
-  'rest': 'REST',
-  'soap': 'SOAP',
-  'smtp': 'SMTP',
-  'imap': 'IMAP',
-  'pop3': 'POP3',
-  'tcp': 'TCP',
-  'udp': 'UDP',
-  'ip': 'IP',
-  'dns': 'DNS',
-  'ldap': 'LDAP',
+  api: 'API',
+  http: 'HTTP',
+  https: 'HTTPS',
+  ftp: 'FTP',
+  sftp: 'SFTP',
+  ssh: 'SSH',
+  sql: 'SQL',
+  nosql: 'NoSQL',
+  graphql: 'GraphQL',
+  grpc: 'gRPC',
+  rest: 'REST',
+  soap: 'SOAP',
+  smtp: 'SMTP',
+  imap: 'IMAP',
+  pop3: 'POP3',
+  tcp: 'TCP',
+  udp: 'UDP',
+  ip: 'IP',
+  dns: 'DNS',
+  ldap: 'LDAP',
 
   // Data Formats
-  'xml': 'XML',
-  'json': 'JSON',
-  'html': 'HTML',
-  'css': 'CSS',
-  'csv': 'CSV',
-  'yaml': 'YAML',
-  'toml': 'TOML',
+  xml: 'XML',
+  json: 'JSON',
+  html: 'HTML',
+  css: 'CSS',
+  csv: 'CSV',
+  yaml: 'YAML',
+  toml: 'TOML',
 
   // Auth & Security
-  'jwt': 'JWT',
-  'oauth': 'OAuth',
-  'saml': 'SAML',
-  'openid': 'OpenID',
+  jwt: 'JWT',
+  oauth: 'OAuth',
+  saml: 'SAML',
+  openid: 'OpenID',
 
   // Messaging
-  'rss': 'RSS',
-  'sms': 'SMS',
-  'mms': 'MMS',
-  'mqtt': 'MQTT',
-  'amqp': 'AMQP',
+  rss: 'RSS',
+  sms: 'SMS',
+  mms: 'MMS',
+  mqtt: 'MQTT',
+  amqp: 'AMQP',
 
   // Databases
-  'mysql': 'MySQL',
-  'postgresql': 'PostgreSQL',
-  'mongodb': 'MongoDB',
-  'redis': 'Redis',
-  'mssql': 'MSSQL',
-  'mariadb': 'MariaDB',
+  mysql: 'MySQL',
+  postgresql: 'PostgreSQL',
+  mongodb: 'MongoDB',
+  redis: 'Redis',
+  mssql: 'MSSQL',
+  mariadb: 'MariaDB',
 
   // Platforms & Companies (common ones)
-  'github': 'GitHub',
-  'gitlab': 'GitLab',
-  'bitbucket': 'Bitbucket',
-  'salesforce': 'Salesforce',
-  'workday': 'Workday',
-  'servicenow': 'ServiceNow',
-  'shopify': 'Shopify',
-  'stripe': 'Stripe',
-  'paypal': 'PayPal',
-  'twilio': 'Twilio',
-  'sendgrid': 'SendGrid',
-  'hubspot': 'HubSpot',
-  'zendesk': 'Zendesk',
-  'jira': 'Jira',
-  'confluence': 'Confluence',
-  'linkedin': 'LinkedIn',
-  'facebook': 'Facebook',
-  'instagram': 'Instagram',
-  'youtube': 'YouTube',
-  'twitter': 'Twitter',
-  'slack': 'Slack',
-  'discord': 'Discord',
-  'dropbox': 'Dropbox',
-  'onedrive': 'OneDrive',
-  'googledrive': 'GoogleDrive',
-  'googleapis': 'GoogleAPIs',
+  github: 'GitHub',
+  gitlab: 'GitLab',
+  bitbucket: 'Bitbucket',
+  salesforce: 'Salesforce',
+  workday: 'Workday',
+  servicenow: 'ServiceNow',
+  shopify: 'Shopify',
+  stripe: 'Stripe',
+  paypal: 'PayPal',
+  twilio: 'Twilio',
+  sendgrid: 'SendGrid',
+  hubspot: 'HubSpot',
+  zendesk: 'Zendesk',
+  jira: 'Jira',
+  confluence: 'Confluence',
+  linkedin: 'LinkedIn',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  twitter: 'Twitter',
+  slack: 'Slack',
+  discord: 'Discord',
+  dropbox: 'Dropbox',
+  onedrive: 'OneDrive',
+  googledrive: 'GoogleDrive',
+  googleapis: 'GoogleAPIs',
 
   // Technologies
-  'iot': 'IoT',
-  'sdk': 'SDK',
-  'cli': 'CLI',
-  'ui': 'UI',
-  'ux': 'UX',
-  'url': 'URL',
-  'uri': 'URI',
-  'uuid': 'UUID',
-  'pdf': 'PDF',
-  'gif': 'GIF',
-  'png': 'PNG',
-  'jpg': 'JPG',
-  'jpeg': 'JPEG',
-  'svg': 'SVG',
+  iot: 'IoT',
+  sdk: 'SDK',
+  cli: 'CLI',
+  ui: 'UI',
+  ux: 'UX',
+  url: 'URL',
+  uri: 'URI',
+  uuid: 'UUID',
+  pdf: 'PDF',
+  gif: 'GIF',
+  png: 'PNG',
+  jpg: 'JPG',
+  jpeg: 'JPEG',
+  svg: 'SVG',
 };
 
 /**
@@ -165,7 +165,11 @@ export function getDisplayName(packageName: string, vendor?: string): string {
     if (index === 0 && vendor && vendor.toLowerCase() !== 'other') {
       const vendorLower = vendor.toLowerCase();
       // Check if the part matches or is contained in the vendor name
-      if (lowerPart === vendorLower || vendorLower.includes(lowerPart) || lowerPart.includes(vendorLower)) {
+      if (
+        lowerPart === vendorLower ||
+        vendorLower.includes(lowerPart) ||
+        lowerPart.includes(vendorLower)
+      ) {
         return vendor; // Use the vendor's proper capitalization
       }
     }
@@ -211,7 +215,6 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
     types: Array.from(types).sort(),
   };
 }
-
 
 /**
  * Filters connectors based on selected criteria
@@ -348,14 +351,10 @@ export function sortConnectors(
       });
 
     case 'pullCount-desc':
-      return sorted.sort(
-        (a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0)
-      );
+      return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
 
     case 'pullCount-asc':
-      return sorted.sort(
-        (a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0)
-      );
+      return sorted.sort((a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0));
 
     case 'date-desc':
       return sorted.sort(

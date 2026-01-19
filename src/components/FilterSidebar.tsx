@@ -63,7 +63,10 @@ export default function FilterSidebar({
 
   // Check if content is scrollable
   useEffect(() => {
-    const checkScrollable = (ref: React.RefObject<HTMLDivElement | null>, setter: (value: boolean) => void) => {
+    const checkScrollable = (
+      ref: React.RefObject<HTMLDivElement | null>,
+      setter: (value: boolean) => void
+    ) => {
       if (ref.current) {
         const { scrollHeight, clientHeight } = ref.current;
         setter(scrollHeight > clientHeight);
@@ -88,7 +91,11 @@ export default function FilterSidebar({
             size="small"
             color="primary"
             onDelete={onClearAll}
-            deleteIcon={<Box component="span" sx={{ fontSize: '0.75rem', ml: 0.5 }}>✕</Box>}
+            deleteIcon={
+              <Box component="span" sx={{ fontSize: '0.75rem', ml: 0.5 }}>
+                ✕
+              </Box>
+            }
             sx={{ fontWeight: 600 }}
           />
         )}

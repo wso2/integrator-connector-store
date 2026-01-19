@@ -17,7 +17,16 @@
 */
 
 import { memo, useMemo, useState } from 'react';
-import { Card, CardContent, CardActionArea, Typography, Chip, Box, Avatar, Button } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  CardActionArea,
+  Typography,
+  Chip,
+  Box,
+  Avatar,
+  Button,
+} from '@mui/material';
 import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
@@ -37,10 +46,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Memoize expensive computations
-  const metadata = useMemo(
-    () => parseConnectorMetadata(connector.keywords),
-    [connector.keywords]
-  );
+  const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
 
   const displayName = useMemo(
     () => getDisplayName(connector.name, metadata.vendor),
@@ -103,7 +109,9 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
               },
               '& code': {
                 backgroundColor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(0, 0, 0, 0.05)',
                 padding: '2px 4px',
                 borderRadius: '4px',
                 fontSize: '0.8125rem',
@@ -126,13 +134,14 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
           >
             <Box
               sx={{
-                ...(!isExpanded && needsTruncation && {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                }),
+                ...(!isExpanded &&
+                  needsTruncation && {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }),
               }}
             >
               <ReactMarkdown
@@ -182,7 +191,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
                 height: '24px',
                 '& .MuiChip-label': {
                   textTransform: 'none',
-                }
+                },
               }}
             />
 
@@ -195,7 +204,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
                   height: '24px',
                   '& .MuiChip-label': {
                     textTransform: 'none',
-                  }
+                  },
                 }}
               />
             )}
@@ -210,7 +219,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
                   height: '24px',
                   '& .MuiChip-label': {
                     textTransform: 'none',
-                  }
+                  },
                 }}
               />
             )}

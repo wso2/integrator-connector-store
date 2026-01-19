@@ -76,10 +76,7 @@ describe('rest-client', () => {
 
   describe('searchPackages', () => {
     it('should fetch packages with correct parameters', async () => {
-      const mockResponse = createMockApiResponse(
-        [{ name: 'test-connector', version: '1.0.0' }],
-        1
-      );
+      const mockResponse = createMockApiResponse([{ name: 'test-connector', version: '1.0.0' }], 1);
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -145,10 +142,7 @@ describe('rest-client', () => {
     });
 
     it('should handle multiple filter combinations', async () => {
-      const mockResponse = createMockApiResponse(
-        [{ name: 'connector-1', version: '1.0.0' }],
-        1
-      );
+      const mockResponse = createMockApiResponse([{ name: 'connector-1', version: '1.0.0' }], 1);
 
       // Mock multiple fetch calls for combinations
       mockFetch.mockResolvedValue({
@@ -346,10 +340,7 @@ describe('rest-client', () => {
 
       localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(expiredCache));
 
-      const mockResponse = createMockApiResponse(
-        [{ name: 'test', version: '1.0.0' }],
-        1
-      );
+      const mockResponse = createMockApiResponse([{ name: 'test', version: '1.0.0' }], 1);
 
       mockFetch.mockResolvedValueOnce({
         ok: true,

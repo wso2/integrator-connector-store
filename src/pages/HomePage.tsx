@@ -86,7 +86,11 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({ areas: [], vendors: [], types: [] });
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    areas: [],
+    vendors: [],
+    types: [],
+  });
   const [loading, setLoading] = useState(false); // For filter/pagination changes
   const [initialLoading, setInitialLoading] = useState(true); // For first page load
   const [error, setError] = useState<string | null>(null);
@@ -103,15 +107,9 @@ export default function HomePage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(
     searchParams.get('types')?.split(',').filter(Boolean) || []
   );
-  const [currentPage, setCurrentPage] = useState(
-    parsePageParam(searchParams.get('page'))
-  );
-  const [pageSize, setPageSize] = useState(
-    parsePageSizeParam(searchParams.get('size'))
-  );
-  const [sortBy, setSortBy] = useState<SortOption>(
-    parseSortParam(searchParams.get('sort'))
-  );
+  const [currentPage, setCurrentPage] = useState(parsePageParam(searchParams.get('page')));
+  const [pageSize, setPageSize] = useState(parsePageSizeParam(searchParams.get('size')));
+  const [sortBy, setSortBy] = useState<SortOption>(parseSortParam(searchParams.get('sort')));
 
   // Refs to prevent effects from running on initial mount
   const isInitialMountRef = useRef(true);
@@ -169,8 +167,7 @@ export default function HomePage() {
         setInitialLoading(false);
       } catch (error) {
         console.error('Failed to initialize:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to load filters.';
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load filters.';
         setError(errorMessage);
         setInitialLoading(false);
       }
@@ -203,7 +200,16 @@ export default function HomePage() {
     if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
     setSearchParams(params, { replace: true });
-  }, [currentPage, pageSize, searchQuery, selectedAreas, selectedVendors, selectedTypes, sortBy, setSearchParams]);
+  }, [
+    currentPage,
+    pageSize,
+    searchQuery,
+    selectedAreas,
+    selectedVendors,
+    selectedTypes,
+    sortBy,
+    setSearchParams,
+  ]);
 
   // Reset to page 1 when filters change (skip on initial mount to preserve URL page)
   useEffect(() => {

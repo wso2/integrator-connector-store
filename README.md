@@ -319,6 +319,7 @@ curl 'https://api.central.ballerina.io/2.0/registry/search-packages?q=org:baller
 ```
 
 **Key Features:**
+
 - **Server-side filtering**: Solr query language for powerful filtering
 - **Server-side sorting**: Sort by name, pullCount, or createdDate
 - **Server-side pagination**: Offset/limit based pagination
@@ -328,6 +329,7 @@ curl 'https://api.central.ballerina.io/2.0/registry/search-packages?q=org:baller
 ### Query Building Strategy
 
 **Filter Logic:**
+
 - **AND between filter types**: Area AND Vendor AND Type
 - **OR within filter type**: Area/Finance OR Area/Health
 - **Implementation**: Multiple parallel queries merged for OR logic
@@ -353,6 +355,7 @@ graphql AND org:ballerinax AND keyword:Area/Database
 ### Filter Caching
 
 **24-Hour localStorage Cache:**
+
 ```typescript
 interface CachedFilters {
   filters: FilterOptions;
@@ -364,6 +367,7 @@ const FILTER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 ```
 
 **Benefits:**
+
 - Instant filter display on subsequent visits
 - Reduces API load for filter discovery
 - Automatic cache invalidation after 24 hours
@@ -371,6 +375,7 @@ const FILTER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 ### Retry Logic
 
 All API requests include automatic retry with exponential backoff:
+
 - **Search requests**: 3 retry attempts (1s, 2s, 4s delays)
 - **Filter fetch**: 3 retry attempts (1s, 2s, 4s delays)
 - **Graceful degradation**: Works with partial data if some requests fail
@@ -483,6 +488,7 @@ See `.docs/LATEST_UPDATES.md` for migration details.
 3. Deploy
 
 **Files required:**
+
 - `.npmrc` - Resolves TypeScript peer dependency conflicts
 - `vercel.json` - Enables client-side routing
 
@@ -557,21 +563,22 @@ The app is a static SPA and can be hosted on any static hosting service:
 The application uses URL-based navigation for bookmarkable, shareable links.
 
 **Base URL:**
+
 ```
 https://your-domain.com/
 ```
 
 **Query Parameters:**
 
-| Parameter | Values | Default | Description |
-|-----------|--------|---------|-------------|
-| `page` | 1, 2, 3... | 1 | Current page number |
-| `size` | 10, 30, 50, 100 | 30 | Items per page |
-| `search` | string | - | Search query |
-| `areas` | comma-separated | - | Selected area filters |
-| `vendors` | comma-separated | - | Selected vendor filters |
-| `types` | comma-separated | - | Selected type filters |
-| `sort` | pullCount-desc, pullCount-asc, date-desc, date-asc, name-asc, name-desc | pullCount-desc | Sort option |
+| Parameter | Values                                                                  | Default        | Description             |
+| --------- | ----------------------------------------------------------------------- | -------------- | ----------------------- |
+| `page`    | 1, 2, 3...                                                              | 1              | Current page number     |
+| `size`    | 10, 30, 50, 100                                                         | 30             | Items per page          |
+| `search`  | string                                                                  | -              | Search query            |
+| `areas`   | comma-separated                                                         | -              | Selected area filters   |
+| `vendors` | comma-separated                                                         | -              | Selected vendor filters |
+| `types`   | comma-separated                                                         | -              | Selected type filters   |
+| `sort`    | pullCount-desc, pullCount-asc, date-desc, date-asc, name-asc, name-desc | pullCount-desc | Sort option             |
 
 **Example URLs:**
 
@@ -749,16 +756,19 @@ npx source-map-explorer build/static/js/*.js
 ### Common Issues
 
 **"Failed to load connectors" error:**
+
 - Network issue or API temporarily down
 - Application will automatically retry 3 times
 - Check console for detailed error messages
 
 **Layout shifts during load:**
+
 - Verify default sort is "Newest First"
 - Check that API returns items in date-desc order
 - Review console for unexpected state updates
 
 **"Most Popular" sort slow:**
+
 - First time: Needs to enrich 100 items (~2s)
 - Subsequent times: Should be instant (cached)
 - Check network tab for enrichment requests
@@ -785,6 +795,7 @@ The application uses a 4-phase loading strategy:
 4. **Background Enrichment** (5s+) - Download counts for remaining items
 
 This approach provides:
+
 - Fast time-to-interactive (~2s)
 - Zero layout shift (CLS = 0)
 - Complete data within ~5s
@@ -797,6 +808,7 @@ This approach provides:
 ### Version 3.0.0 (Latest - 2026-01-05)
 
 **Major Architecture Migration:**
+
 - **GraphQL to REST**: Migrated from GraphQL to REST API for all operations
 - **Server-Side Operations**: Filtering, sorting, and pagination now server-side
 - **Next.js to React**: Migrated from Next.js to React 19 with Create React App
@@ -809,12 +821,14 @@ This approach provides:
 - **Clear All Filters**: Badge showing active filter count with one-click clear
 
 **Performance Impact:**
+
 - Same ~2s initial load time
 - 96% less memory (2MB vs 50MB)
 - Scalable to unlimited connectors
 - Filter changes: ~500ms (was instant, but now server-side)
 
 **Technical Details:**
+
 - New REST client with Solr query building
 - Parallel API calls for OR logic within filter types
 - AND logic between different filter types
@@ -823,6 +837,7 @@ This approach provides:
 ### Version 2.0.0 (2025-12-23)
 
 **Major Performance Overhaul:**
+
 - Reduced stable load time by 60% (14s → 6s)
 - Eliminated layout shifts (CLS: 3 → 0)
 - Added retry logic with exponential backoff
@@ -832,6 +847,7 @@ This approach provides:
 - Migrated to React 19 and Material-UI 7
 
 **Bug Fixes:**
+
 - Fixed re-render loops on sort change
 - Fixed TypeScript peer dependency conflicts
 - Resolved Vercel deployment issues
