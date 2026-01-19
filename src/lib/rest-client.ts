@@ -339,7 +339,6 @@ function getCachedFilters(): FilterOptions | null {
 
     // Return cached filters if less than 24 hours old
     if (age < FILTER_CACHE_TTL) {
-      console.log('Using cached filter options');
       return filters;
     }
 
@@ -362,7 +361,6 @@ function cacheFilters(filters: FilterOptions): void {
       timestamp: Date.now(),
     };
     localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(cached));
-    console.log('Cached filter options');
   } catch (error) {
     console.error('Failed to cache filters:', error);
   }
@@ -385,8 +383,6 @@ export async function fetchAllPackagesForFilters(
   let allPackages: BallerinaPackage[] = [];
   let offset = 0;
   let hasMore = true;
-
-  console.log('Fetching all packages for complete filter options...');
 
   // Fetch all packages in batches
   while (hasMore) {

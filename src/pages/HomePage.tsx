@@ -125,6 +125,7 @@ export default function HomePage() {
     };
 
     initialize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Trigger server-side fetch when filters/sort/page change (skip on initial load)

@@ -28,7 +28,6 @@ import {
   AccordionDetails,
   Paper,
   Chip,
-  Divider,
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { FilterOptions } from '@/types/connector';
