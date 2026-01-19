@@ -105,6 +105,17 @@ async function withRetry<T>(
 }
 
 /**
+ * Escape special characters in Solr query values
+ * Solr special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
+ * Wraps value in double quotes after escaping internal quotes
+ */
+function escapeSolrValue(value: string): string {
+  // Escape double quotes and backslashes, then wrap in quotes
+  const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `"${escaped}"`;
+}
+
+/**
  * Convert sort option to REST API sort parameter
  * @example "pullCount-desc" → "pullCount,DESC"
  */
@@ -123,6 +134,31 @@ function toRestSortParam(sortOption: SortOption): string {
   };
 
   return `${fieldMap[field]},${directionMap[direction]}`;
+}
+
+/**
+ * Sort merged packages according to the specified sort option
+ * Used after deduplicating results from multiple queries
+ */
+function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): BallerinaPackage[] {
+  const sorted = [...packages];
+
+  switch (sort) {
+    case 'name-asc':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case 'name-desc':
+      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+    case 'pullCount-desc':
+      return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
+    case 'pullCount-asc':
+      return sorted.sort((a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0));
+    case 'date-desc':
+      return sorted.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+    case 'date-asc':
+      return sorted.sort((a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime());
+    default:
+      return sorted;
+  }
 }
 
 /**
@@ -145,21 +181,21 @@ function buildSolrQuery(
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
-      filters.push(`keyword:Area/${area}`);
+      filters.push(`keyword:${escapeSolrValue(`Area/${area}`)}`);
     });
   }
 
   // Add vendor filter (required with AND operator)
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
-      filters.push(`keyword:Vendor/${vendor}`);
+      filters.push(`keyword:${escapeSolrValue(`Vendor/${vendor}`)}`);
     });
   }
 
   // Add type filter (required with AND operator)
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
-      filters.push(`keyword:Type/${type}`);
+      filters.push(`keyword:${escapeSolrValue(`Type/${type}`)}`);
     });
   }
 
@@ -302,13 +338,16 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Total count is the deduplicated set size
-  const totalCount = mergedPackages.length;
+  // Re-sort merged packages to respect params.sort
+  const sortedPackages = sortMergedPackages(mergedPackages, params.sort);
 
-  // Apply pagination once to the merged results
+  // Total count is the deduplicated set size
+  const totalCount = sortedPackages.length;
+
+  // Apply pagination once to the sorted results
   const startIndex = params.offset;
   const endIndex = startIndex + params.limit;
-  const paginatedPackages = mergedPackages.slice(startIndex, endIndex);
+  const paginatedPackages = sortedPackages.slice(startIndex, endIndex);
 
   return {
     packages: paginatedPackages,

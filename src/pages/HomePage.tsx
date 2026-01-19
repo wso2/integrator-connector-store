@@ -30,6 +30,58 @@ import WSO2Header from '@/components/WSO2Header';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 
+// Valid sort options for validation
+const VALID_SORT_OPTIONS: SortOption[] = [
+  'name-asc',
+  'name-desc',
+  'pullCount-desc',
+  'pullCount-asc',
+  'date-desc',
+  'date-asc',
+];
+
+// Default values
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 30;
+const DEFAULT_SORT: SortOption = 'pullCount-desc';
+const MAX_PAGE_SIZE = 100;
+
+/**
+ * Validate and parse page number from URL parameter
+ */
+function parsePageParam(value: string | null): number {
+  if (!value) return DEFAULT_PAGE;
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed) || parsed < 1) {
+    return DEFAULT_PAGE;
+  }
+  return Math.floor(parsed);
+}
+
+/**
+ * Validate and parse page size from URL parameter
+ */
+function parsePageSizeParam(value: string | null): number {
+  if (!value) return DEFAULT_PAGE_SIZE;
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed) || parsed < 1) {
+    return DEFAULT_PAGE_SIZE;
+  }
+  // Clamp to sensible range
+  return Math.min(Math.max(1, Math.floor(parsed)), MAX_PAGE_SIZE);
+}
+
+/**
+ * Validate sort option from URL parameter
+ */
+function parseSortParam(value: string | null): SortOption {
+  if (!value) return DEFAULT_SORT;
+  if (VALID_SORT_OPTIONS.includes(value as SortOption)) {
+    return value as SortOption;
+  }
+  return DEFAULT_SORT;
+}
+
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -52,13 +104,13 @@ export default function HomePage() {
     searchParams.get('types')?.split(',').filter(Boolean) || []
   );
   const [currentPage, setCurrentPage] = useState(
-    parseInt(searchParams.get('page') || '1', 10)
+    parsePageParam(searchParams.get('page'))
   );
   const [pageSize, setPageSize] = useState(
-    parseInt(searchParams.get('size') || '30', 10)
+    parsePageSizeParam(searchParams.get('size'))
   );
   const [sortBy, setSortBy] = useState<SortOption>(
-    (searchParams.get('sort') as SortOption) || 'pullCount-desc'
+    parseSortParam(searchParams.get('sort'))
   );
 
   // Refs to prevent effects from running on initial mount
@@ -205,7 +257,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <LazyLoadImage
               src="/images/wso2-integrator-correct.svg"
-              alt=""
+              alt="WSO2 Integrator logo"
               width={40}
               height={40}
               effect="opacity"

@@ -191,7 +191,7 @@ export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
 
 /**
  * Extracts all unique filter options from connectors
- * Note: Only includes connectors with type "connector"
+ * Includes all connector types to populate filter dropdowns
  */
 export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOptions {
   const areas = new Set<string>();
@@ -200,7 +200,6 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
 
   connectors.forEach((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
-    // Include ALL connectors regardless of type
     areas.add(metadata.area);
     vendors.add(metadata.vendor);
     types.add(metadata.type);

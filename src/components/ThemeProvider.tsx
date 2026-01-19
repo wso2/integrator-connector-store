@@ -46,27 +46,62 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     setMounted(true);
 
-    // Check if user has a saved preference in localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
-    } else {
-      // Use system preference if no saved preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setDarkMode(prefersDark);
+    let mediaQuery: MediaQueryList | null = null;
+    let handleChange: ((e: MediaQueryListEvent) => void) | null = null;
+
+    try {
+      // Check if user has a saved preference in localStorage
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        setDarkMode(savedTheme === 'dark');
+      } else {
+        // Use system preference if no saved preference
+        try {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          setDarkMode(prefersDark);
+        } catch {
+          // matchMedia not available, default to light mode
+          setDarkMode(false);
+        }
+      }
+    } catch {
+      // localStorage not available, try system preference or default to light mode
+      try {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setDarkMode(prefersDark);
+      } catch {
+        setDarkMode(false);
+      }
     }
 
     // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if user hasn't manually set a preference
-      if (!localStorage.getItem('theme')) {
-        setDarkMode(e.matches);
+    try {
+      mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      handleChange = (e: MediaQueryListEvent) => {
+        // Only update if user hasn't manually set a preference
+        try {
+          if (!localStorage.getItem('theme')) {
+            setDarkMode(e.matches);
+          }
+        } catch {
+          // localStorage not available, follow system preference
+          setDarkMode(e.matches);
+        }
+      };
+      mediaQuery.addEventListener('change', handleChange);
+    } catch {
+      // matchMedia not available, skip listener setup
+    }
+
+    return () => {
+      if (mediaQuery && handleChange) {
+        try {
+          mediaQuery.removeEventListener('change', handleChange);
+        } catch {
+          // Ignore cleanup errors
+        }
       }
     };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const theme = useMemo(() => (darkMode ? darkTheme : lightTheme), [darkMode]);
@@ -75,7 +110,11 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     setDarkMode((prev) => {
       const newMode = !prev;
       // Save user preference
-      localStorage.setItem('theme', newMode ? 'dark' : 'light');
+      try {
+        localStorage.setItem('theme', newMode ? 'dark' : 'light');
+      } catch {
+        // localStorage not available, state update still works
+      }
       return newMode;
     });
   };
