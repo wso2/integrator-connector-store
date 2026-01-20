@@ -20,8 +20,8 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-import ThemeToggle from './ThemeToggle';
-import { useThemeContext } from './ThemeProvider';
+import ThemeToggle from '../ThemeToggle';
+import { useThemeContext } from '../ThemeProvider';
 
 export default function WSO2Header() {
   const { darkMode, toggleTheme } = useThemeContext();

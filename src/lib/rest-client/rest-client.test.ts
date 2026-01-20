@@ -30,6 +30,7 @@ const localStorageMock = {
   clear: jest.fn(),
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
 // Helper to create mock API response
 const createMockApiResponse = (
@@ -121,12 +122,10 @@ describe('rest-client', () => {
     });
 
     it('should handle API errors with retry', async () => {
-      mockFetch
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(createMockApiResponse([], 0)),
-        });
+      mockFetch.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(createMockApiResponse([], 0)),
+      });
       await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
       expect(mockFetch).toHaveBeenCalledTimes(2);
     }, 10000);

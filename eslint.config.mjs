@@ -1,11 +1,20 @@
 import js from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
-export default [
+export default tseslint.config(
+  {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'build/**',
+      'dist/**',
+      'claude-audit-report/**',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs}'],
@@ -16,18 +25,9 @@ export default [
     },
   },
   {
-    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/setupTests.ts'],
-    languageOptions: {
-      globals: {
-        ...globals.jest,
-        ...globals.node,
-      },
-    },
-  },
-  {
     files: ['**/*.{ts,tsx}'],
+    extends: [...tseslint.configs.recommended],
     languageOptions: {
-      parser: tsparser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -42,7 +42,6 @@ export default [
       },
     },
     plugins: {
-      '@typescript-eslint': tseslint,
       react: react,
       'react-hooks': reactHooks,
     },
@@ -51,7 +50,6 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-unused-vars': 'off', // Turn off base rule
 
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
@@ -69,13 +67,11 @@ export default [
     },
   },
   {
-    ignores: [
-      'node_modules/**',
-      '.next/**',
-      'out/**',
-      'build/**',
-      'dist/**',
-      'claude-audit-report/**',
-    ],
-  },
-];
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/setupTests.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  }
+);

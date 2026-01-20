@@ -17,7 +17,7 @@
 */
 
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
-import { extractFilterOptions } from './connector-utils';
+import { extractFilterOptions } from '../connector-utils';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 
