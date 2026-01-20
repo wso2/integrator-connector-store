@@ -2,7 +2,7 @@
 
 A modern, high-performance connector store for WSO2 Integrator, showcasing 800+ Ballerina connectors from Ballerina Central with accurate download metrics and powerful filtering capabilities.
 
-[![React](https://img.shields.io/badge/React-19.2-61DAFB)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Material-UI](https://img.shields.io/badge/MUI-7.3-007FFF)](https://mui.com/)
 [![License](https://img.shields.io/badge/License-WSO2-orange)](https://wso2.com/)
@@ -718,12 +718,11 @@ See `.docs/VERCEL-BUILD-WARNINGS.md` for detailed explanation.
 
 ### API Errors
 
-**GraphQL API Issues:**
+**REST API Issues:**
 
-- Check: [https://api.central.ballerina.io/2.0/graphql](https://api.central.ballerina.io/2.0/graphql)
-- Verify query syntax
-- Check network tab for errors
-- Look for retry attempts in console
+- Check: [https://api.central.ballerina.io/2.0/registry/search-packages](https://api.central.ballerina.io/2.0/registry/search-packages)
+- Verify network tab for errors
+- Look for retry attempts in console (3 attempts with exponential backoff)
 
 **Network Failures:**
 

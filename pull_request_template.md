@@ -12,7 +12,7 @@
 
 ## User stories
 
-> Summary of user stories addressed by this change>
+> Summary of user stories addressed by this change
 
 ## Release note
 

@@ -63,8 +63,8 @@ describe('rest-client', () => {
     localStorageMock.clear.mockClear();
 
     // Suppress console warnings and errors during tests
-    jest.spyOn(console, 'warn').mockImplementation(() => { });
-    jest.spyOn(console, 'error').mockImplementation(() => { });
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -111,14 +111,22 @@ describe('rest-client', () => {
         json: () =>
           Promise.resolve(createMockApiResponse([{ name: 'connector-1', version: '1.0.0' }], 1)),
       });
-      await searchPackages({ areas: ['Finance', 'Communication'], offset: 0, limit: 30, sort: 'pullCount-desc' });
+      await searchPackages({
+        areas: ['Finance', 'Communication'],
+        offset: 0,
+        limit: 30,
+        sort: 'pullCount-desc',
+      });
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
     it('should handle API errors with retry', async () => {
       mockFetch
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(createMockApiResponse([], 0)) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(createMockApiResponse([], 0)),
+        });
       await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
       expect(mockFetch).toHaveBeenCalledTimes(2);
     }, 10000);
@@ -177,11 +185,11 @@ describe('rest-client', () => {
 
       const initialResponse = createMockApiResponse([], 150); // count > 100
       const batch1 = createMockApiResponse(
-        Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}` })),
+        Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}`, version: '1.0.0' })),
         150
       );
       const batch2 = createMockApiResponse(
-        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}` })),
+        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}`, version: '1.0.0' })),
         150
       );
 
