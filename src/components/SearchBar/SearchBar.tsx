@@ -17,8 +17,8 @@
 */
 
 import React from 'react';
-import { TextField, InputAdornment } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { TextField, InputAdornment } from '@wso2/oxygen-ui';
+import { Search as SearchIcon } from '@wso2/oxygen-ui-icons-react';
 
 interface SearchBarProps {
   value: string;
@@ -42,7 +42,7 @@ export default function SearchBar({
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <SearchIcon fontSize="small" color="action" />
+            <SearchIcon size={18} />
           </InputAdornment>
         ),
       }}

@@ -18,7 +18,7 @@
 
 'use client';
 
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { createTheme } from '@wso2/oxygen-ui';
 
 // WSO2 Design Tokens - Exact colors from wso2.com/integrator
 const wso2Colors = {
@@ -46,7 +46,7 @@ const wso2Colors = {
 const fontFamily =
   "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 
-const commonTheme: ThemeOptions = {
+const commonTheme = {
   typography: {
     fontFamily,
     h1: {

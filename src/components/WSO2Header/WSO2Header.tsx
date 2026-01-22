@@ -17,21 +17,18 @@
 */
 
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, ColorSchemeToggle } from '@wso2/oxygen-ui';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-import ThemeToggle from '../ThemeToggle';
-import { useThemeContext } from '../ThemeProvider';
 
 export default function WSO2Header() {
-  const { darkMode, toggleTheme } = useThemeContext();
-
   return (
     <Box
       component="header"
       sx={{
-        backgroundColor: '#fff', // Always white, like WSO2 site
-        borderBottom: '1px solid #e0e0e0',
+        backgroundColor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
         position: 'sticky',
         top: 0,
         zIndex: 1100,
@@ -62,9 +59,9 @@ export default function WSO2Header() {
           </a>
         </Box>
 
-        {/* Right side - Theme Toggle */}
+        {/* Right side - Color Scheme Toggle */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ThemeToggle darkMode={darkMode} onToggle={toggleTheme} />
+          <ColorSchemeToggle />
         </Box>
       </Box>
     </Box>

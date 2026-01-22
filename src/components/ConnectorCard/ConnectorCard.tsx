@@ -26,8 +26,8 @@ import {
   Box,
   Avatar,
   Button,
-} from '@mui/material';
-import { Download as DownloadIcon, AccessTime as ClockIcon } from '@mui/icons-material';
+} from '@wso2/oxygen-ui';
+import { Download as DownloadIcon, Clock as ClockIcon } from '@wso2/oxygen-ui-icons-react';
 import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
 import {
@@ -196,7 +196,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
             </Box>
             <Box display="flex" flexDirection="column" gap={0.5}>
               <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <DownloadIcon sx={{ fontSize: '1rem' }} />
+                <DownloadIcon size={16} />
                 <Typography variant="caption">
                   {connector.totalPullCount != null
                     ? `${formatPullCount(connector.totalPullCount)} downloads`
@@ -204,7 +204,7 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
                 </Typography>
               </Box>
               <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <ClockIcon sx={{ fontSize: '1rem' }} />
+                <ClockIcon size={16} />
                 <Typography variant="caption" title={formatDate(connector.createdDate)}>
                   {formatDaysSince(connector.createdDate)}
                 </Typography>

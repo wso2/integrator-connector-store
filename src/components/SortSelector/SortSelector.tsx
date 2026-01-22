@@ -17,11 +17,11 @@
 */
 
 import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem } from '@wso2/oxygen-ui';
 import {
-  ArrowUpward as ArrowUpwardIcon,
-  ArrowDownward as ArrowDownwardIcon,
-} from '@mui/icons-material';
+  ArrowUp as ArrowUpwardIcon,
+  ArrowDown as ArrowDownwardIcon,
+} from '@wso2/oxygen-ui-icons-react';
 import { SortOption } from '@/lib/connector-utils';
 
 interface SortSelectorProps {
@@ -42,22 +42,22 @@ export default function SortSelector({ value, onChange }: SortSelectorProps) {
         }}
       >
         <MenuItem value="name-asc">
-          Name (A-Z) <ArrowUpwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Name (A-Z) <ArrowUpwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
         <MenuItem value="name-desc">
-          Name (Z-A) <ArrowDownwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Name (Z-A) <ArrowDownwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
         <MenuItem value="pullCount-desc">
-          Most Popular <ArrowDownwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Most Popular <ArrowDownwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
         <MenuItem value="pullCount-asc">
-          Least Popular <ArrowUpwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Least Popular <ArrowUpwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
         <MenuItem value="date-desc">
-          Newest First <ArrowDownwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Newest First <ArrowDownwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
         <MenuItem value="date-asc">
-          Oldest First <ArrowUpwardIcon fontSize="small" sx={{ ml: 1 }} />
+          Oldest First <ArrowUpwardIcon size={16} style={{ marginLeft: '8px' }} />
         </MenuItem>
       </Select>
     </FormControl>
