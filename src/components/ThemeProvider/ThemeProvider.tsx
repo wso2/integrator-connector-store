@@ -17,7 +17,7 @@
 */
 
 import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
-import { OxygenUIThemeProvider } from '@wso2/oxygen-ui';
+import { OxygenUIThemeProvider, CssBaseline } from '@wso2/oxygen-ui';
 import { lightTheme, darkTheme } from '@/styles/theme';
 
 interface ThemeContextType {
@@ -126,6 +126,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
       <OxygenUIThemeProvider theme={theme}>
+        <CssBaseline />
         {children}
       </OxygenUIThemeProvider>
     </ThemeContext.Provider>

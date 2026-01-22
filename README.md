@@ -114,7 +114,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 ```json
 {
   "@wso2/oxygen-ui": "^0.2.1",
-  "@wso2/oxygen-ui-icons-react": "latest",
+  "@wso2/oxygen-ui-icons-react": "^0.2.1",
   "@mui/material": "^7.3.7",
   "@emotion/react": "^11.14.0",
   "@emotion/styled": "^11.14.0",
