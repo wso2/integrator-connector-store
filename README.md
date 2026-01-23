@@ -4,12 +4,12 @@ A modern, high-performance connector store for WSO2 Integrator, showcasing 800+ 
 
 [![React](https://img.shields.io/badge/React-18.2-61DAFB)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![Material-UI](https://img.shields.io/badge/MUI-7.3-007FFF)](https://mui.com/)
+[![Oxygen UI](https://img.shields.io/badge/Oxygen_UI-0.2.1-FF7300)](https://github.com/wso2/oxygen-ui)
 [![License](https://img.shields.io/badge/License-WSO2-orange)](https://wso2.com/)
 
 ## Overview
 
-The WSO2 Integrator Connector Store provides a user-friendly interface to discover, search, filter, and explore Ballerina connectors from Ballerina Central. Built with React and Material-UI, it offers a fast, responsive experience with professional WSO2 branding.
+The WSO2 Integrator Connector Store provides a user-friendly interface to discover, search, filter, and explore Ballerina connectors from Ballerina Central. Built with React and WSO2 Oxygen UI (built on Material-UI v7), it offers a fast, responsive experience with professional WSO2 branding.
 
 **Live Demo:** [Your deployment URL here]
 
@@ -19,11 +19,14 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 
 ### Professional WSO2 Branding
 
-- Official WSO2 header with logo
+- **WSO2 Oxygen UI Design System** - Built with [@wso2/oxygen-ui](https://github.com/wso2/oxygen-ui)
+- Official WSO2 header with logo and integrated theme toggle
 - Exact color scheme from wso2.com/integrator
 - Plus Jakarta Sans font family
-- Dark/Light theme support with pure black dark mode
+- Dark/Light theme support with system preference detection
+- Lucide icons via @wso2/oxygen-ui-icons-react
 - Sticky header for better navigation
+- Extended theme using `extendTheme` with OxygenTheme base
 
 ### Smart Pagination
 
@@ -82,6 +85,44 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - Touch-friendly interface
 - Optimized for all devices
 
+
+---
+
+## Technology Stack
+
+### Core Framework
+- **React 18.2** - Modern React with concurrent features
+- **TypeScript 5.9** - Type-safe development
+- **React Router 6** - Client-side routing
+
+### UI Framework
+- **WSO2 Oxygen UI 0.2.1** - WSO2's official design system
+  - Built on Material-UI v7.3.7
+  - Includes pre-built WSO2 themes (OxygenTheme, AcrylicOrangeTheme, etc.)
+  - Provides `OxygenUIThemeProvider` for theme management
+  - Re-exports all MUI components and utilities
+- **@wso2/oxygen-ui-icons-react** - Lucide icon set for React
+- **@emotion/react & @emotion/styled** - CSS-in-JS styling
+
+### Build & Development
+- **Create React App** - Zero-config build setup
+- **react-app-rewired** - Custom webpack configuration
+- **TypeScript Compiler** - Type checking and compilation
+
+### Key Dependencies
+```json
+{
+  "@wso2/oxygen-ui": "^0.2.1",
+  "@wso2/oxygen-ui-icons-react": "^0.2.1",
+  "@mui/material": "^7.3.7",
+  "@emotion/react": "^11.14.0",
+  "@emotion/styled": "^11.14.0",
+  "react": "^18.2.0",
+  "react-router-dom": "^6.29.0",
+  "typescript": "^5.9.3"
+}
+```
+
 ---
 
 ## Quick Start
@@ -97,7 +138,7 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd wso2-integrator-connector-store
+cd integrator-connector-store
 
 # Install dependencies
 npm install
@@ -184,14 +225,25 @@ wso2-integrator-connector-store/
 │   ├── pages/
 │   │   └── HomePage.tsx             # Main connector store page
 │   ├── components/
-│   │   ├── ConnectorCard.tsx        # Individual connector card
-│   │   ├── FilterSidebar.tsx        # Filter panel (Area/Vendor)
-│   │   ├── Pagination.tsx           # Pagination controls
-│   │   ├── SearchBar.tsx            # Search input
-│   │   ├── SortSelector.tsx         # Sort dropdown
-│   │   ├── ThemeProvider.tsx        # Theme context provider
-│   │   ├── ThemeToggle.tsx          # Dark/light mode toggle
-│   │   └── WSO2Header.tsx           # Branded header component
+│   │   ├── ConnectorCard/
+│   │   │   ├── ConnectorCard.tsx    # Individual connector card
+│   │   │   └── ConnectorCard.test.tsx
+│   │   ├── FilterSidebar/
+│   │   │   └── FilterSidebar.tsx    # Filter panel (Area/Vendor)
+│   │   ├── Pagination/
+│   │   │   ├── Pagination.tsx       # Pagination controls
+│   │   │   └── Pagination.test.tsx
+│   │   ├── SearchBar/
+│   │   │   ├── SearchBar.tsx        # Search input
+│   │   │   └── SearchBar.test.tsx
+│   │   ├── SortSelector/
+│   │   │   └── SortSelector.tsx     # Sort dropdown
+│   │   ├── ThemeProvider/
+│   │   │   └── ThemeProvider.tsx    # (Deprecated - using Oxygen UI)
+│   │   ├── ThemeToggle/
+│   │   │   └── ThemeToggle.tsx      # (Deprecated - using ColorSchemeToggle)
+│   │   └── WSO2Header/
+│   │       └── WSO2Header.tsx       # Branded header with Oxygen UI
 │   ├── lib/
 │   │   ├── rest-client.ts           # REST API integration with retry logic
 │   │   ├── connector-utils.ts       # Utility functions (filter/sort)
@@ -239,6 +291,10 @@ Required to resolve TypeScript 5.x peer dependency conflicts with react-scripts 
 
 Custom webpack configuration for Create React App (using react-app-rewired).
 
+**Includes:**
+- Module resolution fix for prismjs ESM compatibility
+- Handles `.mjs` files from dependencies properly
+
 ### Deployment Configuration
 
 **File:** `vercel.json`
@@ -258,17 +314,33 @@ Enables client-side routing for single-page application.
 
 ### Theme Customization
 
-**File:** `src/components/ThemeProvider.tsx`
+**Implementation:** `src/App.tsx`
 
-WSO2 Brand Colors:
+The application uses WSO2 Oxygen UI's theme system:
+
+```typescript
+import { OxygenUIThemeProvider, extendTheme, OxygenTheme } from '@wso2/oxygen-ui';
+
+// Create custom theme by extending OxygenTheme
+const theme = extendTheme(OxygenTheme);
+
+// Wrap app with theme provider
+<OxygenUIThemeProvider themes={[{ key: 'default', label: 'Default', theme }]}>
+  {/* App content */}
+</OxygenUIThemeProvider>
+```
+
+**WSO2 Brand Colors (from OxygenTheme):**
 
 - Primary Orange: `#ff7300`
 - Background Light: `#f7f8fb`
-- Background Dark: `#000000` (pure black)
+- Background Dark: Oxygen UI's dark theme palette
 - Text Primary: `#000000` / `#ffffff`
 - Text Secondary: `#494848` / `#cccccc`
 
-Font: **Plus Jakarta Sans** (loaded from WSO2 CDN)
+**Typography:**
+- Font: **Plus Jakarta Sans** (bundled with Oxygen UI)
+- Automatically imported via Oxygen UI's font system
 
 ---
 

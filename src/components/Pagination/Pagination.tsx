@@ -17,11 +17,11 @@
 */
 
 import React from 'react';
-import { Box, Select, MenuItem, Typography, Button, FormControl, InputLabel } from '@mui/material';
+import { Box, Select, MenuItem, Typography, Button, FormControl, InputLabel } from '@wso2/oxygen-ui';
 import {
-  NavigateBefore as NavigateBeforeIcon,
-  NavigateNext as NavigateNextIcon,
-} from '@mui/icons-material';
+  ChevronLeft as NavigateBeforeIcon,
+  ChevronRight as NavigateNextIcon,
+} from '@wso2/oxygen-ui-icons-react';
 
 interface PaginationProps {
   currentPage: number;

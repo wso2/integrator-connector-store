@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Container, Box, Typography, CircularProgress, Alert } from '@wso2/oxygen-ui';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { searchPackages, fetchFiltersProgressively, SortOption } from '@/lib/rest-client';
 import ConnectorCard from '@/components/ConnectorCard';

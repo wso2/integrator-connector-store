@@ -18,18 +18,21 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ThemeProvider from './components/ThemeProvider';
+import { OxygenUIThemeProvider, extendTheme, OxygenTheme } from '@wso2/oxygen-ui';
 import HomePage from './pages/HomePage';
+
+// Create a custom theme by extending the base OxygenTheme
+const theme = extendTheme(OxygenTheme);
 
 function App() {
   return (
-    <ThemeProvider>
+    <OxygenUIThemeProvider themes={[{ key: 'default', label: 'Default', theme }]}>
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
         </Routes>
       </Router>
-    </ThemeProvider>
+    </OxygenUIThemeProvider>
   );
 }
 

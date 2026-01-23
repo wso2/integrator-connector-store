@@ -17,8 +17,7 @@
 */
 
 import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
-import { ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import { OxygenUIThemeProvider, CssBaseline } from '@wso2/oxygen-ui';
 import { lightTheme, darkTheme } from '@/styles/theme';
 
 interface ThemeContextType {
@@ -126,10 +125,10 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
-      <MUIThemeProvider theme={theme}>
+      <OxygenUIThemeProvider theme={theme}>
         <CssBaseline />
         {children}
-      </MUIThemeProvider>
+      </OxygenUIThemeProvider>
     </ThemeContext.Provider>
   );
 }

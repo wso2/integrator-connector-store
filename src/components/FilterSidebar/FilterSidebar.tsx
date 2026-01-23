@@ -28,8 +28,8 @@ import {
   AccordionDetails,
   Paper,
   Chip,
-} from '@mui/material';
-import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+} from '@wso2/oxygen-ui';
+import { ChevronDown as ExpandMoreIcon } from '@wso2/oxygen-ui-icons-react';
 import { FilterOptions } from '@/types/connector';
 
 interface FilterSidebarProps {

@@ -17,8 +17,8 @@
 */
 
 import React from 'react';
-import { IconButton, Tooltip } from '@mui/material';
-import { Brightness4, Brightness7 } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@wso2/oxygen-ui';
+import { Moon, Sun } from '@wso2/oxygen-ui-icons-react';
 
 interface ThemeToggleProps {
   darkMode: boolean;
@@ -35,7 +35,7 @@ export default function ThemeToggle({ darkMode, onToggle }: ThemeToggleProps) {
           '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
         }}
       >
-        {darkMode ? <Brightness7 /> : <Brightness4 />}
+        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
       </IconButton>
     </Tooltip>
   );
