@@ -20,6 +20,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ThemeProvider from './components/ThemeProvider';
 import HomePage from './pages/HomePage';
+import ConnectorDetailPage from './pages/ConnectorDetailPage';
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/connector/:org/:name" element={<ConnectorDetailPage />} />
+          <Route path="/connector/:org/:name/:version" element={<ConnectorDetailPage />} />
         </Routes>
       </Router>
     </ThemeProvider>

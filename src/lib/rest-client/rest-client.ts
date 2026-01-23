@@ -16,10 +16,11 @@
  under the License.
 */
 
-import { BallerinaPackage, FilterOptions } from '@/types/connector';
+import { BallerinaPackage, FilterOptions, PackageDetails } from '@/types/connector';
 import { extractFilterOptions } from '../connector-utils';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
+const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
 
 /**
  * Sort options used in the UI
@@ -492,4 +493,53 @@ export async function fetchFiltersProgressively(
   }
 
   return initialFilters;
+}
+
+/**
+ * Fetch available versions for a package
+ */
+export async function fetchPackageVersions(
+  orgName: string,
+  packageName: string
+): Promise<string[]> {
+  return withRetry(async () => {
+    const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  });
+}
+
+/**
+ * Fetch detailed package information including readme/documentation
+ */
+export async function fetchPackageDetails(
+  orgName: string,
+  packageName: string,
+  version?: string
+): Promise<PackageDetails> {
+  return withRetry(async () => {
+    // If no version provided, fetch latest version first
+    let targetVersion = version;
+    if (!targetVersion) {
+      const versions = await fetchPackageVersions(orgName, packageName);
+      if (versions.length === 0) {
+        throw new Error('No versions found for package');
+      }
+      targetVersion = versions[0]; // First version is the latest
+    }
+
+    const response = await fetch(
+      `${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  });
 }
