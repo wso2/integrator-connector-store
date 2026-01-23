@@ -5,7 +5,6 @@ A modern, high-performance connector store for WSO2 Integrator, showcasing 800+ 
 [![React](https://img.shields.io/badge/React-18.2-61DAFB)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Oxygen UI](https://img.shields.io/badge/Oxygen_UI-0.2.1-FF7300)](https://github.com/wso2/oxygen-ui)
-[![Material-UI](https://img.shields.io/badge/MUI-7.3-007FFF)](https://mui.com/)
 [![License](https://img.shields.io/badge/License-WSO2-orange)](https://wso2.com/)
 
 ## Overview
