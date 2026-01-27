@@ -16,226 +16,258 @@
  under the License.
 */
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardActionArea,
   Typography,
   Chip,
   Box,
-  Avatar,
   Button,
+  Divider,
 } from '@wso2/oxygen-ui';
-import { Download as DownloadIcon, Clock as ClockIcon } from '@wso2/oxygen-ui-icons-react';
-import ReactMarkdown from 'react-markdown';
+import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
 import { BallerinaPackage } from '@/types/connector';
-import {
-  parseConnectorMetadata,
-  formatPullCount,
-  formatDate,
-  formatDaysSince,
-  getDisplayName,
-} from '@/lib/connector-utils';
+import { parseConnectorMetadata } from '@/lib/connector-utils';
+
+const WSO2_ORANGE = '#FF7300';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;
+  effectiveMode: 'light' | 'dark';
 }
 
-function ConnectorCard({ connector }: ConnectorCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+/**
+ * Format pull count to human-readable format
+ */
+function formatPullCount(count: number | undefined): string {
+  if (!count) return '0';
+  if (count < 1000) return count.toString();
+  if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
+  return `${(count / 1000000).toFixed(1)}M`;
+}
 
+/**
+ * Format date to relative time
+ */
+function formatRelativeTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays < 30) return `${diffInDays} days ago`;
+    if (diffInDays < 365) {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+    const years = Math.floor(diffInDays / 365);
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Get icon letter from connector name
+ */
+function getIconLetter(name: string): string {
+  const parts = name.split('.');
+  return parts[parts.length - 1]?.charAt(0).toUpperCase() || 'C';
+}
+
+/**
+ * Get icon background color based on name
+ */
+function getIconColor(name: string): string {
+  const colors = ['#DC2626', '#2563EB', '#16A34A', '#9333EA', '#EA580C', '#52525B'];
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+}
+
+function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   // Memoize expensive computations
   const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
-
-  const displayName = useMemo(
-    () => getDisplayName(connector.name, metadata.vendor),
-    [connector.name, metadata.vendor]
-  );
-
-  const centralUrl = useMemo(
-    () => `https://central.ballerina.io/${connector.URL}`,
-    [connector.URL]
-  );
-
-  // Check if summary is long enough to need truncation
-  const needsTruncation = connector.summary.length > 120;
-  const summaryId = `connector-summary-${connector.name}`;
+  const iconLetter = useMemo(() => getIconLetter(connector.name), [connector.name]);
+  const iconColor = useMemo(() => getIconColor(connector.name), [connector.name]);
 
   return (
     <Card
       sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+        border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+        boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        transition: 'all 0.2s',
+        '&:hover': {
+          boxShadow: effectiveMode === 'dark' ? '0 0 0 2px rgba(255, 115, 0, 0.6)' : 4,
+          borderColor: effectiveMode === 'dark' ? 'transparent' : `${WSO2_ORANGE}80`,
+          outline: effectiveMode === 'dark' ? 'none' : `2px solid ${WSO2_ORANGE}40`,
+        },
       }}
     >
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <CardActionArea
-          href={centralUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-        >
-          <CardContent sx={{ flexGrow: 1, width: '100%' }}>
-            {/* Icon and Title */}
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Avatar
-                src={connector.icon}
+      <CardContent sx={{ p: 2.5 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              color: 'white',
+              fontSize: 18,
+              flexShrink: 0,
+              bgcolor: connector.icon ? 'transparent' : iconColor,
+              overflow: 'hidden',
+            }}
+          >
+            {connector.icon ? (
+              <img 
+                src={connector.icon} 
                 alt={connector.name}
-                sx={{ width: 48, height: 48 }}
-                variant="rounded"
-              >
-                {connector.name.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box flex={1}>
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{ fontWeight: 600, fontSize: '1.1rem' }}
-                >
-                  {displayName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  v{connector.version}
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Summary */}
-            <Box
-              id={summaryId}
-              sx={{
-                mb: 2,
-                minHeight: '40px',
-                '& p': {
-                  margin: 0,
-                  fontSize: '0.8125rem',
-                  lineHeight: 1.43,
-                  color: 'text.secondary',
-                },
-                '& code': {
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.1)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                  padding: '2px 4px',
-                  borderRadius: '4px',
-                  fontSize: '0.8125rem',
-                  fontFamily: 'monospace',
-                },
-                '& strong': {
-                  fontWeight: 600,
-                },
-                '& em': {
-                  fontStyle: 'italic',
-                },
-                '& a': {
-                  color: 'primary.main',
-                  textDecoration: 'none',
-                  '&:hover': {
-                    textDecoration: 'underline',
-                  },
-                },
-                ...(!isExpanded &&
-                  needsTruncation && {
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }),
-              }}
-            >
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <span>{children}</span>,
-                  a: ({ children }) => <span>{children}</span>,
-                }}
-              >
-                {connector.summary}
-              </ReactMarkdown>
-            </Box>
-
-            {/* Metadata Chips and other content */}
-            <Box flexGrow={1} />
-            <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
-              <Chip
-                label={metadata.type}
-                size="small"
-                color="primary"
-                sx={{
-                  fontSize: '0.7rem',
-                  height: '24px',
-                  '& .MuiChip-label': { textTransform: 'none' },
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain' 
                 }}
               />
-              {metadata.vendor !== 'Other' && (
-                <Chip
-                  label={metadata.vendor}
-                  size="small"
-                  sx={{
-                    fontSize: '0.7rem',
-                    height: '24px',
-                    '& .MuiChip-label': { textTransform: 'none' },
-                  }}
-                />
-              )}
-              {metadata.area !== 'Other' && (
-                <Chip
-                  label={metadata.area}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    fontSize: '0.7rem',
-                    height: '24px',
-                    '& .MuiChip-label': { textTransform: 'none' },
-                  }}
-                />
-              )}
+            ) : (
+              iconLetter
+            )}
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={600}>
+                {connector.name.split('.').pop() || connector.name}
+              </Typography>
+              <Chip
+                label={connector.version}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: 11,
+                }}
+              />
             </Box>
-            <Box display="flex" flexDirection="column" gap={0.5}>
-              <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <DownloadIcon size={16} />
-                <Typography variant="caption">
-                  {connector.totalPullCount != null
-                    ? `${formatPullCount(connector.totalPullCount)} downloads`
-                    : 'Loading downloads...'}
-                </Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <ClockIcon size={16} />
-                <Typography variant="caption" title={formatDate(connector.createdDate)}>
-                  {formatDaysSince(connector.createdDate)}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </CardActionArea>
-      </Box>
-      {needsTruncation && (
-        <Box sx={{ p: 2, pt: 0, alignSelf: 'flex-start' }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 0.75,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                lineHeight: 1.5,
+              }}
+            >
+              {connector.summary}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Tags */}
+        <Box display="flex" gap={1} flexWrap="wrap" mb={2} mt={2}>
+          {/* Type chip - always visible */}
+          <Chip
+            label={metadata.type}
+            size="small"
+            color="primary"
+            sx={{
+              fontSize: '0.7rem',
+              height: '24px',
+              '& .MuiChip-label': {
+                textTransform: 'none',
+              }
+            }}
+          />
+
+          {metadata.vendor !== 'Other' && (
+            <Chip
+              label={metadata.vendor}
+              size="small"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+          )}
+
+          {metadata.area !== 'Other' && (
+            <Chip
+              label={metadata.area}
+              size="small"
+              variant="outlined"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+          )}
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Footer */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <Download size={14} />{' '}
+              {formatPullCount(connector.totalPullCount)}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <Clock size={14} />{' '}
+              {formatRelativeTime(connector.createdDate)}
+            </Typography>
+          </Box>
           <Button
             size="small"
-            onClick={() => setIsExpanded(!isExpanded)}
-            aria-expanded={isExpanded}
-            aria-controls={summaryId}
+            href={connector.URL}
+            target="_blank"
             sx={{
-              minWidth: 'auto',
-              padding: 0,
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              mt: -1.5,
+              fontSize: 12,
+              bgcolor: `${WSO2_ORANGE}20`,
+              color: WSO2_ORANGE,
               '&:hover': {
-                backgroundColor: 'transparent',
-                textDecoration: 'underline',
+                bgcolor: `${WSO2_ORANGE}30`,
               },
             }}
           >
-            {isExpanded ? 'Show less' : 'Show more'}
+            View
           </Button>
         </Box>
-      )}
+      </CardContent>
     </Card>
   );
 }

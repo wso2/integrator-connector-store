@@ -24,32 +24,54 @@ interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  effectiveMode: 'light' | 'dark';
 }
 
 export default function SearchBar({
   value,
   onChange,
   placeholder = 'Search connectors...',
+  effectiveMode,
 }: SearchBarProps) {
   return (
     <TextField
+      fullWidth
+      size="small"
+      placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      variant="outlined"
-      size="medium"
-      fullWidth
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchIcon size={18} />
-          </InputAdornment>
-        ),
-      }}
       sx={{
         '& .MuiOutlinedInput-root': {
-          backgroundColor: 'background.paper',
+          bgcolor: effectiveMode === 'dark' ? '#1A1A1C' : '#F3F4F6',
+          borderRadius: '8px',
+          paddingY: '10px',
+          paddingX: '12px',
+          fontSize: '14px',
+          '& fieldset': {
+            border: effectiveMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+          },
+          '& input': {
+            padding: 0,
+            color: effectiveMode === 'dark' ? '#F4F4F5' : '#18181B',
+            '&::placeholder': {
+              color: effectiveMode === 'dark' ? '#A1A1AA' : '#71717A',
+              opacity: 1,
+            },
+          },
         },
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment 
+            position="start" 
+            sx={{ 
+              marginRight: '8px',
+              color: effectiveMode === 'dark' ? '#A1A1AA' : '#71717A',
+            }}
+          >
+            <SearchIcon size={16} />
+          </InputAdornment>
+        ),
       }}
     />
   );

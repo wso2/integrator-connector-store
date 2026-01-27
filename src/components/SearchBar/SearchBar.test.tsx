@@ -24,21 +24,21 @@ import SearchBar from './SearchBar';
 describe('SearchBar', () => {
   it('should render with default placeholder', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} />);
+    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
     expect(screen.getByPlaceholderText('Search connectors...')).toBeInTheDocument();
   });
 
   it('should render with custom placeholder', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} placeholder="Custom placeholder" />);
+    render(<SearchBar value="" onChange={onChange} placeholder="Custom placeholder" effectiveMode="light" />);
 
     expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
   });
 
   it('should display the provided value', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="test query" onChange={onChange} />);
+    render(<SearchBar value="test query" onChange={onChange} effectiveMode="light" />);
 
     expect(screen.getByDisplayValue('test query')).toBeInTheDocument();
   });
@@ -47,7 +47,7 @@ describe('SearchBar', () => {
     const onChange = jest.fn();
     const user = userEvent.setup();
 
-    render(<SearchBar value="" onChange={onChange} />);
+    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
     const input = screen.getByPlaceholderText('Search connectors...');
     await user.type(input, 'stripe');
@@ -60,7 +60,7 @@ describe('SearchBar', () => {
   it('should call onChange with full value on change event', () => {
     const onChange = jest.fn();
 
-    render(<SearchBar value="" onChange={onChange} />);
+    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
     const input = screen.getByPlaceholderText('Search connectors...');
     fireEvent.change(input, { target: { value: 'payment' } });
@@ -70,7 +70,7 @@ describe('SearchBar', () => {
 
   it('should render search icon', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} />);
+    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
     // MUI renders the icon with a data-testid or we can check for svg
     const searchIcon = document.querySelector('[data-testid="SearchIcon"]');

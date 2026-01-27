@@ -185,30 +185,36 @@ function buildSolrQuery(
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
-      filters.push(`keyword:${escapeSolrValue(`Area/${area}`)}`);
+      const filterValue = `keyword:Area\\/${area}`;
+      console.log('Adding area filter:', filterValue);
+      filters.push(filterValue);
     });
   }
 
   // Add vendor filter (required with AND operator)
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
-      filters.push(`keyword:${escapeSolrValue(`Vendor/${vendor}`)}`);
+      filters.push(`keyword:Vendor\\/${vendor}`);
     });
   }
 
   // Add type filter (required with AND operator)
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
-      filters.push(`keyword:${escapeSolrValue(`Type/${type}`)}`);
+      filters.push(`keyword:Type\\/${type}`);
     });
   }
 
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
-    return `${params.query} AND ${filters.join(' AND ')}`;
+    const finalQuery = `${params.query} AND ${filters.join(' AND ')}`;
+    console.log('Final Solr query:', finalQuery);
+    return finalQuery;
   }
 
-  return filters.join(' AND ');
+  const finalQuery = filters.join(' AND ');
+  console.log('Final Solr query:', finalQuery);
+  return finalQuery;
 }
 
 /**
@@ -279,6 +285,8 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
 
     // Add sort without encoding the comma
     const urlString = `${REST_ENDPOINT}?${queryParams.toString()}&sort=${sortParam}`;
+
+    console.log('Fetching URL:', urlString);
 
     const response = await fetch(urlString);
 
