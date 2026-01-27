@@ -19,6 +19,7 @@
 import { memo, useMemo } from 'react';
 import {
   Card,
+  CardActionArea,
   CardContent,
   Typography,
   Chip,
@@ -97,18 +98,21 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   return (
     <Card
       sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
         border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
         boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        transition: 'all 0.2s',
-        '&:hover': {
-          boxShadow: effectiveMode === 'dark' ? '0 0 0 2px rgba(255, 115, 0, 0.6)' : 4,
-          borderColor: effectiveMode === 'dark' ? 'transparent' : `${WSO2_ORANGE}80`,
-          outline: effectiveMode === 'dark' ? 'none' : `2px solid ${WSO2_ORANGE}40`,
-        },
       }}
     >
-      <CardContent sx={{ p: 2.5 }}>
+      <CardActionArea
+        href={`https://central.ballerina.io/${connector.URL}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+      >
+        <CardContent sx={{ flexGrow: 1, width: '100%', p: 2.5 }}>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Box
             sx={{
@@ -251,23 +255,9 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               {formatRelativeTime(connector.createdDate)}
             </Typography>
           </Box>
-          <Button
-            size="small"
-            href={connector.URL}
-            target="_blank"
-            sx={{
-              fontSize: 12,
-              bgcolor: `${WSO2_ORANGE}20`,
-              color: WSO2_ORANGE,
-              '&:hover': {
-                bgcolor: `${WSO2_ORANGE}30`,
-              },
-            }}
-          >
-            View
-          </Button>
         </Box>
       </CardContent>
+      </CardActionArea>
     </Card>
   );
 }
