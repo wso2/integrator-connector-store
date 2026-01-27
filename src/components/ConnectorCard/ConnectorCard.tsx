@@ -17,6 +17,7 @@
 */
 
 import { memo, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -53,10 +54,16 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
     [connector.name, metadata.vendor]
   );
 
-  const centralUrl = useMemo(
-    () => `https://central.ballerina.io/${connector.URL}`,
-    [connector.URL]
-  );
+  // Parse org and package name from connector.name (e.g., "ballerinax/openai.chat")
+  const detailUrl = useMemo(() => {
+    const nameParts = connector.name.split('/');
+    if (nameParts.length === 2) {
+      const [org, packageName] = nameParts;
+      return `/connector/${org}/${packageName}`;
+    }
+    // Fallback: use URL path
+    return `/connector/${connector.URL.replace('packages/', '')}`;
+  }, [connector.name, connector.URL]);
 
   // Check if summary is long enough to need truncation
   const needsTruncation = connector.summary.length > 120;
@@ -70,13 +77,11 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
         flexDirection: 'column',
       }}
     >
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <CardActionArea
-          href={centralUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-        >
+      <CardActionArea
+        component={RouterLink}
+        to={detailUrl}
+        sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+      >
           <CardContent sx={{ flexGrow: 1, width: '100%' }}>
             {/* Icon and Title */}
             <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -212,7 +217,6 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
             </Box>
           </CardContent>
         </CardActionArea>
-      </Box>
       {needsTruncation && (
         <Box sx={{ p: 2, pt: 0, alignSelf: 'flex-start' }}>
           <Button
