@@ -40,6 +40,9 @@ export default function SearchBar({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      inputProps={{
+        'aria-label': placeholder,
+      }}
       sx={{
         '& .MuiOutlinedInput-root': {
           bgcolor: effectiveMode === 'dark' ? '#1A1A1C' : '#F3F4F6',

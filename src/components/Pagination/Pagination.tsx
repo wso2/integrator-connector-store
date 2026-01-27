@@ -121,6 +121,9 @@ export default function Pagination({
                 onPageSizeChange(Number(e.target.value));
                 onPageChange(1); // Reset to page 1 when page size changes
               }}
+              inputProps={{
+                'aria-label': 'Items per page',
+              }}
               sx={{ minWidth: 100 }}
             >
               {pageSizeOptions.map((size) => (
@@ -146,6 +149,9 @@ export default function Pagination({
             <Select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as SortOption)}
+              inputProps={{
+                'aria-label': 'Sort by',
+              }}
               sx={{ minWidth: 140 }}
             >
               <MenuItem value="pullCount-desc">Most Popular</MenuItem>
