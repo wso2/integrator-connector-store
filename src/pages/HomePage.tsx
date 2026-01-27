@@ -36,6 +36,7 @@ import ConnectorCard from '@/components/ConnectorCard';
 import WSO2Header from '@/components/WSO2Header';
 import Hero from '@/components/Hero';
 import FilterSidebar from '@/components/FilterSidebar';
+import Footer from '@/components/Footer';
 
 // WSO2 brand colors
 const WSO2_ORANGE = '#FF7300';
@@ -286,12 +287,14 @@ export default function HomePage() {
   }, [currentPage]);
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
+    <>
       {/* Header */}
       <WSO2Header effectiveMode={effectiveMode} />
 
       {/* Hero Banner */}
       <Hero effectiveMode={effectiveMode} />
+
+      <Box sx={{ minHeight: '100vh' }}>
 
       {/* Initial Loading State */}
       {initialLoading && (
@@ -481,5 +484,9 @@ export default function HomePage() {
           </Container>
         )}
       </Box>
+      
+      {/* Footer */}
+      <Footer effectiveMode={effectiveMode} />
+    </>
   );
 }
