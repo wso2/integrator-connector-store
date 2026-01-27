@@ -17,7 +17,7 @@
 */
 
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
-import { extractFilterOptions } from '../connector-utils';
+import { extractFilterOptions, parseConnectorMetadata, getDisplayName } from '../connector-utils';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 
@@ -145,9 +145,17 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
 
   switch (sort) {
     case 'name-asc':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(a.name, vendorA).localeCompare(getDisplayName(b.name, vendorB));
+      });
     case 'name-desc':
-      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
+      });
     case 'pullCount-desc':
       return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
     case 'pullCount-asc':
@@ -322,7 +330,10 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    return executeSingleSearch(combinations[0]);
+    const result = await executeSingleSearch(combinations[0]);
+    // Apply client-side sorting to ensure correct order (especially for display names)
+    result.packages = sortMergedPackages(result.packages, params.sort);
+    return result;
   }
 
   // Multiple combinations - execute in parallel and merge results

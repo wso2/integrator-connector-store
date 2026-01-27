@@ -154,10 +154,12 @@ export default function Pagination({
               }}
               sx={{ minWidth: 140 }}
             >
+              <MenuItem value="name-asc">Name (A-Z)</MenuItem>
+              <MenuItem value="name-desc">Name (Z-A)</MenuItem>
               <MenuItem value="pullCount-desc">Most Popular</MenuItem>
-              <MenuItem value="date-desc">Recently Updated</MenuItem>
-              <MenuItem value="name-asc">Name A-Z</MenuItem>
-              <MenuItem value="name-desc">Name Z-A</MenuItem>
+              <MenuItem value="pullCount-asc">Least Popular</MenuItem>
+              <MenuItem value="date-desc">Newest First</MenuItem>
+              <MenuItem value="date-asc">Oldest First</MenuItem>
             </Select>
           </FormControl>
         </Box>
