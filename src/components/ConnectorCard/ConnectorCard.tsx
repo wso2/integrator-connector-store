@@ -16,7 +16,7 @@
  under the License.
 */
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   Card,
   CardActionArea,
@@ -28,10 +28,9 @@ import {
   Divider,
 } from '@wso2/oxygen-ui';
 import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
+import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
-import { parseConnectorMetadata } from '@/lib/connector-utils';
-
-const WSO2_ORANGE = '#FF7300';
+import { parseConnectorMetadata, getDisplayName } from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;
@@ -90,10 +89,19 @@ function getIconColor(name: string): string {
 }
 
 function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Memoize expensive computations
   const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
   const iconLetter = useMemo(() => getIconLetter(connector.name), [connector.name]);
   const iconColor = useMemo(() => getIconColor(connector.name), [connector.name]);
+  const displayName = useMemo(
+    () => getDisplayName(connector.name, metadata.vendor),
+    [connector.name, metadata.vendor]
+  );
+
+  // Check if summary is long enough to need truncation
+  const needsTruncation = connector.summary.length > 120;
 
   return (
     <Card
@@ -102,18 +110,30 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
         display: 'flex',
         flexDirection: 'column',
         bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
-        border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+        border: effectiveMode === 'dark' ? '1px solid #27272A' : '1px solid #E5E7EB',
         boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        transition: 'border-color 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: '#FF7300',
+        },
       }}
     >
       <CardActionArea
         href={`https://central.ballerina.io/${connector.URL}`}
         target="_blank"
         rel="noopener noreferrer"
-        sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+        sx={{ 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'stretch',
+          '&:hover': {
+            backgroundColor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+          },
+        }}
       >
-        <CardContent sx={{ flexGrow: 1, width: '100%', p: 2.5 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <CardContent sx={{ flexGrow: 1, width: '100%', p: 2.5, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', gap: 2, flexGrow: 1 }}>
           <Box
             sx={{
               width: 48,
@@ -153,7 +173,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               }}
             >
               <Typography variant="subtitle2" fontWeight={600}>
-                {connector.name.split('.').pop() || connector.name}
+                {displayName}
               </Typography>
               <Chip
                 label={connector.version}
@@ -164,20 +184,87 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
                 }}
               />
             </Box>
-            <Typography
-              variant="body2"
-              color="text.secondary"
+            <Box
               sx={{
                 mt: 0.75,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                lineHeight: 1.5,
+                minHeight: '40px',
+                fontSize: '0.8571428571428571rem',
+                lineHeight: 1.43,
+                color: 'text.secondary',
+                '& p, & span': {
+                  margin: 0,
+                  fontSize: '0.8571428571428571rem',
+                  lineHeight: 1.43,
+                  color: 'text.secondary',
+                },
+                '& code': {
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  fontSize: '0.8571428571428571rem',
+                  fontFamily: 'monospace',
+                },
+                '& strong': {
+                  fontWeight: 600,
+                },
+                '& em': {
+                  fontStyle: 'italic',
+                },
+                '& a': {
+                  color: 'primary.main',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                },
               }}
             >
-              {connector.summary}
-            </Typography>
+              <Box
+                sx={{
+                  ...(!isExpanded && needsTruncation && {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }),
+                }}
+              >
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <span>{children}</span>,
+                    // Don't render links - the whole card is already clickable
+                    a: ({ children }) => <span>{children}</span>,
+                  }}
+                >
+                  {connector.summary}
+                </ReactMarkdown>
+              </Box>
+              {needsTruncation && (
+                <Button
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  sx={{
+                    minWidth: 'auto',
+                    padding: 0,
+                    fontSize: '0.75rem',
+                    textTransform: 'none',
+                    mt: 0.5,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {isExpanded ? 'Show less' : 'Show more'}
+                </Button>
+              )}
+            </Box>
           </Box>
         </Box>
 
@@ -227,16 +314,18 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
           )}
         </Box>
 
-        <Divider sx={{ my: 2 }} />
+        {/* Bottom section - always at bottom */}
+        <Box sx={{ mt: 'auto' }}>
+          <Divider sx={{ my: 2 }} />
 
-        {/* Footer */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
+          {/* Footer */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography
               variant="caption"
@@ -255,6 +344,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               {formatRelativeTime(connector.createdDate)}
             </Typography>
           </Box>
+        </Box>
         </Box>
       </CardContent>
       </CardActionArea>

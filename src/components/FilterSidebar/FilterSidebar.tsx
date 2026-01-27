@@ -27,7 +27,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Paper,
-  Chip,
 } from '@wso2/oxygen-ui';
 import { ChevronDown } from '@wso2/oxygen-ui-icons-react';
 import { FilterOptions } from '@/types/connector';
@@ -57,14 +56,12 @@ export default function FilterSidebar({
   onAreaChange,
   onVendorChange,
   onTypeChange,
-  onClearAll,
   effectiveMode,
 }: FilterSidebarProps) {
   const [expandedArea, setExpandedArea] = useState(true);
   const [expandedType, setExpandedType] = useState(false);
   const [expandedVendor, setExpandedVendor] = useState(false);
   
-  const totalFiltersActive = selectedAreas.length + selectedVendors.length + selectedTypes.length;
 
   return (
     <Paper
@@ -78,35 +75,6 @@ export default function FilterSidebar({
         boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
       }}
     >
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: 16 }}>
-          Filters
-        </Typography>
-        {totalFiltersActive > 0 && (
-          <Chip
-            label={totalFiltersActive.toString()}
-            size="small"
-            onDelete={onClearAll}
-            deleteIcon={
-              <Box component="span" sx={{ fontSize: '0.75rem', ml: 0.5 }}>
-                ✕
-              </Box>
-            }
-            sx={{ 
-              fontWeight: 600,
-              bgcolor: '#FF7300',
-              color: '#FFFFFF',
-              '& .MuiChip-deleteIcon': {
-                color: '#FFFFFF',
-                '&:hover': {
-                  color: 'rgba(255, 255, 255, 0.8)',
-                },
-              },
-            }}
-          />
-        )}
-      </Box>
 
       {/* Search */}
       <SearchBar 
