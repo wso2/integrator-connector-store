@@ -182,25 +182,32 @@ function buildSolrQuery(
   const org = params.orgName || 'ballerinax';
   filters.push(`org:${org}`);
 
+  // Helper to escape Lucene/Solr string values
+  function escapeLuceneValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
-      const filterValue = `keyword:Area\\/${area}`;
-      filters.push(filterValue);
+      const escaped = escapeLuceneValue(area);
+      filters.push(`keyword:Area\/${escaped}`);
     });
   }
 
   // Add vendor filter (required with AND operator)
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
-      filters.push(`keyword:Vendor\\/${vendor}`);
+      const escaped = escapeLuceneValue(vendor);
+      filters.push(`keyword:Vendor\/${escaped}`);
     });
   }
 
   // Add type filter (required with AND operator)
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
-      filters.push(`keyword:Type\\/${type}`);
+      const escaped = escapeLuceneValue(type);
+      filters.push(`keyword:Type\/${escaped}`);
     });
   }
 
@@ -317,10 +324,26 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    const result = await executeSingleSearch(combinations[0]);
-    // Apply client-side sorting to ensure correct order (especially for display names)
-    result.packages = sortMergedPackages(result.packages, params.sort);
-    return result;
+    // For name-asc/name-desc, fetch all results, sort, then slice for pagination
+    if (params.sort === 'name-asc' || params.sort === 'name-desc') {
+      // Fetch all results from offset 0
+      const allResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 10000 });
+      // Sort client-side
+      const sorted = sortMergedPackages(allResult.packages, params.sort);
+      // Slice for pagination
+      const paged = sorted.slice(params.offset, params.offset + params.limit);
+      return {
+        packages: paged,
+        count: sorted.length,
+        offset: params.offset,
+        limit: params.limit,
+      };
+    } else {
+      // Other sorts: keep existing behavior
+      const result = await executeSingleSearch(combinations[0]);
+      result.packages = sortMergedPackages(result.packages, params.sort);
+      return result;
+    }
   }
 
   // Multiple combinations - execute in parallel and merge results
@@ -513,7 +536,22 @@ export async function fetchPackageVersionsNoRetry(
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
-  return data;
+  // If data is an array of strings, return as is
+  if (Array.isArray(data) && data.every(v => typeof v === 'string')) {
+    return data;
+  }
+  // If data is an object with a versions array of strings, return that
+  if (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.versions) &&
+    data.versions.every((v: any) => typeof v === 'string')
+  ) {
+    return data.versions;
+  }
+  throw new Error(
+    `Unexpected response from ${PACKAGES_ENDPOINT}/${orgName}/${packageName}: expected array or { versions: [...] }`
+  );
 }
 
 export async function fetchPackageVersions(
