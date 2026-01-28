@@ -16,4 +16,4 @@
  under the License.
 */
 
-export { default } from './Pagination';
+export { default } from './Footer';

@@ -17,11 +17,13 @@
 */
 
 import React from 'react';
-import { Box, Select, MenuItem, Typography, Button, FormControl, InputLabel } from '@wso2/oxygen-ui';
+import { Box, Select, MenuItem, Typography, Button, FormControl } from '@wso2/oxygen-ui';
 import {
   ChevronLeft as NavigateBeforeIcon,
   ChevronRight as NavigateNextIcon,
 } from '@wso2/oxygen-ui-icons-react';
+
+type SortOption = 'name-asc' | 'name-desc' | 'pullCount-desc' | 'pullCount-asc' | 'date-desc' | 'date-asc';
 
 interface PaginationProps {
   currentPage: number;
@@ -30,6 +32,8 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   pageSizeOptions?: number[];
+  sortBy?: SortOption;
+  onSortChange?: (sort: SortOption) => void;
 }
 
 export default function Pagination({
@@ -39,6 +43,8 @@ export default function Pagination({
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 30, 50, 100],
+  sortBy,
+  onSortChange,
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / pageSize);
   const startItem = (currentPage - 1) * pageSize + 1;
@@ -97,36 +103,67 @@ export default function Pagination({
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'space-between',
+        flexWrap: { xs: 'wrap', lg: 'nowrap' },
         alignItems: 'center',
-        flexWrap: 'wrap',
+        justifyContent: 'space-between',
         gap: 2,
-        mt: 4,
-        pt: 3,
-        borderTop: 1,
-        borderColor: 'divider',
       }}
     >
-      {/* Items per page selector */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Per page</InputLabel>
-          <Select
-            value={pageSize}
-            label="Per page"
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          >
-            {pageSizeOptions.map((size) => (
-              <MenuItem key={size} value={size}>
-                {size} items
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Per page
+          </Typography>
+          <FormControl size="small">
+            <Select
+              value={pageSize}
+              onChange={(e) => {
+                onPageSizeChange(Number(e.target.value));
+                onPageChange(1); // Reset to page 1 when page size changes
+              }}
+              inputProps={{
+                'aria-label': 'Items per page',
+              }}
+              sx={{ minWidth: 100 }}
+            >
+              {pageSizeOptions.map((size) => (
+                <MenuItem key={size} value={size}>
+                  {size} Items
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <Typography variant="body2" color="text.secondary">
-          Showing {startItem}-{endItem} of {totalItems}
+          Showing {totalItems > 0 ? startItem : 0}-{endItem} of {totalItems}
         </Typography>
       </Box>
+
+      {/* Sort selector */}
+      {sortBy && onSortChange && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Sort by
+          </Typography>
+          <FormControl size="small">
+            <Select
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value as SortOption)}
+              inputProps={{
+                'aria-label': 'Sort by',
+              }}
+              sx={{ minWidth: 140 }}
+            >
+              <MenuItem value="name-asc">Name (A-Z)</MenuItem>
+              <MenuItem value="name-desc">Name (Z-A)</MenuItem>
+              <MenuItem value="pullCount-desc">Most Popular</MenuItem>
+              <MenuItem value="pullCount-asc">Least Popular</MenuItem>
+              <MenuItem value="date-desc">Newest First</MenuItem>
+              <MenuItem value="date-asc">Oldest First</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      )}
 
       {/* Page navigation */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
