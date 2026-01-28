@@ -17,6 +17,7 @@
 */
 
 import { memo, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardActionArea,
@@ -90,6 +91,7 @@ function getIconColor(name: string): string {
 
 function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
 
   // Memoize expensive computations
   const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
@@ -99,6 +101,17 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
     () => getDisplayName(connector.name, metadata.vendor),
     [connector.name, metadata.vendor]
   );
+
+  // Parse org and package name from connector.name (e.g., "ballerinax/openai.chat")
+  const detailUrl = useMemo(() => {
+    const nameParts = connector.name.split('/');
+    if (nameParts.length === 2) {
+      const [org, packageName] = nameParts;
+      return `/connector/${org}/${packageName}`;
+    }
+    // Fallback: use URL path
+    return `/connector/${connector.URL.replace('packages/', '')}`;
+  }, [connector.name, connector.URL]);
 
   // Check if summary is long enough to need truncation
   const needsTruncation = connector.summary.length > 120;
@@ -119,9 +132,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
       }}
     >
       <CardActionArea
-        href={`https://central.ballerina.io/${connector.URL}`}
-        target="_blank"
-        rel="noopener noreferrer"
+        onClick={() => navigate(detailUrl)}
         sx={{ 
           height: '100%', 
           display: 'flex', 

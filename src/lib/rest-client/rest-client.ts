@@ -16,10 +16,12 @@
  under the License.
 */
 
-import { BallerinaPackage, FilterOptions } from '@/types/connector';
+import { BallerinaPackage, FilterOptions, PackageDetails } from '@/types/connector';
 import { extractFilterOptions, parseConnectorMetadata, getDisplayName } from '../connector-utils';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
+const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
+
 
 /**
  * Sort options used in the UI
@@ -109,11 +111,11 @@ async function withRetry<T>(
  * Solr special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
  * Wraps value in double quotes after escaping internal quotes
  */
-function escapeSolrValue(value: string): string {
-  // Escape double quotes and backslashes, then wrap in quotes
-  const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `"${escaped}"`;
-}
+// function escapeSolrValue(value: string): string {
+//   // Escape double quotes and backslashes, then wrap in quotes
+//   const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+//   return `"${escaped}"`;
+// }
 
 /**
  * Convert sort option to REST API sort parameter
@@ -216,12 +218,10 @@ function buildSolrQuery(
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
     const finalQuery = `${params.query} AND ${filters.join(' AND ')}`;
-    console.log('Final Solr query:', finalQuery);
     return finalQuery;
   }
 
   const finalQuery = filters.join(' AND ');
-  console.log('Final Solr query:', finalQuery);
   return finalQuery;
 }
 
@@ -293,8 +293,6 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
 
     // Add sort without encoding the comma
     const urlString = `${REST_ENDPOINT}?${queryParams.toString()}&sort=${sortParam}`;
-
-    console.log('Fetching URL:', urlString);
 
     const response = await fetch(urlString);
 
@@ -511,4 +509,53 @@ export async function fetchFiltersProgressively(
   }
 
   return initialFilters;
+}
+
+/**
+ * Fetch available versions for a package
+ */
+export async function fetchPackageVersions(
+  orgName: string,
+  packageName: string
+): Promise<string[]> {
+  return withRetry(async () => {
+    const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  });
+}
+
+/**
+ * Fetch detailed package information including readme/documentation
+ */
+export async function fetchPackageDetails(
+  orgName: string,
+  packageName: string,
+  version?: string
+): Promise<PackageDetails> {
+  return withRetry(async () => {
+    // If no version provided, fetch latest version first
+    let targetVersion = version;
+    if (!targetVersion) {
+      const versions = await fetchPackageVersions(orgName, packageName);
+      if (versions.length === 0) {
+        throw new Error('No versions found for package');
+      }
+      targetVersion = versions[0]; // First version is the latest
+    }
+
+    const response = await fetch(
+      `${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  });
 }

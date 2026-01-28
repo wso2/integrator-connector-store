@@ -179,16 +179,6 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
 
-      console.log('Fetching with filters:', {
-        query: searchQuery,
-        areas: selectedAreas,
-        vendors: selectedVendors,
-        types: selectedTypes,
-        offset: (currentPage - 1) * pageSize,
-        limit: pageSize,
-        sort: sortBy,
-      });
-
       const response = await searchPackages({
         query: searchQuery,
         areas: selectedAreas,
@@ -198,8 +188,6 @@ export default function HomePage() {
         limit: pageSize,
         sort: sortBy,
       });
-
-      console.log('API Response:', response);
 
       setConnectors(response.packages);
       setTotalCount(response.count);
