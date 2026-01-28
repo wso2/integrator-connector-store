@@ -512,7 +512,8 @@ export async function fetchPackageVersionsNoRetry(
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  const data = await response.json();
+  return data;
 }
 
 export async function fetchPackageVersions(
@@ -536,12 +537,19 @@ export async function fetchPackageDetails(
 
     if (!targetVersion) {
       const versions = await fetchPackageVersionsNoRetry(orgName, packageName);
-      if (versions.length === 0) {
+      // Map to objects with both raw and sanitized semver
+      const sanitized = versions
+        .map(v => {
+          const valid = semver.valid(v) || semver.coerce(v)?.version;
+          return valid ? { raw: v, semver: valid } : null;
+        })
+        .filter((v): v is { raw: string; semver: string } => !!v);
+      if (sanitized.length === 0) {
         throw new Error('No versions found for package');
       }
-      // Sort versions in descending semver order
-      const sortedVersions = versions.slice().sort((a, b) => semver.rcompare(a, b));
-      targetVersion = sortedVersions[0]; // Latest semver version
+      // Sort by sanitized semver descending
+      sanitized.sort((a, b) => semver.rcompare(a.semver, b.semver));
+      targetVersion = sanitized[0].raw; // Use the original/raw version string
     }
 
     const response = await fetch(

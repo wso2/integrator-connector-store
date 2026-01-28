@@ -17,6 +17,7 @@
 */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useColorScheme } from '@wso2/oxygen-ui';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -91,6 +92,41 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
 }
 
 export default function ConnectorDetailPage() {
+  const { mode } = useColorScheme();
+  const [effectiveMode, setEffectiveMode] = useState<'light' | 'dark'>(() => {
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return mode as 'light' | 'dark';
+  });
+
+  useEffect(() => {
+    let m: MediaQueryList | null = null;
+    let handler: ((e: MediaQueryListEvent) => void) | null = null;
+    if (mode === 'system') {
+      m = window.matchMedia('(prefers-color-scheme: dark)');
+      setEffectiveMode(m.matches ? 'dark' : 'light');
+      handler = (e: MediaQueryListEvent) => {
+        setEffectiveMode(e.matches ? 'dark' : 'light');
+      };
+      if (m.addEventListener) {
+        m.addEventListener('change', handler);
+      } else if (m.addListener) {
+        m.addListener(handler);
+      }
+    } else {
+      setEffectiveMode(mode as 'light' | 'dark');
+    }
+    return () => {
+      if (m && handler) {
+        if (m.removeEventListener) {
+          m.removeEventListener('change', handler);
+        } else if (m.removeListener) {
+          m.removeListener(handler);
+        }
+      }
+    };
+  }, [mode]);
   const { org, name, version } = useParams<{ org: string; name: string; version?: string }>();
   const navigate = useNavigate();
 
@@ -155,7 +191,7 @@ export default function ConnectorDetailPage() {
 
   return (
     <>
-      <WSO2Header effectiveMode={'light'} />
+      <WSO2Header effectiveMode={effectiveMode} />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Breadcrumbs */}
