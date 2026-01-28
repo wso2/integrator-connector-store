@@ -196,7 +196,6 @@ function buildSolrQuery(
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
       const filterValue = `keyword:Area\\/${area}`;
-      console.log('Adding area filter:', filterValue);
       filters.push(filterValue);
     });
   }
