@@ -146,7 +146,10 @@ export default function ConnectorDetailPage() {
   
   // Extract only Overview and Setup sections
   const { overview, setup } = useMemo(
-    () => (packageDetails ? extractOverviewAndSetup(packageDetails.readme) : { overview: '', setup: '' }),
+    () =>
+      packageDetails
+        ? extractOverviewAndSetup(String(packageDetails?.readme || ''))
+        : { overview: '', setup: '' },
     [packageDetails]
   );
 
@@ -284,7 +287,7 @@ export default function ConnectorDetailPage() {
                       sx={{ fontSize: '0.75rem' }}
                     />
                   )}
-                  {packageDetails.licenses.map((license) => (
+                  {(packageDetails.licenses ?? []).map((license) => (
                     <Chip
                       key={license}
                       label={license}

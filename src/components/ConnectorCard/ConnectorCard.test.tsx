@@ -17,7 +17,7 @@
 */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ConnectorCard from './ConnectorCard';
 import { BallerinaPackage } from '@/types/connector';
 
@@ -108,13 +108,20 @@ describe('ConnectorCard', () => {
   });
 
   it('should render formatted relative date', () => {
-    // Set date to yesterday
-    const yesterday = new Date();
+    // Use a fixed system time for deterministic results
+    const fixedNow = new Date('2026-01-28T12:00:00Z');
+    jest.useFakeTimers();
+    jest.setSystemTime(fixedNow);
+
+    // Set date to yesterday relative to fixedNow
+    const yesterday = new Date(fixedNow);
     yesterday.setDate(yesterday.getDate() - 1);
     const connector = createMockConnector({ createdDate: yesterday.toISOString() });
     render(<ConnectorCard connector={connector} effectiveMode="light" />);
 
     expect(screen.getByText('1 day ago')).toBeInTheDocument();
+
+    jest.useRealTimers();
   });
 
   it('should have a link to connector URL', () => {

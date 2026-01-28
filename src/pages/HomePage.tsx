@@ -23,9 +23,7 @@ import {
   Box,
   Container,
   Typography,
-  Button,
   Paper,
-  Chip,
   CircularProgress,
   Alert,
 } from '@wso2/oxygen-ui';
@@ -37,6 +35,7 @@ import WSO2Header from '@/components/WSO2Header';
 import Hero from '@/components/Hero';
 import FilterSidebar from '@/components/FilterSidebar';
 import Footer from '@/components/Footer';
+import SelectedFilters from '@/components/SelectedFilters';
 
 // WSO2 brand colors
 const WSO2_ORANGE = '#FF7300';
@@ -104,13 +103,33 @@ export default function HomePage() {
     return mode as 'light' | 'dark';
   });
 
-  // Update effectiveMode when mode changes
+  // Update effectiveMode when mode changes and subscribe to OS theme changes if mode is 'system'
   useEffect(() => {
+    let m: MediaQueryList | null = null;
+    let handler: ((e: MediaQueryListEvent) => void) | null = null;
     if (mode === 'system') {
-      setEffectiveMode(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      m = window.matchMedia('(prefers-color-scheme: dark)');
+      setEffectiveMode(m.matches ? 'dark' : 'light');
+      handler = (e: MediaQueryListEvent) => {
+        setEffectiveMode(e.matches ? 'dark' : 'light');
+      };
+      if (m.addEventListener) {
+        m.addEventListener('change', handler);
+      } else if (m.addListener) {
+        m.addListener(handler);
+      }
     } else {
       setEffectiveMode(mode as 'light' | 'dark');
     }
+    return () => {
+      if (m && handler) {
+        if (m.removeEventListener) {
+          m.removeEventListener('change', handler);
+        } else if (m.removeListener) {
+          m.removeListener(handler);
+        }
+      }
+    };
   }, [mode]);
 
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
@@ -165,13 +184,8 @@ export default function HomePage() {
     setSelectedAreas([]);
     setSelectedTypes([]);
     setSelectedVendors([]);
+    setSearchQuery('');
   };
-
-  const hasActiveFilters =
-    selectedAreas.length > 0 ||
-    selectedTypes.length > 0 ||
-    selectedVendors.length > 0 ||
-    searchQuery.length > 0;
 
   // Fetch page data from REST API
   const fetchPageData = useCallback(async () => {
@@ -233,9 +247,9 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Trigger server-side fetch when filters/sort/page change
+  // Trigger server-side fetch when filters/sort/page change (after initial loading)
   useEffect(() => {
-    if (!initialLoading && initialFetchDoneRef.current) {
+    if (!initialLoading) {
       fetchPageData();
     }
   }, [initialLoading, fetchPageData]);
@@ -320,6 +334,19 @@ export default function HomePage() {
                 )}
 
                 {totalCount === 0 && !loading ? (
+                  <>
+                  {/* Selected Filters (always show if active) */}
+                <SelectedFilters
+                  selectedAreas={selectedAreas}
+                  selectedTypes={selectedTypes}
+                  selectedVendors={selectedVendors}
+                  onAreaDelete={toggleAreaFilter}
+                  onTypeDelete={toggleTypeFilter}
+                  onVendorDelete={toggleVendorFilter}
+                  onClearAll={clearAllFilters}
+                  WSO2_ORANGE={WSO2_ORANGE}
+                />
+
                   <Box
                     display="flex"
                     flexDirection="column"
@@ -334,6 +361,7 @@ export default function HomePage() {
                       Try adjusting your search or filters
                     </Typography>
                   </Box>
+                  </>
                 ) : (
                   <>
                     {/* Top Pagination Bar */}
@@ -356,65 +384,17 @@ export default function HomePage() {
                       />
                     </Paper>
 
-                    {/* Selected Filters */}
-                    {hasActiveFilters && (
-                      <Paper
-                        sx={{
-                          p: 1.5,
-                          mb: 2.5,
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          alignItems: 'center',
-                          gap: 1,
-                          bgcolor: 'action.hover',
-                        }}
-                      >
-                        <Typography variant="body2" fontWeight={500} sx={{ mr: 1 }}>
-                          Active filters:
-                        </Typography>
-
-                        {selectedAreas.map((area) => (
-                          <Chip
-                            key={`area-${area}`}
-                            label={area}
-                            size="small"
-                            onDelete={() => toggleAreaFilter(area)}
-                            sx={{
-                              bgcolor: `${WSO2_ORANGE}20`,
-                              color: WSO2_ORANGE,
-                            }}
-                          />
-                        ))}
-
-                        {selectedTypes.map((type) => (
-                          <Chip
-                            key={`type-${type}`}
-                            label={type}
-                            size="small"
-                            onDelete={() => toggleTypeFilter(type)}
-                            color="default"
-                          />
-                        ))}
-
-                        {selectedVendors.map((vendor) => (
-                          <Chip
-                            key={`vendor-${vendor}`}
-                            label={vendor}
-                            size="small"
-                            onDelete={() => toggleVendorFilter(vendor)}
-                            color="primary"
-                          />
-                        ))}
-
-                        <Button
-                          size="small"
-                          onClick={clearAllFilters}
-                          sx={{ ml: 'auto', textDecoration: 'underline', color: 'text.secondary' }}
-                        >
-                          Clear all
-                        </Button>
-                      </Paper>
-                    )}
+                    {/* Selected Filters (always show if active) */}
+                <SelectedFilters
+                  selectedAreas={selectedAreas}
+                  selectedTypes={selectedTypes}
+                  selectedVendors={selectedVendors}
+                  onAreaDelete={toggleAreaFilter}
+                  onTypeDelete={toggleTypeFilter}
+                  onVendorDelete={toggleVendorFilter}
+                  onClearAll={clearAllFilters}
+                  WSO2_ORANGE={WSO2_ORANGE}
+                />
 
                     {/* Loading Overlay */}
                     {loading && (

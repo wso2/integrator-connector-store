@@ -18,6 +18,7 @@
 
 import { BallerinaPackage, FilterOptions, PackageDetails } from '@/types/connector';
 import { extractFilterOptions, parseConnectorMetadata, getDisplayName } from '../connector-utils';
+import semver from 'semver';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
@@ -105,17 +106,6 @@ async function withRetry<T>(
 
   throw lastError;
 }
-
-/**
- * Escape special characters in Solr query values
- * Solr special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
- * Wraps value in double quotes after escaping internal quotes
- */
-// function escapeSolrValue(value: string): string {
-//   // Escape double quotes and backslashes, then wrap in quotes
-//   const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-//   return `"${escaped}"`;
-// }
 
 /**
  * Convert sort option to REST API sort parameter
@@ -513,19 +503,23 @@ export async function fetchFiltersProgressively(
 /**
  * Fetch available versions for a package
  */
+
+export async function fetchPackageVersionsNoRetry(
+  orgName: string,
+  packageName: string
+): Promise<string[]> {
+  const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function fetchPackageVersions(
   orgName: string,
   packageName: string
 ): Promise<string[]> {
-  return withRetry(async () => {
-    const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
-  });
+  return withRetry(() => fetchPackageVersionsNoRetry(orgName, packageName));
 }
 
 /**
@@ -539,12 +533,15 @@ export async function fetchPackageDetails(
   return withRetry(async () => {
     // If no version provided, fetch latest version first
     let targetVersion = version;
+
     if (!targetVersion) {
-      const versions = await fetchPackageVersions(orgName, packageName);
+      const versions = await fetchPackageVersionsNoRetry(orgName, packageName);
       if (versions.length === 0) {
         throw new Error('No versions found for package');
       }
-      targetVersion = versions[0]; // First version is the latest
+      // Sort versions in descending semver order
+      const sortedVersions = versions.slice().sort((a, b) => semver.rcompare(a, b));
+      targetVersion = sortedVersions[0]; // Latest semver version
     }
 
     const response = await fetch(
