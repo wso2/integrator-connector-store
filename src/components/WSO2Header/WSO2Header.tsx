@@ -17,53 +17,51 @@
 */
 
 import React from 'react';
-import { Box, ColorSchemeToggle } from '@wso2/oxygen-ui';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import { Box, ColorSchemeToggle, AppBar, Container, Toolbar } from '@wso2/oxygen-ui';
 
-export default function WSO2Header() {
+interface WSO2HeaderProps {
+  effectiveMode: 'light' | 'dark';
+}
+
+export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
   return (
-    <Box
-      component="header"
-      sx={{
-        backgroundColor: 'background.paper',
-        borderBottom: 1,
+    <AppBar
+      position="static"
+      color="default"
+      elevation={0}
+      sx={{ 
+        borderBottom: 1, 
         borderColor: 'divider',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1100,
+        bgcolor: 'background.paper'
       }}
     >
-      <Box
-        sx={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          px: { xs: 2, sm: 3 },
-          py: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* Left side - WSO2 Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <a href="https://wso2.com/" aria-label="WSO2 Home">
-            <LazyLoadImage
-              src="/images/wso2-logo.webp"
-              alt="WSO2"
-              width={100}
-              height={39}
-              effect="opacity"
-              style={{ display: 'block' }}
-            />
-          </a>
-        </Box>
+      <Container maxWidth="xl">
+        <Toolbar disableGutters sx={{ height: 64 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* WSO2 Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                component="img"
+                src={effectiveMode === 'dark' ? '/images/Logo_WSO2-integrator-white.png' : '/images/Logo_WSO2-integrator-black.png'}
+                alt="WSO2 Integrator"
+                sx={{ 
+                  height: 32,
+                  width: 'auto',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            </Box>
+          </Box>
 
-        {/* Right side - Color Scheme Toggle */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ColorSchemeToggle />
-        </Box>
-      </Box>
-    </Box>
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <ColorSchemeToggle />
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 }

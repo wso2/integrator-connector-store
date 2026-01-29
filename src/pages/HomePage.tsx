@@ -16,19 +16,29 @@
  under the License.
 */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Container, Box, Typography, CircularProgress, Alert } from '@wso2/oxygen-ui';
+import { useColorScheme } from '@wso2/oxygen-ui';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  CircularProgress,
+  Alert,
+} from '@wso2/oxygen-ui';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { searchPackages, fetchFiltersProgressively, SortOption } from '@/lib/rest-client';
-import ConnectorCard from '@/components/ConnectorCard';
-import FilterSidebar from '@/components/FilterSidebar';
-import SearchBar from '@/components/SearchBar';
-import SortSelector from '@/components/SortSelector';
 import Pagination from '@/components/Pagination';
+import ConnectorCard from '@/components/ConnectorCard';
 import WSO2Header from '@/components/WSO2Header';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import Hero from '@/components/Hero';
+import FilterSidebar from '@/components/FilterSidebar';
+import Footer from '@/components/Footer';
+import SelectedFilters from '@/components/SelectedFilters';
+
+// WSO2 brand colors
+const WSO2_ORANGE = '#FF7300';
 
 // Valid sort options for validation
 const VALID_SORT_OPTIONS: SortOption[] = [
@@ -67,7 +77,6 @@ function parsePageSizeParam(value: string | null): number {
   if (!Number.isFinite(parsed) || Number.isNaN(parsed) || parsed < 1) {
     return DEFAULT_PAGE_SIZE;
   }
-  // Clamp to sensible range
   return Math.min(Math.max(1, Math.floor(parsed)), MAX_PAGE_SIZE);
 }
 
@@ -84,6 +93,44 @@ function parseSortParam(value: string | null): SortOption {
 
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { mode } = useColorScheme();
+  
+  // Handle system mode by detecting actual system preference
+  const [effectiveMode, setEffectiveMode] = useState<'light' | 'dark'>(() => {
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return mode as 'light' | 'dark';
+  });
+
+  // Update effectiveMode when mode changes and subscribe to OS theme changes if mode is 'system'
+  useEffect(() => {
+    let m: MediaQueryList | null = null;
+    let handler: ((e: MediaQueryListEvent) => void) | null = null;
+    if (mode === 'system') {
+      m = window.matchMedia('(prefers-color-scheme: dark)');
+      setEffectiveMode(m.matches ? 'dark' : 'light');
+      handler = (e: MediaQueryListEvent) => {
+        setEffectiveMode(e.matches ? 'dark' : 'light');
+      };
+      if (m.addEventListener) {
+        m.addEventListener('change', handler);
+      } else if (m.addListener) {
+        m.addListener(handler);
+      }
+    } else {
+      setEffectiveMode(mode as 'light' | 'dark');
+    }
+    return () => {
+      if (m && handler) {
+        if (m.removeEventListener) {
+          m.removeEventListener('change', handler);
+        } else if (m.removeListener) {
+          m.removeListener(handler);
+        }
+      }
+    };
+  }, [mode]);
 
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -91,8 +138,8 @@ export default function HomePage() {
     vendors: [],
     types: [],
   });
-  const [loading, setLoading] = useState(false); // For filter/pagination changes
-  const [initialLoading, setInitialLoading] = useState(true); // For first page load
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -111,9 +158,34 @@ export default function HomePage() {
   const [pageSize, setPageSize] = useState(parsePageSizeParam(searchParams.get('size')));
   const [sortBy, setSortBy] = useState<SortOption>(parseSortParam(searchParams.get('sort')));
 
-  // Refs to prevent effects from running on initial mount
-  const isInitialMountRef = useRef(true);
+  // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
+
+  // Toggle filter selection
+  const toggleAreaFilter = (area: string) => {
+    setSelectedAreas((prev) =>
+      prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
+    );
+  };
+
+  const toggleTypeFilter = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleVendorFilter = (vendor: string) => {
+    setSelectedVendors((prev) =>
+      prev.includes(vendor) ? prev.filter((v) => v !== vendor) : [...prev, vendor]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSelectedAreas([]);
+    setSelectedTypes([]);
+    setSelectedVendors([]);
+    setSearchQuery('');
+  };
 
   // Fetch page data from REST API
   const fetchPageData = useCallback(async () => {
@@ -153,8 +225,6 @@ export default function HomePage() {
 
         // Phase 1: Load first page immediately (fast)
         await fetchPageData();
-
-        // Mark initial fetch as done to prevent duplicate fetch in the other effect
         initialFetchDoneRef.current = true;
 
         // Phase 2: Get filter options (cached or progressive)
@@ -177,20 +247,17 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Trigger server-side fetch when filters/sort/page change (skip on initial load)
+  // Trigger server-side fetch when filters/sort/page change (after initial loading)
   useEffect(() => {
-    // Skip if initial fetch hasn't been done yet or if we're still in initial loading
-    if (!initialFetchDoneRef.current || initialLoading) {
-      return;
+    if (!initialLoading) {
+      fetchPageData();
     }
-    fetchPageData();
   }, [initialLoading, fetchPageData]);
 
   // Sync state with URL params
   useEffect(() => {
     const params = new URLSearchParams();
 
-    // Only add non-default params to keep URL clean
     if (currentPage > 1) params.set('page', currentPage.toString());
     if (pageSize !== 30) params.set('size', pageSize.toString());
     if (searchQuery) params.set('search', searchQuery);
@@ -211,12 +278,8 @@ export default function HomePage() {
     setSearchParams,
   ]);
 
-  // Reset to page 1 when filters change (skip on initial mount to preserve URL page)
+  // Reset to page 1 when filters change
   useEffect(() => {
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      return;
-    }
     setCurrentPage(1);
   }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 
@@ -225,240 +288,173 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Filter handlers
-  const handleAreaChange = (area: string) => {
-    setSelectedAreas((prev) =>
-      prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
-    );
-  };
-
-  const handleVendorChange = (vendor: string) => {
-    setSelectedVendors((prev) =>
-      prev.includes(vendor) ? prev.filter((v) => v !== vendor) : [...prev, vendor]
-    );
-  };
-
-  const handleTypeChange = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
-  const handleClearAll = () => {
-    setSelectedAreas([]);
-    setSelectedVendors([]);
-    setSelectedTypes([]);
-    setSearchQuery('');
-  };
-
   return (
     <>
-      {/* WSO2 Header */}
-      <WSO2Header />
+      {/* Header */}
+      <WSO2Header effectiveMode={effectiveMode} />
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        {/* WSO2 Integrator Brand Section */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-          {/* WSO2 Integrator Logo with Icon + Text */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <LazyLoadImage
-              src="/images/wso2-integrator-correct.svg"
-              alt="WSO2 Integrator logo"
-              width={40}
-              height={40}
-              effect="opacity"
-              style={{ display: 'block' }}
-            />
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 600,
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                letterSpacing: '0.008rem',
-              }}
-            >
-              WSO
-              <Box component="span" sx={{ fontSize: '0.7em', verticalAlign: 'sub' }}>
-                2
-              </Box>{' '}
-              Integrator
-            </Typography>
-          </Box>
+      {/* Hero Banner */}
+      <Hero effectiveMode={effectiveMode} />
 
-          {/* Separator and Connector Store */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Box
-              sx={{
-                width: '1px',
-                height: '32px',
-                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#444' : '#ddd'),
-              }}
-            />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 600,
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                letterSpacing: '0.008rem',
-              }}
-            >
-              Connector Store
-            </Typography>
-          </Box>
+      <Box sx={{ minHeight: '100vh' }}>
+
+      {/* Initial Loading State */}
+      {initialLoading && (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+          <CircularProgress />
         </Box>
+      )}
 
-        {/* Description */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 800 }}>
-            Discover and integrate with 100+ pre-built connectors for popular services and
-            platforms. Accelerate your integration development with WSO2 Integrator.
-          </Typography>
-        </Box>
-
-        {/* Search and Sort Controls */}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 2,
-            mb: 3,
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'stretch', sm: 'center' },
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box sx={{ flex: 1, maxWidth: { xs: '100%', sm: '500px' } }}>
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          </Box>
-          <Box sx={{ flexShrink: 0 }}>
-            <SortSelector value={sortBy} onChange={setSortBy} />
-          </Box>
-        </Box>
-
-        {/* Initial Loading State */}
-        {initialLoading && (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {/* Main Content */}
-        {!initialLoading && (
-          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-            {/* Filter Sidebar - Always visible */}
-            <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
+      {/* Main Content */}
+      {!initialLoading && (
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
+              {/* Sidebar Filters */}
               <FilterSidebar
                 filterOptions={filterOptions}
                 selectedAreas={selectedAreas}
                 selectedVendors={selectedVendors}
                 selectedTypes={selectedTypes}
-                onAreaChange={handleAreaChange}
-                onVendorChange={handleVendorChange}
-                onTypeChange={handleTypeChange}
-                onClearAll={handleClearAll}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onAreaChange={toggleAreaFilter}
+                onVendorChange={toggleVendorFilter}
+                onTypeChange={toggleTypeFilter}
+                onClearAll={clearAllFilters}
+                effectiveMode={effectiveMode}
               />
-            </Box>
 
-            {/* Connector Grid */}
-            <Box sx={{ flex: 1 }}>
-              {/* Error State */}
-              {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                  {error}
-                </Alert>
-              )}
+              {/* Main Content Area */}
+              <Box sx={{ flex: 1 }}>
+                {/* Error State */}
+                {error && (
+                  <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                  </Alert>
+                )}
 
-              {totalCount === 0 && !loading ? (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  justifyContent="center"
-                  minHeight={300}
-                >
-                  <Typography variant="h6" gutterBottom>
-                    No connectors found
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Try adjusting your search or filters
-                  </Typography>
-                </Box>
-              ) : (
-                <Box sx={{ position: 'relative' }}>
-                  {/* Loading Overlay */}
-                  {loading && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: (theme) =>
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(0, 0, 0, 0.7)'
-                            : 'rgba(255, 255, 255, 0.7)',
-                        zIndex: 10,
-                        minHeight: 300,
-                      }}
-                    >
-                      <CircularProgress />
-                    </Box>
-                  )}
-
-                  {/* Pagination - Top */}
-                  <Pagination
-                    currentPage={currentPage}
-                    totalItems={totalCount}
-                    pageSize={pageSize}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                  />
+                {totalCount === 0 && !loading ? (
+                  <>
+                  {/* Selected Filters (always show if active) */}
+                <SelectedFilters
+                  selectedAreas={selectedAreas}
+                  selectedTypes={selectedTypes}
+                  selectedVendors={selectedVendors}
+                  onAreaDelete={toggleAreaFilter}
+                  onTypeDelete={toggleTypeFilter}
+                  onVendorDelete={toggleVendorFilter}
+                  onClearAll={clearAllFilters}
+                  WSO2_ORANGE={WSO2_ORANGE}
+                />
 
                   <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, 1fr)',
-                        lg: 'repeat(3, 1fr)',
-                      },
-                      gap: 3,
-                      mt: 4,
-                      opacity: loading ? 0.5 : 1,
-                      transition: 'opacity 0.2s',
-                    }}
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    minHeight={300}
                   >
-                    {connectors.map((connector) => (
-                      <ConnectorCard
-                        connector={connector}
-                        key={`${connector.name}-${connector.version}`}
-                      />
-                    ))}
+                    <Typography variant="h6" gutterBottom>
+                      No connectors found
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Try adjusting your search or filters
+                    </Typography>
                   </Box>
+                  </>
+                ) : (
+                  <>
+                    {/* Top Pagination Bar */}
+                    <Paper sx={{ 
+                      p: 1.5, 
+                      mb: 2.5,
+                      bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                      border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                      boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                    }}>
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={totalCount}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        pageSizeOptions={[10, 30, 50, 100]}
+                      />
+                    </Paper>
 
-                  {/* Pagination - Bottom */}
-                  <Pagination
-                    currentPage={currentPage}
-                    totalItems={totalCount}
-                    pageSize={pageSize}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                  />
-                </Box>
-              )}
+                    {/* Selected Filters (always show if active) */}
+                <SelectedFilters
+                  selectedAreas={selectedAreas}
+                  selectedTypes={selectedTypes}
+                  selectedVendors={selectedVendors}
+                  onAreaDelete={toggleAreaFilter}
+                  onTypeDelete={toggleTypeFilter}
+                  onVendorDelete={toggleVendorFilter}
+                  onClearAll={clearAllFilters}
+                  WSO2_ORANGE={WSO2_ORANGE}
+                />
+
+                    {/* Loading Overlay */}
+                    {loading && (
+                      <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+                        <CircularProgress />
+                      </Box>
+                    )}
+
+                    {/* Cards Grid */}
+                    {!loading && (
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            lg: 'repeat(3, 1fr)',
+                          },
+                          gap: 2.5,
+                        }}
+                      >
+                        {connectors.map((connector) => (
+                          <ConnectorCard
+                            key={`${connector.name}-${connector.version}`}
+                            connector={connector}
+                            effectiveMode={effectiveMode}
+                          />
+                        ))}
+                      </Box>
+                    )}
+
+                    {/* Bottom Pagination Bar */}
+                    <Paper sx={{ 
+                      p: 1.5, 
+                      mt: 3,
+                      bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                      border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                      boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                    }}>
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={totalCount}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        pageSizeOptions={[10, 30, 50, 100]}
+                      />
+                    </Paper>
+                  </>
+                )}
+              </Box>
             </Box>
-          </Box>
+          </Container>
         )}
-      </Container>
+      </Box>
+      
+      {/* Footer */}
+      <Footer effectiveMode={effectiveMode} />
     </>
   );
 }

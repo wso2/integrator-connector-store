@@ -45,3 +45,32 @@ export interface ConnectorFilters {
   selectedTypes: string[];
   searchQuery: string;
 }
+
+export interface PackageModule {
+  name: string;
+  readme: string;
+  apiDocURL: string;
+  packageURL: string;
+}
+
+export interface PackageDetails {
+  id: string;
+  organization: string;
+  name: string;
+  version: string;
+  platform: string;
+  languageSpecificationVersion: string;
+  isDeprecated: boolean;
+  summary: string;
+  readme: string;
+  modules: PackageModule[];
+  URL: string;
+  balaURL: string;
+  sourceCodeLocation: string;
+  icon: string;
+  pullCount: number;
+  authors: string[];
+  licenses: string[];
+  keywords: string[];
+  createdDate: string;
+}

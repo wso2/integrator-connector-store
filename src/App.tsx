@@ -20,6 +20,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { OxygenUIThemeProvider, extendTheme, OxygenTheme } from '@wso2/oxygen-ui';
 import HomePage from './pages/HomePage';
+import ConnectorDetailPage from './pages/ConnectorDetailPage';
 
 // Create a custom theme by extending the base OxygenTheme
 const theme = extendTheme(OxygenTheme);
@@ -30,6 +31,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/connector/:org/:name" element={<ConnectorDetailPage />} />
+          <Route path="/connector/:org/:name/:version" element={<ConnectorDetailPage />} />
         </Routes>
       </Router>
     </OxygenUIThemeProvider>

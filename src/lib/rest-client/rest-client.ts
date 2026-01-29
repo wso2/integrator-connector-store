@@ -16,10 +16,13 @@
  under the License.
 */
 
-import { BallerinaPackage, FilterOptions } from '@/types/connector';
-import { extractFilterOptions } from '../connector-utils';
+import { BallerinaPackage, FilterOptions, PackageDetails } from '@/types/connector';
+import { extractFilterOptions, parseConnectorMetadata, getDisplayName } from '../connector-utils';
+import semver from 'semver';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
+const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
+
 
 /**
  * Sort options used in the UI
@@ -105,17 +108,6 @@ async function withRetry<T>(
 }
 
 /**
- * Escape special characters in Solr query values
- * Solr special characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
- * Wraps value in double quotes after escaping internal quotes
- */
-function escapeSolrValue(value: string): string {
-  // Escape double quotes and backslashes, then wrap in quotes
-  const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `"${escaped}"`;
-}
-
-/**
  * Convert sort option to REST API sort parameter
  * @example "pullCount-desc" → "pullCount,DESC"
  */
@@ -145,9 +137,17 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
 
   switch (sort) {
     case 'name-asc':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(a.name, vendorA).localeCompare(getDisplayName(b.name, vendorB));
+      });
     case 'name-desc':
-      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      return sorted.sort((a, b) => {
+        const vendorA = parseConnectorMetadata(a.keywords).vendor;
+        const vendorB = parseConnectorMetadata(b.keywords).vendor;
+        return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
+      });
     case 'pullCount-desc':
       return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
     case 'pullCount-asc':
@@ -182,33 +182,43 @@ function buildSolrQuery(
   const org = params.orgName || 'ballerinax';
   filters.push(`org:${org}`);
 
+  // Helper to escape Lucene/Solr string values
+  function escapeLuceneValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
-      filters.push(`keyword:${escapeSolrValue(`Area/${area}`)}`);
+      const escaped = escapeLuceneValue(area);
+      filters.push(`keyword:Area/${escaped}`);
     });
   }
 
   // Add vendor filter (required with AND operator)
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
-      filters.push(`keyword:${escapeSolrValue(`Vendor/${vendor}`)}`);
+      const escaped = escapeLuceneValue(vendor);
+      filters.push(`keyword:Vendor/${escaped}`);
     });
   }
 
   // Add type filter (required with AND operator)
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
-      filters.push(`keyword:${escapeSolrValue(`Type/${type}`)}`);
+      const escaped = escapeLuceneValue(type);
+      filters.push(`keyword:Type/${escaped}`);
     });
   }
 
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
-    return `${params.query} AND ${filters.join(' AND ')}`;
+    const finalQuery = `${params.query} AND ${filters.join(' AND ')}`;
+    return finalQuery;
   }
 
-  return filters.join(' AND ');
+  const finalQuery = filters.join(' AND ');
+  return finalQuery;
 }
 
 /**
@@ -314,7 +324,34 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    return executeSingleSearch(combinations[0]);
+    // For name-asc/name-desc, fetch all results, sort, then slice for pagination
+    if (params.sort === 'name-asc' || params.sort === 'name-desc') {
+      // Step 1: Fetch count only
+      const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
+      const totalCount = countResult.count;
+      // Step 2: Fetch all pages in batches
+      const batchSize = 500;
+      let allPackages: typeof countResult.packages = [];
+      for (let offset = 0; offset < totalCount; offset += batchSize) {
+        const batchResult = await executeSingleSearch({ ...combinations[0], offset, limit: batchSize });
+        allPackages = allPackages.concat(batchResult.packages);
+      }
+      // Sort client-side
+      const sorted = sortMergedPackages(allPackages, params.sort);
+      // Slice for pagination
+      const paged = sorted.slice(params.offset, params.offset + params.limit);
+      return {
+        packages: paged,
+        count: sorted.length,
+        offset: params.offset,
+        limit: params.limit,
+      };
+    } else {
+      // Other sorts: keep existing behavior
+      const result = await executeSingleSearch(combinations[0]);
+      result.packages = sortMergedPackages(result.packages, params.sort);
+      return result;
+    }
   }
 
   // Multiple combinations - execute in parallel and merge results
@@ -492,4 +529,83 @@ export async function fetchFiltersProgressively(
   }
 
   return initialFilters;
+}
+
+/**
+ * Fetch available versions for a package
+ */
+
+export async function fetchPackageVersionsNoRetry(
+  orgName: string,
+  packageName: string
+): Promise<string[]> {
+  const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  // If data is an array of strings, return as is
+  if (Array.isArray(data) && data.every(v => typeof v === 'string')) {
+    return data;
+  }
+  // If data is an object with a versions array of strings, return that
+  if (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray(data.versions) &&
+    data.versions.every((v: unknown) => typeof v === 'string')
+  ) {
+    return data.versions;
+  }
+  throw new Error(
+    `Unexpected response from ${PACKAGES_ENDPOINT}/${orgName}/${packageName}: expected array or { versions: [...] }`
+  );
+}
+
+export async function fetchPackageVersions(
+  orgName: string,
+  packageName: string
+): Promise<string[]> {
+  return withRetry(() => fetchPackageVersionsNoRetry(orgName, packageName));
+}
+
+/**
+ * Fetch detailed package information including readme/documentation
+ */
+export async function fetchPackageDetails(
+  orgName: string,
+  packageName: string,
+  version?: string
+): Promise<PackageDetails> {
+  return withRetry(async () => {
+    // If no version provided, fetch latest version first
+    let targetVersion = version;
+
+    if (!targetVersion) {
+      const versions = await fetchPackageVersionsNoRetry(orgName, packageName);
+      // Map to objects with both raw and sanitized semver
+      const sanitized = versions
+        .map(v => {
+          const valid = semver.valid(v) || semver.coerce(v)?.version;
+          return valid ? { raw: v, semver: valid } : null;
+        })
+        .filter((v): v is { raw: string; semver: string } => !!v);
+      if (sanitized.length === 0) {
+        throw new Error('No versions found for package');
+      }
+      // Sort by sanitized semver descending
+      sanitized.sort((a, b) => semver.rcompare(a.semver, b.semver));
+      targetVersion = sanitized[0].raw; // Use the original/raw version string
+    }
+
+    const response = await fetch(
+      `${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  });
 }

@@ -17,50 +17,104 @@
 */
 
 import { memo, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
-  CardContent,
   CardActionArea,
+  CardContent,
   Typography,
   Chip,
   Box,
-  Avatar,
   Button,
+  Divider,
 } from '@wso2/oxygen-ui';
-import { Download as DownloadIcon, Clock as ClockIcon } from '@wso2/oxygen-ui-icons-react';
+import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
 import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
-import {
-  parseConnectorMetadata,
-  formatPullCount,
-  formatDate,
-  formatDaysSince,
-  getDisplayName,
-} from '@/lib/connector-utils';
+import { parseConnectorMetadata, getDisplayName } from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;
+  effectiveMode: 'light' | 'dark';
 }
 
-function ConnectorCard({ connector }: ConnectorCardProps) {
+/**
+ * Format pull count to human-readable format
+ */
+function formatPullCount(count: number | undefined): string {
+  if (!count) return '0';
+  if (count < 1000) return count.toString();
+  if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
+  return `${(count / 1000000).toFixed(1)}M`;
+}
+
+/**
+ * Format date to relative time
+ */
+function formatRelativeTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays < 30) return `${diffInDays} days ago`;
+    if (diffInDays < 365) {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+    const years = Math.floor(diffInDays / 365);
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Get icon letter from connector name
+ */
+function getIconLetter(name: string): string {
+  const parts = name.split('.');
+  return parts[parts.length - 1]?.charAt(0).toUpperCase() || 'C';
+}
+
+/**
+ * Get icon background color based on name
+ */
+function getIconColor(name: string): string {
+  const colors = ['#DC2626', '#2563EB', '#16A34A', '#9333EA', '#EA580C', '#52525B'];
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+}
+
+function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
 
   // Memoize expensive computations
   const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
-
+  const iconLetter = useMemo(() => getIconLetter(connector.name), [connector.name]);
+  const iconColor = useMemo(() => getIconColor(connector.name), [connector.name]);
   const displayName = useMemo(
     () => getDisplayName(connector.name, metadata.vendor),
     [connector.name, metadata.vendor]
   );
 
-  const centralUrl = useMemo(
-    () => `https://central.ballerina.io/${connector.URL}`,
-    [connector.URL]
-  );
+  // Parse org and package name from connector.name (e.g., "ballerinax/openai.chat")
+  const detailUrl = useMemo(() => {
+    const nameParts = connector.name.split('/');
+    if (nameParts.length === 2) {
+      const [org, packageName] = nameParts;
+      return `/connector/${org}/${packageName}`;
+    }
+    // Fallback: use URL path
+    return `/connector/${connector.URL.replace('packages/', '')}`;
+  }, [connector.name, connector.URL]);
 
   // Check if summary is long enough to need truncation
   const needsTruncation = connector.summary.length > 120;
-  const summaryId = `connector-summary-${connector.name}`;
 
   return (
     <Card
@@ -68,60 +122,98 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+        border: effectiveMode === 'dark' ? '1px solid #27272A' : '1px solid #E5E7EB',
+        boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        transition: 'border-color 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: '#FF7300',
+        },
       }}
     >
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <CardActionArea
-          href={centralUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
-        >
-          <CardContent sx={{ flexGrow: 1, width: '100%' }}>
-            {/* Icon and Title */}
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Avatar
-                src={connector.icon}
+      <CardActionArea
+        onClick={() => navigate(detailUrl)}
+        sx={{ 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'stretch',
+          '&:hover': {
+            backgroundColor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+          },
+        }}
+      >
+        <CardContent sx={{ flexGrow: 1, width: '100%', p: 2.5, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', gap: 2, flexGrow: 1 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              color: 'white',
+              fontSize: 18,
+              flexShrink: 0,
+              bgcolor: connector.icon ? 'transparent' : iconColor,
+              overflow: 'hidden',
+            }}
+          >
+            {connector.icon ? (
+              <img 
+                src={connector.icon} 
                 alt={connector.name}
-                sx={{ width: 48, height: 48 }}
-                variant="rounded"
-              >
-                {connector.name.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box flex={1}>
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{ fontWeight: 600, fontSize: '1.1rem' }}
-                >
-                  {displayName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  v{connector.version}
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Summary */}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain' 
+                }}
+              />
+            ) : (
+              iconLetter
+            )}
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box
-              id={summaryId}
               sx={{
-                mb: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={600}>
+                {displayName}
+              </Typography>
+              <Chip
+                label={connector.version}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: 11,
+                }}
+              />
+            </Box>
+            <Box
+              sx={{
+                mt: 0.75,
                 minHeight: '40px',
-                '& p': {
+                fontSize: '0.8571428571428571rem',
+                lineHeight: 1.43,
+                color: 'text.secondary',
+                '& p, & span': {
                   margin: 0,
-                  fontSize: '0.8125rem',
+                  fontSize: '0.8571428571428571rem',
                   lineHeight: 1.43,
                   color: 'text.secondary',
                 },
                 '& code': {
                   backgroundColor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.1)'
-                      : 'rgba(0, 0, 0, 0.05)',
+                    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                   padding: '2px 4px',
                   borderRadius: '4px',
-                  fontSize: '0.8125rem',
+                  fontSize: '0.8571428571428571rem',
                   fontFamily: 'monospace',
                 },
                 '& strong': {
@@ -137,105 +229,136 @@ function ConnectorCard({ connector }: ConnectorCardProps) {
                     textDecoration: 'underline',
                   },
                 },
-                ...(!isExpanded &&
-                  needsTruncation && {
+              }}
+            >
+              <Box
+                sx={{
+                  ...(!isExpanded && needsTruncation && {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                   }),
-              }}
-            >
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <span>{children}</span>,
-                  a: ({ children }) => <span>{children}</span>,
                 }}
               >
-                {connector.summary}
-              </ReactMarkdown>
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <span>{children}</span>,
+                    // Don't render links - the whole card is already clickable
+                    a: ({ children }) => <span>{children}</span>,
+                  }}
+                >
+                  {connector.summary}
+                </ReactMarkdown>
+              </Box>
+              {needsTruncation && (
+                <Button
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  sx={{
+                    minWidth: 'auto',
+                    padding: 0,
+                    fontSize: '0.75rem',
+                    textTransform: 'none',
+                    mt: 0.5,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {isExpanded ? 'Show less' : 'Show more'}
+                </Button>
+              )}
             </Box>
+          </Box>
+        </Box>
 
-            {/* Metadata Chips and other content */}
-            <Box flexGrow={1} />
-            <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
-              <Chip
-                label={metadata.type}
-                size="small"
-                color="primary"
-                sx={{
-                  fontSize: '0.7rem',
-                  height: '24px',
-                  '& .MuiChip-label': { textTransform: 'none' },
-                }}
-              />
-              {metadata.vendor !== 'Other' && (
-                <Chip
-                  label={metadata.vendor}
-                  size="small"
-                  sx={{
-                    fontSize: '0.7rem',
-                    height: '24px',
-                    '& .MuiChip-label': { textTransform: 'none' },
-                  }}
-                />
-              )}
-              {metadata.area !== 'Other' && (
-                <Chip
-                  label={metadata.area}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    fontSize: '0.7rem',
-                    height: '24px',
-                    '& .MuiChip-label': { textTransform: 'none' },
-                  }}
-                />
-              )}
-            </Box>
-            <Box display="flex" flexDirection="column" gap={0.5}>
-              <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <DownloadIcon size={16} />
-                <Typography variant="caption">
-                  {connector.totalPullCount != null
-                    ? `${formatPullCount(connector.totalPullCount)} downloads`
-                    : 'Loading downloads...'}
-                </Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                <ClockIcon size={16} />
-                <Typography variant="caption" title={formatDate(connector.createdDate)}>
-                  {formatDaysSince(connector.createdDate)}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </CardActionArea>
-      </Box>
-      {needsTruncation && (
-        <Box sx={{ p: 2, pt: 0, alignSelf: 'flex-start' }}>
-          <Button
+        {/* Tags */}
+        <Box display="flex" gap={1} flexWrap="wrap" mb={2} mt={2}>
+          {/* Type chip - always visible */}
+          <Chip
+            label={metadata.type}
             size="small"
-            onClick={() => setIsExpanded(!isExpanded)}
-            aria-expanded={isExpanded}
-            aria-controls={summaryId}
+            color="primary"
             sx={{
-              minWidth: 'auto',
-              padding: 0,
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              mt: -1.5,
-              '&:hover': {
-                backgroundColor: 'transparent',
-                textDecoration: 'underline',
-              },
+              fontSize: '0.7rem',
+              height: '24px',
+              '& .MuiChip-label': {
+                textTransform: 'none',
+              }
+            }}
+          />
+
+          {metadata.vendor !== 'Other' && (
+            <Chip
+              label={metadata.vendor}
+              size="small"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+          )}
+
+          {metadata.area !== 'Other' && (
+            <Chip
+              label={metadata.area}
+              size="small"
+              variant="outlined"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+          )}
+        </Box>
+
+        {/* Bottom section - always at bottom */}
+        <Box sx={{ mt: 'auto' }}>
+          <Divider sx={{ my: 2 }} />
+
+          {/* Footer */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            {isExpanded ? 'Show less' : 'Show more'}
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <Download size={14} />{' '}
+              {formatPullCount(connector.totalPullCount)}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <Clock size={14} />{' '}
+              {formatRelativeTime(connector.createdDate)}
+            </Typography>
+          </Box>
         </Box>
-      )}
+        </Box>
+      </CardContent>
+      </CardActionArea>
     </Card>
   );
 }
