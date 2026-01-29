@@ -191,7 +191,7 @@ function buildSolrQuery(
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
       const escaped = escapeLuceneValue(area);
-      filters.push(`keyword:Area\/${escaped}`);
+      filters.push(`keyword:Area/${escaped}`);
     });
   }
 
@@ -199,7 +199,7 @@ function buildSolrQuery(
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
       const escaped = escapeLuceneValue(vendor);
-      filters.push(`keyword:Vendor\/${escaped}`);
+      filters.push(`keyword:Vendor/${escaped}`);
     });
   }
 
@@ -207,7 +207,7 @@ function buildSolrQuery(
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
       const escaped = escapeLuceneValue(type);
-      filters.push(`keyword:Type\/${escaped}`);
+      filters.push(`keyword:Type/${escaped}`);
     });
   }
 
@@ -326,10 +326,18 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
   if (combinations.length === 1) {
     // For name-asc/name-desc, fetch all results, sort, then slice for pagination
     if (params.sort === 'name-asc' || params.sort === 'name-desc') {
-      // Fetch all results from offset 0
-      const allResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 10000 });
+      // Step 1: Fetch count only
+      const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
+      const totalCount = countResult.count;
+      // Step 2: Fetch all pages in batches
+      const batchSize = 500;
+      let allPackages: typeof countResult.packages = [];
+      for (let offset = 0; offset < totalCount; offset += batchSize) {
+        const batchResult = await executeSingleSearch({ ...combinations[0], offset, limit: batchSize });
+        allPackages = allPackages.concat(batchResult.packages);
+      }
       // Sort client-side
-      const sorted = sortMergedPackages(allResult.packages, params.sort);
+      const sorted = sortMergedPackages(allPackages, params.sort);
       // Slice for pagination
       const paged = sorted.slice(params.offset, params.offset + params.limit);
       return {
@@ -545,7 +553,7 @@ export async function fetchPackageVersionsNoRetry(
     data &&
     typeof data === 'object' &&
     Array.isArray(data.versions) &&
-    data.versions.every((v: any) => typeof v === 'string')
+    data.versions.every((v: unknown) => typeof v === 'string')
   ) {
     return data.versions;
   }
