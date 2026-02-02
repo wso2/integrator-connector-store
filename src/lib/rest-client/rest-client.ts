@@ -213,7 +213,11 @@ function buildSolrQuery(
 
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
-    const finalQuery = `${params.query} AND ${filters.join(' AND ')}`;
+    // Add wildcard for partial matching if query doesn't already have wildcards
+    const searchTerm = params.query.includes('*') || params.query.includes('?')
+      ? params.query
+      : `*${params.query}*`;
+    const finalQuery = `${searchTerm} AND ${filters.join(' AND ')}`;
     return finalQuery;
   }
 

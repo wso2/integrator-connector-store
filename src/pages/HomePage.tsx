@@ -160,6 +160,10 @@ export default function HomePage() {
 
   // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
+  // Ref to track if component just mounted (to avoid resetting page on mount)
+  const isMountedRef = useRef(false);
+  // Ref to skip state-to-URL sync on first render
+  const isFirstRenderRef = useRef(true);
 
   // Toggle filter selection
   const toggleAreaFilter = (area: string) => {
@@ -254,8 +258,14 @@ export default function HomePage() {
     }
   }, [initialLoading, fetchPageData]);
 
-  // Sync state with URL params
+  // Sync state with URL params (one-way: state -> URL)
   useEffect(() => {
+    // Skip first render to preserve initial URL params
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
     const params = new URLSearchParams();
 
     if (currentPage > 1) params.set('page', currentPage.toString());
@@ -278,8 +288,12 @@ export default function HomePage() {
     setSearchParams,
   ]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (but not on mount)
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
     setCurrentPage(1);
   }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 

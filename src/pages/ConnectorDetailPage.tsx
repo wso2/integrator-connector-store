@@ -16,52 +16,41 @@
  under the License.
 */
 
-import { useState, useEffect, useMemo } from 'react';
-import { useColorScheme } from '@wso2/oxygen-ui';
-import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Chip,
-  Avatar,
-  Button,
-  Paper,
-  Breadcrumbs,
-  Link,
-} from '@wso2/oxygen-ui';
-import {
-  ArrowBack as ArrowBackIcon,
-  AccessTime as ClockIcon,
-  OpenInNew as OpenInNewIcon,
-} from '@mui/icons-material';
-import {
-  Download as DownloadIcon,
-} from '@wso2/oxygen-ui-icons-react';
+import React, { useEffect, useMemo, useState } from "react";
+import { 
+  useColorScheme, 
+  Box, 
+  Container, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Chip, 
+  Divider, 
+  useMediaQuery, 
+  Button, 
+  CircularProgress 
+} from "@wso2/oxygen-ui";
+import WSO2Header from "../components/WSO2Header";
+import { Clock, Download } from '@wso2/oxygen-ui-icons-react';
+import { OpenInNew } from "@mui/icons-material";
+import BreadcrumbsNav from "../components/BreadcrumbsNav";
+import { useParams } from 'react-router-dom';
 import { PackageDetails } from '@/types/connector';
 import { fetchPackageDetails } from '@/lib/rest-client';
 import {
   parseConnectorMetadata,
   formatPullCount,
-  formatDate,
   formatDaysSince,
   getDisplayName,
 } from '@/lib/connector-utils';
-import WSO2Header from '@/components/WSO2Header';
 import MarkdownContent from '@/components/MarkdownContent';
+import Footer from "@/components/Footer";
 
 /**
- * Extract only Overview and Setup sections from README, removing code blocks
+ * Extracts Overview and Setup sections from README content.
  */
 function extractOverviewAndSetup(readme: string): { overview: string; setup: string } {
-  // Remove code blocks (``` ... ```)
-  const removeCodeBlocks = (text: string) => {
-    return text.replace(/```[\s\S]*?```/g, '').trim();
-  };
-
-  // Split by ## headers to find sections
+  const removeCodeBlocks = (text: string) => text.replace(/```[\s\S]*?```/g, '').trim();
   const sections = readme.split(/(?=^## )/m);
 
   let overview = '';
@@ -69,7 +58,6 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
 
   for (const section of sections) {
     const lowerSection = section.toLowerCase();
-
     if (lowerSection.startsWith('## overview')) {
       overview = removeCodeBlocks(section);
     } else if (lowerSection.startsWith('## setup') || lowerSection.startsWith('## prerequisites')) {
@@ -77,14 +65,11 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
     }
   }
 
-  // If no ## Overview found, check for content before first ## header (intro text)
-  if (!overview) {
+  if (!overview && readme) {
     const firstHeaderIndex = readme.indexOf('## ');
     if (firstHeaderIndex > 0) {
       const introText = readme.substring(0, firstHeaderIndex).trim();
-      if (introText) {
-        overview = removeCodeBlocks(introText);
-      }
+      if (introText) overview = removeCodeBlocks(introText);
     }
   }
 
@@ -93,46 +78,20 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
 
 export default function ConnectorDetailPage() {
   const { mode } = useColorScheme();
-  const [effectiveMode, setEffectiveMode] = useState<'light' | 'dark'>(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down('lg'));
+  const { org, name, version } = useParams<{ org: string; name: string; version?: string }>();
+
+  const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+
+  const effectiveMode = useMemo(() => {
     if (mode === 'system') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return mode as 'light' | 'dark';
-  });
-
-  useEffect(() => {
-    let m: MediaQueryList | null = null;
-    let handler: ((e: MediaQueryListEvent) => void) | null = null;
-    if (mode === 'system') {
-      m = window.matchMedia('(prefers-color-scheme: dark)');
-      setEffectiveMode(m.matches ? 'dark' : 'light');
-      handler = (e: MediaQueryListEvent) => {
-        setEffectiveMode(e.matches ? 'dark' : 'light');
-      };
-      if (m.addEventListener) {
-        m.addEventListener('change', handler);
-      } else if (m.addListener) {
-        m.addListener(handler);
-      }
-    } else {
-      setEffectiveMode(mode as 'light' | 'dark');
-    }
-    return () => {
-      if (m && handler) {
-        if (m.removeEventListener) {
-          m.removeEventListener('change', handler);
-        } else if (m.removeListener) {
-          m.removeListener(handler);
-        }
-      }
-    };
   }, [mode]);
-  const { org, name, version } = useParams<{ org: string; name: string; version?: string }>();
-  const navigate = useNavigate();
-
-  const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPackageDetails = async () => {
@@ -141,225 +100,150 @@ export default function ConnectorDetailPage() {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
-        setError(null);
         const details = await fetchPackageDetails(org, name, version);
         setPackageDetails(details);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        console.error('Failed to load package details:', err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to load connector details. Please try again.'
-        );
+        setError('Failed to load connector details.');
       } finally {
         setLoading(false);
       }
     };
-
     loadPackageDetails();
   }, [org, name, version]);
 
-  const metadata = useMemo(
-    () => (packageDetails ? parseConnectorMetadata(packageDetails.keywords) : null),
-    [packageDetails]
-  );
+  const metadata = useMemo(() => packageDetails ? parseConnectorMetadata(packageDetails.keywords) : null, [packageDetails]);
+  const displayName = useMemo(() => packageDetails && metadata ? getDisplayName(packageDetails.name, metadata.vendor) : name || '', [packageDetails, metadata, name]);
+  const { overview, setup } = useMemo(() => packageDetails ? extractOverviewAndSetup(String(packageDetails?.readme || '')) : { overview: '', setup: '' }, [packageDetails]);
 
-  const displayName = useMemo(
-    () =>
-      packageDetails && metadata
-        ? getDisplayName(packageDetails.name, metadata.vendor)
-        : name || '',
-    [packageDetails, metadata, name]
-  );
+  const iconColor = useMemo(() => {
+    const colors = ['#DC2626', '#2563EB', '#16A34A', '#9333EA', '#EA580C', '#52525B'];
+    const hash = displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  }, [displayName]);
 
-  const centralUrl = useMemo(
-    () => (packageDetails ? `https://central.ballerina.io/${packageDetails.URL}` : ''),
-    [packageDetails]
-  );
-  
-  // Extract only Overview and Setup sections
-  const { overview, setup } = useMemo(
-    () =>
-      packageDetails
-        ? extractOverviewAndSetup(String(packageDetails?.readme || ''))
-        : { overview: '', setup: '' },
-    [packageDetails]
+  const MetadataContent = ({ details }: { details: PackageDetails }) => (
+    <Box>
+      <Box display='flex' flexDirection={isMobile ? 'row' : 'column'} flexWrap="wrap" gap={isMobile ? 4 : 2}>
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Version</Typography>
+          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>v{details.version}</Typography>
+        </Box>
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Downloads</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Download size={14} />
+            <Typography variant="body2">{formatPullCount(details.pullCount)}</Typography>
+          </Box>
+        </Box>
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Updated</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Clock size={14} />
+            <Typography variant="body2">{formatDaysSince(details.createdDate)}</Typography>
+          </Box>
+        </Box>
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>License</Typography>
+          {(packageDetails?.licenses ?? []).map((license) => (
+            <Typography variant="body2" mt={0.5}>{license}</Typography>
+          ))}
+        </Box>
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Tags</Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+          {details.keywords.map((tag) => (
+            <Chip key={tag} label={tag} size="small" />
+          ))}
+        </Box>
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={() => window.open(`https://central.ballerina.io/${details.URL}`, '_blank')}
+        endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
+      >
+        View on Ballerina Central
+      </Button>
+    </Box>
   );
 
   return (
-    <>
+    <Box sx={{ minHeight: "100vh", bgcolor: effectiveMode === 'dark' ? 'rgba(0, 0, 0, 0.27)' : '#F9FAFB' }}>
       <WSO2Header effectiveMode={effectiveMode} />
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Breadcrumbs */}
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link
-            component={RouterLink}
-            to="/"
-            color="inherit"
-            underline="hover"
-            sx={{ display: 'flex', alignItems: 'center' }}
-          >
-            Connector Store
-          </Link>
-          <Typography color="text.primary">{displayName}</Typography>
-        </Breadcrumbs>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF' }}>
+        <Container maxWidth="xl" sx={{ py: 1.5 }}>
+          <BreadcrumbsNav connectorName={displayName} />
+        </Container>
+      </Box>
 
-        {/* Back Button */}
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
-          sx={{ mb: 3 }}
-          variant="text"
-        >
-          Back
-        </Button>
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}><CircularProgress /></Box>
+      ) : packageDetails && (
+        <Container maxWidth="xl" sx={{ py: 5 }}>
+          <Box sx={{ 
+            display: "flex", 
+            gap: 6
+          }}>
+            
+            {/* Main Content */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 5 }}>
+                <Box sx={{
+                  width: 64, height: 64, borderRadius: 3,
+                  bgcolor: packageDetails.icon ? 'transparent' : iconColor,
+                  display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 24, flexShrink: 0
+                }}>
+                  {packageDetails.icon ? <img src={packageDetails.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : displayName.charAt(0).toUpperCase()}
+                </Box>
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700 }}>{displayName}</Typography>
+                  <Typography variant="body2" sx={{ fontFamily: "monospace", color: "text.secondary" }}>{packageDetails.organization}/{packageDetails.name}</Typography>
+                </Box>
+              </Box>
 
-        {/* Loading State */}
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-            <CircularProgress />
+              {isMobile && (
+                <Card sx={{ mb: 4 }}><CardContent><MetadataContent details={packageDetails} /></CardContent></Card>
+              )}
+
+              <Box sx={{ minHeight: '100vh' }}>
+                {overview && <Box component="section" sx={{ mb: 6 }}><MarkdownContent content={overview} /></Box>}
+                {setup && <Box component="section"><MarkdownContent content={setup} /></Box>}
+              </Box>
+            </Box>
+
+            {/* Sticky Sidebar */}
+            {!isMobile && (
+              <Box sx={{ width: 340, flexShrink: 0 }}>
+                <Box sx={{ 
+                  position: "sticky", 
+                  top: 100
+                }}>
+                  <Card sx={{
+                    bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                    border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                    boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <MetadataContent details={packageDetails} />
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Box>
+            )}
           </Box>
-        )}
+        </Container>
+      )}
 
-        {/* Error State */}
-        {error && !loading && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Content */}
-        {packageDetails && !loading && (
-          <>
-            {/* Header Section */}
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                {/* Icon and Title */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
-                  <Avatar
-                    src={packageDetails.icon}
-                    alt={packageDetails.name}
-                    sx={{ width: 64, height: 64 }}
-                    variant="rounded"
-                  >
-                    {displayName.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                      {displayName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {packageDetails.organization}/{packageDetails.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      v{packageDetails.version}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Stats */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                    alignItems: { xs: 'flex-start', sm: 'flex-end' },
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                    <DownloadIcon style={{ fontSize: '1rem' }} />
-                    <Typography variant="body2">
-                      {formatPullCount(packageDetails.pullCount)} downloads
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={0.5} color="text.secondary">
-                    <ClockIcon sx={{ fontSize: '1rem' }} />
-                    <Typography variant="body2" title={formatDate(packageDetails.createdDate)}>
-                      Updated {formatDaysSince(packageDetails.createdDate)}
-                    </Typography>
-                  </Box>
-                  <Button
-                    href={centralUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="outlined"
-                    size="small"
-                    endIcon={<OpenInNewIcon />}
-                    sx={{ mt: 1 }}
-                  >
-                    View on Ballerina Central
-                  </Button>
-                </Box>
-              </Box>
-
-              {/* Overview Content */}
-              {overview && (
-                <Box sx={{ mt: 2 }}>
-                  <MarkdownContent content={overview} />
-                </Box>
-              )}
-
-              {/* Metadata Chips */}
-              {metadata && (
-                <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
-                  <Chip
-                    label={metadata.type}
-                    size="small"
-                    color="primary"
-                    sx={{ fontSize: '0.75rem' }}
-                  />
-                  {metadata.vendor !== 'Other' && (
-                    <Chip label={metadata.vendor} size="small" sx={{ fontSize: '0.75rem' }} />
-                  )}
-                  {metadata.area !== 'Other' && (
-                    <Chip
-                      label={metadata.area}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.75rem' }}
-                    />
-                  )}
-                  {(packageDetails.licenses ?? []).map((license) => (
-                    <Chip
-                      key={license}
-                      label={license}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.75rem' }}
-                    />
-                  ))}
-                </Box>
-              )}
-            </Paper>
-
-            {/* Setup Section */}
-            {setup && (
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <MarkdownContent content={setup} />
-              </Paper>
-            )}
-
-            {/* Source Code Link */}
-            {packageDetails.sourceCodeLocation && (
-              <Box sx={{ textAlign: 'center' }}>
-                <Button
-                  href={packageDetails.sourceCodeLocation}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="text"
-                  endIcon={<OpenInNewIcon />}
-                >
-                  View Source Code
-                </Button>
-              </Box>
-            )}
-          </>
-        )}
-      </Container>
-    </>
+       {/* Footer */}
+            <Footer effectiveMode={effectiveMode} />
+    </Box>
   );
 }
