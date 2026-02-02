@@ -84,7 +84,7 @@ export default function ConnectorDetailPage() {
 
   const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const effectiveMode = useMemo(() => {
     if (mode === 'system') {
@@ -104,9 +104,9 @@ export default function ConnectorDetailPage() {
         setLoading(true);
         const details = await fetchPackageDetails(org, name, version);
         setPackageDetails(details);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        setError('Failed to load connector details.');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError(errorMessage || 'Failed to load connector details.');
       } finally {
         setLoading(false);
       }
@@ -186,7 +186,18 @@ export default function ConnectorDetailPage() {
 
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}><CircularProgress /></Box>
-      ) : packageDetails && (
+      ) : !packageDetails ? (
+        <Container maxWidth="xl" sx={{ py: 5 }}>
+          <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight={400}>
+            <Typography variant="h5" color="error" gutterBottom>
+              Failed to load connector details
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {error || 'The connector could not be found or is unavailable.'}
+            </Typography>
+          </Box>
+        </Container>
+      ) : (
         <Container maxWidth="xl" sx={{ py: 5 }}>
           <Box sx={{ 
             display: "flex", 
