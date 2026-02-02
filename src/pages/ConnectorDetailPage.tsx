@@ -30,10 +30,10 @@ import {
   Button, 
   CircularProgress 
 } from "@wso2/oxygen-ui";
-import WSO2Header from "../components/WSO2Header";
+import WSO2Header from "@/components/WSO2Header";
 import { Clock, Download } from '@wso2/oxygen-ui-icons-react';
 import { OpenInNew } from "@mui/icons-material";
-import BreadcrumbsNav from "../components/BreadcrumbsNav";
+import BreadcrumbsNav from "@/components/BreadcrumbsNav";
 import { useParams } from 'react-router-dom';
 import { PackageDetails } from '@/types/connector';
 import { fetchPackageDetails } from '@/lib/rest-client';
