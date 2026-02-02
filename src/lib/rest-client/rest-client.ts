@@ -187,6 +187,21 @@ function buildSolrQuery(
     return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
+  /**
+   * Escape Solr query special characters
+   * Escapes: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
+   * Also handles leading/trailing whitespace
+   */
+  function escapeSolrQuery(query: string): string {
+    // Trim whitespace first
+    const trimmed = query.trim();
+    if (!trimmed) return '';
+    
+    // Escape special Solr characters
+    // Note: We escape * and ? here but will add them back if needed for wildcards
+    return trimmed.replace(/([+\-&|!(){}[\]^"~*?:\\/ ])/g, '\\$1');
+  }
+
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
@@ -213,12 +228,36 @@ function buildSolrQuery(
 
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
-    const finalQuery = `${params.query} AND ${filters.join(' AND ')}`;
+    // Trim the query first
+    const trimmedQuery = params.query.trim();
+    
+    // If query is empty after trimming, just use filters
+    if (!trimmedQuery) {
+      const finalQuery = filters.join(' AND ');
+      return finalQuery || 'org:ballerinax'; // Fallback to org filter
+    }
+    
+    // Check if query already contains wildcards before escaping
+    const hasWildcards = trimmedQuery.includes('*') || trimmedQuery.includes('?');
+    
+    // Escape Solr special characters
+    const escapedQuery = escapeSolrQuery(trimmedQuery);
+    
+    // If query is empty after escaping, just use filters
+    if (!escapedQuery) {
+      const finalQuery = filters.join(' AND ');
+      return finalQuery || 'org:ballerinax';
+    }
+    
+    // Add wildcards for partial matching only if query doesn't already have them
+    const searchTerm = hasWildcards ? trimmedQuery : `*${escapedQuery}*`;
+    
+    const finalQuery = `${searchTerm} AND ${filters.join(' AND ')}`;
     return finalQuery;
   }
 
   const finalQuery = filters.join(' AND ');
-  return finalQuery;
+  return finalQuery || 'org:ballerinax'; // Fallback to org filter
 }
 
 /**

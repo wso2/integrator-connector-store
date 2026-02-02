@@ -25,8 +25,8 @@ import {
   Typography,
   Chip,
   Box,
-  Button,
   Divider,
+  ButtonBase,
 } from '@wso2/oxygen-ui';
 import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
 import ReactMarkdown from 'react-markdown';
@@ -253,27 +253,40 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
                 </ReactMarkdown>
               </Box>
               {needsTruncation && (
-                <Button
-                  size="small"
+                <ButtonBase
                   onClick={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     setIsExpanded(!isExpanded);
                   }}
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? 'Show less description' : 'Show more description'}
                   sx={{
-                    minWidth: 'auto',
-                    padding: 0,
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                    color: '#FF7300 !important',
                     fontSize: '0.75rem',
-                    textTransform: 'none',
+                    fontWeight: 500,
                     mt: 0.5,
+                    padding: '8px',
+                    minHeight: '44px',
+                    minWidth: '44px',
+                    margin: '-8px',
+                    border: 'none',
+                    background: 'none',
+                    textAlign: 'left',
                     '&:hover': {
-                      backgroundColor: 'transparent',
                       textDecoration: 'underline',
+                      background: 'none',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid #FF7300',
+                      outlineOffset: '2px',
+                      borderRadius: '2px',
                     },
                   }}
                 >
                   {isExpanded ? 'Show less' : 'Show more'}
-                </Button>
+                </ButtonBase>
               )}
             </Box>
           </Box>

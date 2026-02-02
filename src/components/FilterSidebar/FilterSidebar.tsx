@@ -44,6 +44,7 @@ interface FilterSidebarProps {
   onTypeChange: (type: string) => void;
   onClearAll: () => void;
   effectiveMode: 'light' | 'dark';
+  hideSearch?: boolean;
 }
 
 export default function FilterSidebar({
@@ -57,6 +58,7 @@ export default function FilterSidebar({
   onVendorChange,
   onTypeChange,
   effectiveMode,
+  hideSearch = false,
 }: FilterSidebarProps) {
   const [expandedArea, setExpandedArea] = useState(true);
   const [expandedType, setExpandedType] = useState(false);
@@ -76,15 +78,17 @@ export default function FilterSidebar({
       }}
     >
 
-      {/* Search */}
-      <SearchBar 
-        value={searchQuery}
-        onChange={onSearchChange}
-        effectiveMode={effectiveMode}
-      />
+      {/* Search - conditionally rendered */}
+      {!hideSearch && (
+        <SearchBar 
+          value={searchQuery}
+          onChange={onSearchChange}
+          effectiveMode={effectiveMode}
+        />
+      )}
 
       {/* Filter Accordions */}
-      <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ mt: hideSearch ? 0 : 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* Area Filter */}
         <Accordion
           expanded={expandedArea}

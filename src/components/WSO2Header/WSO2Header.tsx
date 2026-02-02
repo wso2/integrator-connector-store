@@ -18,6 +18,7 @@
 
 import React from 'react';
 import { Box, ColorSchemeToggle, AppBar, Container, Toolbar } from '@wso2/oxygen-ui';
+import { Link } from 'react-router-dom';
 
 interface WSO2HeaderProps {
   effectiveMode: 'light' | 'dark';
@@ -39,19 +40,21 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
         <Toolbar disableGutters sx={{ height: 64 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             {/* WSO2 Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box
-                component="img"
-                src={effectiveMode === 'dark' ? '/images/Logo_WSO2-integrator-white.png' : '/images/Logo_WSO2-integrator-black.png'}
-                alt="WSO2 Integrator"
-                sx={{ 
-                  height: 32,
-                  width: 'auto',
-                  objectFit: 'contain',
-                  display: 'block'
-                }}
-              />
-            </Box>
+            <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
+                <Box
+                  component="img"
+                  src={effectiveMode === 'dark' ? '/images/Logo_WSO2-integrator-white.png' : '/images/Logo_WSO2-integrator-black.png'}
+                  alt="WSO2 Integrator"
+                  sx={{ 
+                    height: 32,
+                    width: 'auto',
+                    objectFit: 'contain',
+                    display: 'block'
+                  }}
+                />
+              </Box>
+            </Link>
           </Box>
 
           <Box sx={{ flexGrow: 1 }} />

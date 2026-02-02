@@ -26,7 +26,11 @@ import {
   Paper,
   CircularProgress,
   Alert,
+  Drawer,
+  IconButton,
+  Button,
 } from '@wso2/oxygen-ui';
+import { ChevronRight, Filter } from '@wso2/oxygen-ui-icons-react';
 import { BallerinaPackage, FilterOptions } from '@/types/connector';
 import { searchPackages, fetchFiltersProgressively, SortOption } from '@/lib/rest-client';
 import Pagination from '@/components/Pagination';
@@ -34,6 +38,7 @@ import ConnectorCard from '@/components/ConnectorCard';
 import WSO2Header from '@/components/WSO2Header';
 import Hero from '@/components/Hero';
 import FilterSidebar from '@/components/FilterSidebar';
+import SearchBar from '@/components/SearchBar';
 import Footer from '@/components/Footer';
 import SelectedFilters from '@/components/SelectedFilters';
 
@@ -160,6 +165,13 @@ export default function HomePage() {
 
   // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
+  // Ref to track if component just mounted (to avoid resetting page on mount)
+  const isMountedRef = useRef(false);
+  // Ref to skip state-to-URL sync on first render
+  const isFirstRenderRef = useRef(true);
+
+  // Mobile filter drawer state
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Toggle filter selection
   const toggleAreaFilter = (area: string) => {
@@ -254,8 +266,14 @@ export default function HomePage() {
     }
   }, [initialLoading, fetchPageData]);
 
-  // Sync state with URL params
+  // Sync state with URL params (one-way: state -> URL)
   useEffect(() => {
+    // Skip first render to preserve initial URL params
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
     const params = new URLSearchParams();
 
     if (currentPage > 1) params.set('page', currentPage.toString());
@@ -278,8 +296,12 @@ export default function HomePage() {
     setSearchParams,
   ]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (but not on mount)
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
     setCurrentPage(1);
   }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 
@@ -309,20 +331,22 @@ export default function HomePage() {
       {!initialLoading && (
         <Container maxWidth="xl" sx={{ py: 4 }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
-              {/* Sidebar Filters */}
-              <FilterSidebar
-                filterOptions={filterOptions}
-                selectedAreas={selectedAreas}
-                selectedVendors={selectedVendors}
-                selectedTypes={selectedTypes}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onAreaChange={toggleAreaFilter}
-                onVendorChange={toggleVendorFilter}
-                onTypeChange={toggleTypeFilter}
-                onClearAll={clearAllFilters}
-                effectiveMode={effectiveMode}
-              />
+              {/* Sidebar Filters - Hidden on mobile */}
+              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                <FilterSidebar
+                  filterOptions={filterOptions}
+                  selectedAreas={selectedAreas}
+                  selectedVendors={selectedVendors}
+                  selectedTypes={selectedTypes}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  onAreaChange={toggleAreaFilter}
+                  onVendorChange={toggleVendorFilter}
+                  onTypeChange={toggleTypeFilter}
+                  onClearAll={clearAllFilters}
+                  effectiveMode={effectiveMode}
+                />
+              </Box>
 
               {/* Main Content Area */}
               <Box sx={{ flex: 1 }}>
@@ -332,6 +356,34 @@ export default function HomePage() {
                     {error}
                   </Alert>
                 )}
+
+                {/* Mobile Search and Filter Bar - Always visible on mobile */}
+                <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, mb: 2.5 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <SearchBar
+                      value={searchQuery}
+                      onChange={setSearchQuery}
+                      effectiveMode={effectiveMode}
+                    />
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Filter size={16}/>}
+                    onClick={() => setMobileFilterOpen(true)}
+                    sx={{
+                      minWidth: 'auto',
+                      px: 2,
+                      borderColor: effectiveMode === 'dark' ? '#ffffff33' : '#E5E7EB',
+                      color: effectiveMode === 'dark' ? '#FFFFFF' : '#000000',
+                      '&:hover': {
+                        borderColor: '#FF7300',
+                        bgcolor: 'transparent',
+                      },
+                    }}
+                  >
+                    Filter
+                  </Button>
+                </Box>
 
                 {totalCount === 0 && !loading ? (
                   <>
@@ -453,6 +505,47 @@ export default function HomePage() {
         )}
       </Box>
       
+      {/* Mobile Filter Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileFilterOpen}
+        onClose={() => setMobileFilterOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: '85%',
+            maxWidth: 360,
+            bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" fontWeight={600}>
+              Filters
+            </Typography>
+            <IconButton
+              onClick={() => setMobileFilterOpen(false)}
+              size="small"
+            >
+              <ChevronRight />
+            </IconButton>
+          </Box>
+          
+          <FilterSidebar
+            filterOptions={filterOptions}
+            selectedAreas={selectedAreas}
+            selectedVendors={selectedVendors}
+            selectedTypes={selectedTypes}
+            searchQuery=""
+            onSearchChange={() => {}}
+            onAreaChange={toggleAreaFilter}
+            onVendorChange={toggleVendorFilter}
+            onTypeChange={toggleTypeFilter}
+            onClearAll={clearAllFilters}
+            effectiveMode={effectiveMode}            hideSearch={true}          />
+        </Box>
+      </Drawer>
+
       {/* Footer */}
       <Footer effectiveMode={effectiveMode} />
     </>

@@ -51,7 +51,14 @@ export default function SearchBar({
           paddingX: '12px',
           fontSize: '14px',
           '& fieldset': {
-            border: effectiveMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+            border: effectiveMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #E5E7EB',
+          },
+          '&:hover fieldset': {
+            borderColor: effectiveMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#FF7300',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#FF7300',
+            borderWidth: '1px',
           },
           '& input': {
             padding: 0,

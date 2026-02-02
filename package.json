@@ -23,6 +23,7 @@
     "@wso2/oxygen-ui": "^0.2.1",
     "@wso2/oxygen-ui-icons-react": "^0.2.1",
     "ajv": "^8.17.1",
+    "lightgallery": "^2.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-lazy-load-image-component": "^1.6.3",
