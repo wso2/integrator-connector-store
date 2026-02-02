@@ -25,7 +25,6 @@ import {
   Typography,
   Chip,
   Box,
-  Button,
   Divider,
 } from '@wso2/oxygen-ui';
 import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
@@ -253,27 +252,27 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
                 </ReactMarkdown>
               </Box>
               {needsTruncation && (
-                <Button
-                  size="small"
+                <Box
+                  component="span"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setIsExpanded(!isExpanded);
                   }}
                   sx={{
-                    minWidth: 'auto',
-                    padding: 0,
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                    color: '#FF7300 !important',
                     fontSize: '0.75rem',
-                    textTransform: 'none',
+                    fontWeight: 500,
                     mt: 0.5,
                     '&:hover': {
-                      backgroundColor: 'transparent',
                       textDecoration: 'underline',
                     },
                   }}
                 >
                   {isExpanded ? 'Show less' : 'Show more'}
-                </Button>
+                </Box>
               )}
             </Box>
           </Box>

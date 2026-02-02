@@ -147,8 +147,8 @@ export default function ConnectorDetailPage() {
         </Box>
         <Box>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>License</Typography>
-          {(packageDetails?.licenses ?? []).map((license) => (
-            <Typography variant="body2" mt={0.5}>{license}</Typography>
+          {(packageDetails?.licenses ?? []).map((license, index) => (
+            <Typography key={index} variant="body2" mt={0.5}>{license}</Typography>
           ))}
         </Box>
       </Box>

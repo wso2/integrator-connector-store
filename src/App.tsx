@@ -28,7 +28,7 @@ const theme = extendTheme(OxygenTheme);
 function App() {
   return (
     <OxygenUIThemeProvider themes={[{ key: 'default', label: 'Default', theme }]}>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/connector/:org/:name" element={<ConnectorDetailPage />} />
