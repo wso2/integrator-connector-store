@@ -621,10 +621,10 @@ export async function fetchPackageDetails(
     // Fetch all versions for the package
     const allVersions = await fetchPackageVersionsNoRetry(orgName, packageName);
     
-    // If no version provided, determine latest version
+    // If no version provided or version is "latest", determine latest version
     let targetVersion = version;
 
-    if (!targetVersion) {
+    if (!targetVersion || targetVersion === 'latest') {
       // Map to objects with both raw and sanitized semver
       const sanitized = allVersions
         .map(v => {
@@ -677,7 +677,13 @@ export async function fetchPackageDetails(
         const graphqlData = await graphqlResponse.json();
         if (graphqlData?.data?.package?.totalPullCount !== undefined) {
           packageData.totalPullCount = graphqlData.data.package.totalPullCount;
+        } else {
+          // Data structure is missing or incomplete, use fallback
+          packageData.totalPullCount = packageData.pullCount;
         }
+      } else {
+        // Non-OK response, use fallback
+        packageData.totalPullCount = packageData.pullCount;
       }
     } catch (error) {
       // If GraphQL fails, fall back to using pullCount from current version

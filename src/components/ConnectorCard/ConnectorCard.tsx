@@ -17,10 +17,9 @@
 */
 
 import { memo, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Card,
-  CardActionArea,
   CardContent,
   Typography,
   Chip,
@@ -91,7 +90,6 @@ function getIconColor(name: string): string {
 
 function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const navigate = useNavigate();
 
   // Memoize expensive computations
   const metadata = useMemo(() => parseConnectorMetadata(connector.keywords), [connector.keywords]);
@@ -104,13 +102,40 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
 
   // Parse org and package name from connector.name (e.g., "ballerinax/openai.chat")
   const detailUrl = useMemo(() => {
-    const nameParts = connector.name.split('/');
+    const nameParts = connector.name.split('/').filter(Boolean); // Filter out empty strings
     if (nameParts.length === 2) {
       const [org, packageName] = nameParts;
-      return `/connector/${org}/${packageName}`;
+      if (org && packageName) {
+        return `/connector/${org}/${packageName}/latest`;
+      }
     }
-    // Fallback: use URL path
-    return `/connector/${connector.URL.replace('packages/', '')}`;
+    
+    // Fallback: parse URL path and extract org/package only (remove version if present)
+    const urlPath = connector.URL.replace(/^packages\//, '').replace(/^\//, ''); // Remove 'packages/' prefix and leading slash
+    const urlParts = urlPath.split('/').filter(Boolean); // Filter out empty strings
+    
+    if (urlParts.length >= 2) {
+      const [org, packageName] = urlParts;
+      if (org && packageName) {
+        console.warn('Using fallback URL parsing for connector:', {
+          connectorName: connector.name,
+          connectorURL: connector.URL,
+          parsedOrg: org,
+          parsedPackage: packageName,
+          finalURL: `/connector/${org}/${packageName}/latest`
+        });
+        return `/connector/${org}/${packageName}/latest`;
+      }
+    }
+    
+    console.error('Unable to parse connector URL properly:', {
+      name: connector.name,
+      URL: connector.URL,
+      nameParts,
+      urlParts
+    });
+    // Last resort fallback - use the original versioned URL
+    return connector.URL.replace(/^packages\//, '/connector/').replace(/\/[\d.]+$/, '/latest');
   }, [connector.name, connector.URL]);
 
   // Check if summary is long enough to need truncation
@@ -131,16 +156,14 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
         },
       }}
     >
-      <CardActionArea
-        onClick={() => navigate(detailUrl)}
-        sx={{ 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'stretch',
-          '&:hover': {
-            backgroundColor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
-          },
+      <Link
+        to={detailUrl}
+        style={{
+          textDecoration: 'none',
+          color: 'inherit',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <CardContent sx={{ flexGrow: 1, width: '100%', p: 2.5, display: 'flex', flexDirection: 'column' }}>
@@ -371,7 +394,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
         </Box>
         </Box>
       </CardContent>
-      </CardActionArea>
+      </Link>
     </Card>
   );
 }

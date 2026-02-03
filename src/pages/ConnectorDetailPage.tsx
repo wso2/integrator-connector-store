@@ -103,6 +103,14 @@ export default function ConnectorDetailPage() {
         setLoading(false);
         return;
       }
+      
+      // Check if "latest" ended up as the package name (routing error)
+      if (name === 'latest') {
+        setError('Invalid package URL - missing package name');
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         const details = await fetchPackageDetails(org, name, version);
@@ -131,7 +139,7 @@ export default function ConnectorDetailPage() {
     <Box>
       <Box display='flex' flexDirection={isMobile ? 'row' : 'column'} flexWrap="wrap" gap={isMobile ? 4 : 2}>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Latest Version</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Version</Typography>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>v{details.version}</Typography>
         </Box>
         <Box>
@@ -251,7 +259,7 @@ export default function ConnectorDetailPage() {
         fullWidth
         variant="contained"
         color="primary"
-        onClick={() => window.open(`https://central.ballerina.io/${details.URL}`, '_blank')}
+        onClick={() => window.open(`https://central.ballerina.io${details.URL}`, '_blank')}
         endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
       >
         View on Ballerina Central
