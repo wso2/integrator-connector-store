@@ -135,8 +135,8 @@ export default function ConnectorDetailPage() {
 
     const pageTitle = `${displayName} - WSO2 Integrator Connector Store`;
     const description = packageDetails.summary || `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
-    const url = `https://central.ballerina.io/connector/${org}/${name}/${version || packageDetails.version}`;
-    const imageUrl = '/images/og-image.png';
+    const url = `${window.location.origin}/connector/${org}/${name}/${version || packageDetails.version}`;
+    const imageUrl = `${window.location.origin}/images/og-image.png`;
 
     // Update document title
     document.title = pageTitle;
@@ -144,8 +144,11 @@ export default function ConnectorDetailPage() {
     // Helper function to update or create meta tag
     const updateMetaTag = (selector: string, content: string) => {
       let tag = document.querySelector(selector);
+      const isLinkTag = selector.startsWith('link[');
+      const attributeName = isLinkTag ? 'href' : 'content';
+      
       if (tag) {
-        tag.setAttribute('content', content);
+        tag.setAttribute(attributeName, content);
       } else {
         // Parse selector to create new tag (e.g., "meta[name="robots"]")
         const match = selector.match(/^(\w+)\[(\w+)=["']([^"']+)["']\]$/);
@@ -153,7 +156,8 @@ export default function ConnectorDetailPage() {
           const [, tagName, attrName, attrValue] = match;
           tag = document.createElement(tagName);
           tag.setAttribute(attrName, attrValue);
-          tag.setAttribute('content', content);
+          const isLink = tagName.toLowerCase() === 'link';
+          tag.setAttribute(isLink ? 'href' : 'content', content);
           document.head.appendChild(tag);
         }
       }
