@@ -310,6 +310,51 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
+  // Update meta tags dynamically based on search/filters
+  useEffect(() => {
+    let pageTitle = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
+    let description = 'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
+
+    if (searchQuery) {
+      pageTitle = `Search: "${searchQuery}" - WSO2 Integrator Connector Store`;
+      description = `Search results for "${searchQuery}" - Find Ballerina connectors matching your query.`;
+    } else if (selectedAreas.length > 0 || selectedVendors.length > 0 || selectedTypes.length > 0) {
+      const filters = [...selectedAreas, ...selectedVendors, ...selectedTypes];
+      pageTitle = `${filters.join(', ')} Connectors - WSO2 Integrator Connector Store`;
+      description = `Browse ${filters.join(', ')} connectors for Ballerina integration.`;
+    }
+
+    document.title = pageTitle;
+
+    const updateMetaTag = (selector: string, content: string) => {
+      let tag = document.querySelector(selector);
+      if (tag) {
+        tag.setAttribute('content', content);
+      } else {
+        // Parse selector to create new tag (e.g., "meta[name="robots"]")
+        const match = selector.match(/^(\w+)\[(\w+)=["']([^"']+)["']\]$/);
+        if (match) {
+          const [, tagName, attrName, attrValue] = match;
+          tag = document.createElement(tagName);
+          tag.setAttribute(attrName, attrValue);
+          tag.setAttribute('content', content);
+          document.head.appendChild(tag);
+        }
+      }
+    };
+
+    updateMetaTag('meta[name="description"]', description);
+    updateMetaTag('meta[name="title"]', pageTitle);
+    updateMetaTag('meta[property="og:title"]', pageTitle);
+    updateMetaTag('meta[property="og:description"]', description);
+    updateMetaTag('meta[name="twitter:title"]', pageTitle);
+    updateMetaTag('meta[name="twitter:description"]', description);
+    
+    // Set robots meta tag based on hostname
+    const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
+    updateMetaTag('meta[name="robots"]', robotsContent);
+  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes]);
+
   return (
     <>
       {/* Header */}

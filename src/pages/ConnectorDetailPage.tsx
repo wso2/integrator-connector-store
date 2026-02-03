@@ -129,6 +129,64 @@ export default function ConnectorDetailPage() {
   const displayName = useMemo(() => packageDetails && metadata ? getDisplayName(packageDetails.name, metadata.vendor) : name || '', [packageDetails, metadata, name]);
   const { overview, setup } = useMemo(() => packageDetails ? extractOverviewAndSetup(String(packageDetails?.readme || '')) : { overview: '', setup: '' }, [packageDetails]);
 
+  // Update meta tags dynamically when package details load
+  useEffect(() => {
+    if (!packageDetails) return;
+
+    const pageTitle = `${displayName} - WSO2 Integrator Connector Store`;
+    const description = packageDetails.summary || `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
+    const url = `https://central.ballerina.io/connector/${org}/${name}/${version || packageDetails.version}`;
+    const imageUrl = '/images/og-image.png';
+
+    // Update document title
+    document.title = pageTitle;
+
+    // Helper function to update or create meta tag
+    const updateMetaTag = (selector: string, content: string) => {
+      let tag = document.querySelector(selector);
+      if (tag) {
+        tag.setAttribute('content', content);
+      } else {
+        // Parse selector to create new tag (e.g., "meta[name="robots"]")
+        const match = selector.match(/^(\w+)\[(\w+)=["']([^"']+)["']\]$/);
+        if (match) {
+          const [, tagName, attrName, attrValue] = match;
+          tag = document.createElement(tagName);
+          tag.setAttribute(attrName, attrValue);
+          tag.setAttribute('content', content);
+          document.head.appendChild(tag);
+        }
+      }
+    };
+
+    // Update primary meta tags
+    updateMetaTag('meta[name="description"]', description);
+    updateMetaTag('meta[name="title"]', pageTitle);
+    updateMetaTag('link[rel="canonical"]', url);
+    
+    // Set robots meta tag based on hostname
+    const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
+    updateMetaTag('meta[name="robots"]', robotsContent);
+
+    // Update Open Graph tags
+    updateMetaTag('meta[property="og:title"]', pageTitle);
+    updateMetaTag('meta[property="og:description"]', description);
+    updateMetaTag('meta[property="og:url"]', url);
+    updateMetaTag('meta[property="og:image"]', imageUrl);
+    updateMetaTag('meta[property="og:type"]', 'website');
+
+    // Update Twitter tags
+    updateMetaTag('meta[name="twitter:title"]', pageTitle);
+    updateMetaTag('meta[name="twitter:description"]', description);
+    updateMetaTag('meta[name="twitter:url"]', url);
+    updateMetaTag('meta[name="twitter:image"]', imageUrl);
+
+    // Cleanup: restore default title when component unmounts
+    return () => {
+      document.title = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
+    };
+  }, [packageDetails, displayName, org, name, version]);
+
   const iconColor = useMemo(() => {
     const colors = ['#DC2626', '#2563EB', '#16A34A', '#9333EA', '#EA580C', '#52525B'];
     const hash = displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -318,8 +376,8 @@ export default function ConnectorDetailPage() {
               )}
 
               <Box sx={{ minHeight: '100vh' }}>
-                {overview && <Box component="section" sx={{ mb: 6 }}><MarkdownContent content={overview} /></Box>}
-                {setup && <Box component="section"><MarkdownContent content={setup} /></Box>}
+                {overview && <Box component="section" sx={{ mb: 6 }}><MarkdownContent content={overview} effectiveMode={effectiveMode} /></Box>}
+                {setup && <Box component="section"><MarkdownContent content={setup} effectiveMode={effectiveMode} /></Box>}
               </Box>
             </Box>
 

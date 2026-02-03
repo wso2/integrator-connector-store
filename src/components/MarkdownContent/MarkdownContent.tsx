@@ -31,9 +31,10 @@ import 'lightgallery/css/lg-thumbnail.css';
 
 interface MarkdownContentProps {
   content: string;
+  effectiveMode: 'light' | 'dark';
 }
 
-export default function MarkdownContent({ content }: MarkdownContentProps) {
+export default function MarkdownContent({ content, effectiveMode }: MarkdownContentProps) {
   const galleryContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,8 +98,11 @@ export default function MarkdownContent({ content }: MarkdownContentProps) {
               py: 2,
               px: 3,
               borderLeft: '4px solid',
+              borderRight: '0.1px solid',
+              borderBottom: '0.1px solid',
+              borderTop: '0.1px solid',
               borderColor: 'primary.main',
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 115, 0, 0.15)' : 'rgba(255, 115, 0, 0.05)',
+              bgcolor: effectiveMode === 'dark' ? 'rgba(255, 115, 0, 0.15)' : 'rgba(255, 115, 0, 0.05)',
               borderRadius: 1,
               fontStyle: 'italic',
               color: 'text.primary',

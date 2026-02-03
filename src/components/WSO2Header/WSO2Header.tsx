@@ -44,7 +44,7 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
                 <Box
                   component="img"
-                  src={effectiveMode === 'dark' ? '/images/Logo_WSO2-integrator-white.png' : '/images/Logo_WSO2-integrator-black.png'}
+                  src={effectiveMode === 'dark' ? '/images/WSO2-Integrator-white.svg' : '/images/WSO2-Integrator-black.svg'}
                   alt="WSO2 Integrator"
                   sx={{ 
                     height: 32,
