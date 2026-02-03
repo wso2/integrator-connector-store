@@ -69,6 +69,8 @@ export interface PackageDetails {
   sourceCodeLocation: string;
   icon: string;
   pullCount: number;
+  totalPullCount?: number;
+  versions?: string[];
   authors: string[];
   licenses: string[];
   keywords: string[];

@@ -28,10 +28,13 @@ import {
   Divider, 
   useMediaQuery, 
   Button, 
-  CircularProgress 
+  CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails 
 } from "@wso2/oxygen-ui";
 import WSO2Header from "@/components/WSO2Header";
-import { Clock, Download } from '@wso2/oxygen-ui-icons-react';
+import { Clock, Download, ChevronDown } from '@wso2/oxygen-ui-icons-react';
 import { OpenInNew } from "@mui/icons-material";
 import BreadcrumbsNav from "@/components/BreadcrumbsNav";
 import { useParams } from 'react-router-dom';
@@ -128,14 +131,14 @@ export default function ConnectorDetailPage() {
     <Box>
       <Box display='flex' flexDirection={isMobile ? 'row' : 'column'} flexWrap="wrap" gap={isMobile ? 4 : 2}>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Version</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Latest Version</Typography>
           <Typography variant="body2" sx={{ fontFamily: "monospace" }}>v{details.version}</Typography>
         </Box>
         <Box>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Downloads</Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Download size={14} />
-            <Typography variant="body2">{formatPullCount(details.pullCount)}</Typography>
+            <Typography variant="body2">{formatPullCount(details.totalPullCount ?? 0)}</Typography>
           </Box>
         </Box>
         <Box>
@@ -162,6 +165,88 @@ export default function ConnectorDetailPage() {
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
+      {details.versions && details.versions.length > 1 && (
+        <>
+          {isMobile ? (
+            <Accordion
+              disableGutters
+              sx={{
+                bgcolor: effectiveMode === 'dark' ? 'rgba(39, 39, 46, 0.5)' : '#F9FAFB',
+                borderRadius: '8px',
+                boxShadow: 'none',
+                border: 'none',
+                mb: 2,
+                '&:before': {
+                  display: 'none',
+                },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ChevronDown size={16} />}
+                sx={{
+                  '& .MuiAccordionSummary-expandIconWrapper': {
+                    transition: 'transform 0.2s',
+                  },
+                  '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+                    transform: 'rotate(180deg)',
+                  },
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+                  Other Versions
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ pt: 0, maxHeight: 200, overflowY: 'auto' }}>
+                {details.versions
+                  .filter(v => v !== details.version)
+                  .slice(0, 10)
+                  .map((ver) => (
+                    <Box
+                      key={ver}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        py: 0.5,
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                        v{ver}
+                      </Typography>
+                    </Box>
+                  ))}
+              </AccordionDetails>
+            </Accordion>
+          ) : (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+                Other Versions
+              </Typography>
+              <Box sx={{ mt: 1, maxHeight: 200, overflowY: 'auto' }}>
+                {details.versions
+                  .filter(v => v !== details.version)
+                  .slice(0, 10)
+                  .map((ver) => (
+                    <Box
+                      key={ver}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        py: 0.5,
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                        v{ver}
+                      </Typography>
+                    </Box>
+                  ))}
+              </Box>
+            </Box>
+          )}
+          <Divider sx={{ my: 2 }} />
+        </>
+      )}
       <Button
         fullWidth
         variant="contained"
@@ -173,7 +258,7 @@ export default function ConnectorDetailPage() {
       </Button>
     </Box>
   );
-
+  
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: effectiveMode === 'dark' ? 'rgba(0, 0, 0, 0.27)' : '#F9FAFB' }}>
       <WSO2Header effectiveMode={effectiveMode} />
