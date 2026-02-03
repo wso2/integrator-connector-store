@@ -22,6 +22,7 @@ import semver from 'semver';
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
+const GRAPHQL_ENDPOINT = 'https://api.central.ballerina.io/2.0/graphql';
 
 
 /**
@@ -617,13 +618,15 @@ export async function fetchPackageDetails(
   version?: string
 ): Promise<PackageDetails> {
   return withRetry(async () => {
-    // If no version provided, fetch latest version first
+    // Fetch all versions for the package
+    const allVersions = await fetchPackageVersionsNoRetry(orgName, packageName);
+    
+    // If no version provided or version is "latest", determine latest version
     let targetVersion = version;
 
-    if (!targetVersion) {
-      const versions = await fetchPackageVersionsNoRetry(orgName, packageName);
+    if (!targetVersion || targetVersion === 'latest') {
       // Map to objects with both raw and sanitized semver
-      const sanitized = versions
+      const sanitized = allVersions
         .map(v => {
           const valid = semver.valid(v) || semver.coerce(v)?.version;
           return valid ? { raw: v, semver: valid } : null;
@@ -645,6 +648,49 @@ export async function fetchPackageDetails(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return response.json();
+    const packageData = await response.json();
+    
+    // Add versions array to the response
+    packageData.versions = allVersions;
+    
+    // Fetch totalPullCount from GraphQL API (more accurate than REST API)
+    try {
+      const graphqlQuery = {
+        query: `
+          query {
+            package(orgName: "${orgName}", packageName: "${packageName}", version: "${targetVersion}") {
+              totalPullCount
+            }
+          }
+        `
+      };
+
+      const graphqlResponse = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(graphqlQuery),
+      });
+
+      if (graphqlResponse.ok) {
+        const graphqlData = await graphqlResponse.json();
+        if (graphqlData?.data?.package?.totalPullCount !== undefined) {
+          packageData.totalPullCount = graphqlData.data.package.totalPullCount;
+        } else {
+          // Data structure is missing or incomplete, use fallback
+          packageData.totalPullCount = packageData.pullCount;
+        }
+      } else {
+        // Non-OK response, use fallback
+        packageData.totalPullCount = packageData.pullCount;
+      }
+    } catch (error) {
+      // If GraphQL fails, fall back to using pullCount from current version
+      console.warn('Failed to fetch totalPullCount from GraphQL:', error);
+      packageData.totalPullCount = packageData.pullCount;
+    }
+
+    return packageData;
   });
 }
