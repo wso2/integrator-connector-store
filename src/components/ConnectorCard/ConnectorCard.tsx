@@ -278,6 +278,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               {needsTruncation && (
                 <ButtonBase
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setIsExpanded(!isExpanded);
                   }}

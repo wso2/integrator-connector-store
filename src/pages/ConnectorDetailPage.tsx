@@ -259,7 +259,7 @@ export default function ConnectorDetailPage() {
         fullWidth
         variant="contained"
         color="primary"
-        onClick={() => window.open(`https://central.ballerina.io${details.URL}`, '_blank')}
+        onClick={() => window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')}
         endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
       >
         View on Ballerina Central
