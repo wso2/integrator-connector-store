@@ -162,7 +162,6 @@ export default function ConnectorDetailPage() {
     // Update primary meta tags
     updateMetaTag('meta[name="description"]', description);
     updateMetaTag('meta[name="title"]', pageTitle);
-    updateMetaTag('link[rel="canonical"]', url);
     
     // Set robots meta tag based on hostname
     const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
