@@ -100,30 +100,15 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
     [connector.name, metadata.vendor]
   );
 
-  // Parse org and package name from connector.name (e.g., "ballerinax/openai.chat")
+  // Parse org and package name from connector URL
   const detailUrl = useMemo(() => {
-    const nameParts = connector.name.split('/').filter(Boolean); // Filter out empty strings
-    if (nameParts.length === 2) {
-      const [org, packageName] = nameParts;
-      if (org && packageName) {
-        return `/connector/${org}/${packageName}/latest`;
-      }
-    }
-    
-    // Fallback: parse URL path and extract org/package only (remove version if present)
+    // Parse URL path and extract org/package (e.g., "/ballerinax/twilio/5.0.1" -> "/connector/ballerinax/twilio/latest")
     const urlPath = connector.URL.replace(/^packages\//, '').replace(/^\//, ''); // Remove 'packages/' prefix and leading slash
     const urlParts = urlPath.split('/').filter(Boolean); // Filter out empty strings
     
     if (urlParts.length >= 2) {
       const [org, packageName] = urlParts;
       if (org && packageName) {
-        console.warn('Using fallback URL parsing for connector:', {
-          connectorName: connector.name,
-          connectorURL: connector.URL,
-          parsedOrg: org,
-          parsedPackage: packageName,
-          finalURL: `/connector/${org}/${packageName}/latest`
-        });
         return `/connector/${org}/${packageName}/latest`;
       }
     }
@@ -131,7 +116,6 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
     console.error('Unable to parse connector URL properly:', {
       name: connector.name,
       URL: connector.URL,
-      nameParts,
       urlParts
     });
     // Last resort fallback - use the original versioned URL
@@ -322,7 +306,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
           <Chip
             label={metadata.type}
             size="small"
-            color="primary"
+            color="default"
             sx={{
               fontSize: '0.7rem',
               height: '24px',
@@ -336,6 +320,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
             <Chip
               label={metadata.vendor}
               size="small"
+              color="primary"
               sx={{
                 fontSize: '0.7rem',
                 height: '24px',
@@ -350,10 +335,29 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
             <Chip
               label={metadata.area}
               size="small"
-              variant="outlined"
               sx={{
                 fontSize: '0.7rem',
                 height: '24px',
+                bgcolor: effectiveMode === 'dark' ? '#FF730020' : 'transparent',
+                color: '#FF7300',
+                border: '1px solid #FF7300',
+                '& .MuiChip-label': {
+                  textTransform: 'none',
+                }
+              }}
+            />
+          )}
+
+          {metadata.industry !== 'Other' && (
+            <Chip
+              label={metadata.industry}
+              size="small"
+              sx={{
+                fontSize: '0.7rem',
+                height: '24px',
+                bgcolor: effectiveMode === 'dark' ? 'transparent' : '#18181B',
+                color: '#FFFFFF',
+                border: effectiveMode === 'dark' ? '1px solid #FFFFFF' : 'none',
                 '& .MuiChip-label': {
                   textTransform: 'none',
                 }
