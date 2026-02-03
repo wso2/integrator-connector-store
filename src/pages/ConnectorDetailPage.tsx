@@ -201,7 +201,7 @@ export default function ConnectorDetailPage() {
                 }}
               >
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
-                  Other Versions
+                  Version History
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0, maxHeight: 200, overflowY: 'auto' }}>
@@ -228,7 +228,7 @@ export default function ConnectorDetailPage() {
           ) : (
             <Box sx={{ mb: 2 }}>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
-                Other Versions
+                Version History
               </Typography>
               <Box sx={{ mt: 1, maxHeight: 200, overflowY: 'auto' }}>
                 {details.versions
