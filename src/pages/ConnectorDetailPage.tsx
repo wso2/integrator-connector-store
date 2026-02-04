@@ -40,6 +40,7 @@ import BreadcrumbsNav from "@/components/BreadcrumbsNav";
 import { useParams } from 'react-router-dom';
 import { PackageDetails } from '@/types/connector';
 import { fetchPackageDetails } from '@/lib/rest-client';
+import { fetchMIConnector } from '@/lib/mi-connector';
 import {
   parseConnectorMetadata,
   formatPullCount,
@@ -88,6 +89,7 @@ export default function ConnectorDetailPage() {
   const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [miConnector, setMiConnector] = useState<{ name: string; documentationUrl?: string } | null>(null);
 
   const effectiveMode = useMemo(() => {
     if (mode === 'system') {
@@ -115,6 +117,12 @@ export default function ConnectorDetailPage() {
         setLoading(true);
         const details = await fetchPackageDetails(org, name, version);
         setPackageDetails(details);
+        
+        // Check for matching MI connector
+        const miConnectorDetails = await fetchMIConnector(name);
+        if (miConnectorDetails?.documentationUrl) {
+          setMiConnector(miConnectorDetails);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(errorMessage || 'Failed to load connector details.');
@@ -325,6 +333,18 @@ export default function ConnectorDetailPage() {
       >
         View on Ballerina Central
       </Button>
+      {miConnector?.documentationUrl && (
+        <Button
+          fullWidth
+          variant="outlined"
+          color="primary"
+          onClick={() => window.open(miConnector.documentationUrl, '_blank')}
+          endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
+          sx={{ mt: 1.5 }}
+        >
+          View MI Connector
+        </Button>
+      )}
     </Box>
   );
   
