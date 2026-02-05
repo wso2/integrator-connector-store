@@ -344,9 +344,15 @@ export default function HomePage() {
     if (selectedIndustries.length > 0) params.set('industries', selectedIndustries.join(','));
     if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
-    // Mark that we're updating URL from state
-    updatingUrlFromStateRef.current = true;
-    setSearchParams(params, { replace: true });
+    const newParamsString = params.toString();
+    const currentParamsString = searchParams.toString();
+
+    // Only update URL if params actually changed (prevents stuck flag on no-op updates)
+    if (newParamsString !== currentParamsString) {
+      // Mark that we're updating URL from state
+      updatingUrlFromStateRef.current = true;
+      setSearchParams(params, { replace: true });
+    }
   }, [
     currentPage,
     pageSize,
@@ -356,6 +362,7 @@ export default function HomePage() {
     selectedTypes,
     selectedIndustries,
     sortBy,
+    searchParams,
     setSearchParams,
   ]);
 
