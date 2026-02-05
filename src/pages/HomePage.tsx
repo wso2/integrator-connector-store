@@ -149,30 +149,34 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Initialize state from URL params
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedAreas, setSelectedAreas] = useState<string[]>(
+  // Initialize state from URL params to ensure deep-linked values are used immediately
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(() => 
     searchParams.get('areas')?.split(',').filter(Boolean) || []
   );
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(() => 
     searchParams.get('vendors')?.split(',').filter(Boolean) || []
   );
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => 
     searchParams.get('types')?.split(',').filter(Boolean) || []
   );
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(() => 
     searchParams.get('industries')?.split(',').filter(Boolean) || []
   );
-  const [currentPage, setCurrentPage] = useState(parsePageParam(searchParams.get('page')));
-  const [pageSize, setPageSize] = useState(parsePageSizeParam(searchParams.get('size')));
-  const [sortBy, setSortBy] = useState<SortOption>(parseSortParam(searchParams.get('sort')));
+  const [currentPage, setCurrentPage] = useState(() => parsePageParam(searchParams.get('page')));
+  const [pageSize, setPageSize] = useState(() => parsePageSizeParam(searchParams.get('size')));
+  const [sortBy, setSortBy] = useState<SortOption>(() => parseSortParam(searchParams.get('sort')));
 
   // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
   // Ref to track if component just mounted (to avoid resetting page on mount)
   const isMountedRef = useRef(false);
-  // Ref to skip state-to-URL sync on first render
-  const isFirstRenderRef = useRef(true);
+  // Ref to prevent URL->State sync from running (when URL changes from external source)
+  const syncingFromUrlRef = useRef(false);
+  // Ref to prevent State->URL updates from triggering URL->State sync
+  const updatingUrlFromStateRef = useRef(false);
+  // Ref to track previous URL params
+  const prevSearchParamsRef = useRef<string>('');
 
   // Mobile filter drawer state
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -278,11 +282,54 @@ export default function HomePage() {
     }
   }, [initialLoading, fetchPageData]);
 
-  // Sync state with URL params (one-way: state -> URL)
+  // Sync URL params to state (URL -> State)
   useEffect(() => {
-    // Skip first render to preserve initial URL params
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
+    // Skip if URL was just updated by state
+    if (updatingUrlFromStateRef.current) {
+      updatingUrlFromStateRef.current = false;
+      prevSearchParamsRef.current = searchParams.toString();
+      return;
+    }
+
+    const currentParamsString = searchParams.toString();
+    
+    // Only update if URL actually changed
+    if (currentParamsString === prevSearchParamsRef.current) {
+      return;
+    }
+    
+    prevSearchParamsRef.current = currentParamsString;
+    syncingFromUrlRef.current = true;
+    
+    const page = parsePageParam(searchParams.get('page'));
+    const size = parsePageSizeParam(searchParams.get('size'));
+    const sort = parseSortParam(searchParams.get('sort'));
+    const search = searchParams.get('search') || '';
+    const areas = searchParams.get('areas')?.split(',').filter(Boolean) || [];
+    const vendors = searchParams.get('vendors')?.split(',').filter(Boolean) || [];
+    const types = searchParams.get('types')?.split(',').filter(Boolean) || [];
+    const industries = searchParams.get('industries')?.split(',').filter(Boolean) || [];
+
+    setCurrentPage(page);
+    setPageSize(size);
+    setSortBy(sort);
+    setSearchQuery(search);
+    setSelectedAreas(areas);
+    setSelectedVendors(vendors);
+    setSelectedTypes(types);
+    setSelectedIndustries(industries);
+
+    // Reset flag after React's state batching completes
+    queueMicrotask(() => {
+      syncingFromUrlRef.current = false;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Sync state to URL params (State -> URL)
+  useEffect(() => {
+    // Skip if we're currently syncing from URL to avoid infinite loop
+    if (syncingFromUrlRef.current) {
       return;
     }
 
@@ -297,7 +344,15 @@ export default function HomePage() {
     if (selectedIndustries.length > 0) params.set('industries', selectedIndustries.join(','));
     if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
-    setSearchParams(params, { replace: true });
+    const newParamsString = params.toString();
+    const currentParamsString = searchParams.toString();
+
+    // Only update URL if params actually changed (prevents stuck flag on no-op updates)
+    if (newParamsString !== currentParamsString) {
+      // Mark that we're updating URL from state
+      updatingUrlFromStateRef.current = true;
+      setSearchParams(params, { replace: true });
+    }
   }, [
     currentPage,
     pageSize,
@@ -307,13 +362,18 @@ export default function HomePage() {
     selectedTypes,
     selectedIndustries,
     sortBy,
+    searchParams,
     setSearchParams,
   ]);
 
-  // Reset to page 1 when filters change (but not on mount)
+  // Reset to page 1 when filters change (but not on mount or when syncing from URL)
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
+      return;
+    }
+    // Don't reset page when syncing from URL
+    if (syncingFromUrlRef.current) {
       return;
     }
     setCurrentPage(1);
