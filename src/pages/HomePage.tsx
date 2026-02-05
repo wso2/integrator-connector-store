@@ -149,15 +149,23 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Initialize state with default values (URL sync will update these)
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(DEFAULT_PAGE);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [sortBy, setSortBy] = useState<SortOption>(DEFAULT_SORT);
+  // Initialize state from URL params to ensure deep-linked values are used immediately
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(() => 
+    searchParams.get('areas')?.split(',').filter(Boolean) || []
+  );
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(() => 
+    searchParams.get('vendors')?.split(',').filter(Boolean) || []
+  );
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => 
+    searchParams.get('types')?.split(',').filter(Boolean) || []
+  );
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(() => 
+    searchParams.get('industries')?.split(',').filter(Boolean) || []
+  );
+  const [currentPage, setCurrentPage] = useState(() => parsePageParam(searchParams.get('page')));
+  const [pageSize, setPageSize] = useState(() => parsePageSizeParam(searchParams.get('size')));
+  const [sortBy, setSortBy] = useState<SortOption>(() => parseSortParam(searchParams.get('sort')));
 
   // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
