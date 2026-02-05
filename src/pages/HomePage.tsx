@@ -163,8 +163,10 @@ export default function HomePage() {
   const initialFetchDoneRef = useRef(false);
   // Ref to track if component just mounted (to avoid resetting page on mount)
   const isMountedRef = useRef(false);
-  // Ref to prevent infinite loops between URL and state sync
+  // Ref to prevent URL->State sync from running (when URL changes from external source)
   const syncingFromUrlRef = useRef(false);
+  // Ref to prevent State->URL updates from triggering URL->State sync
+  const updatingUrlFromStateRef = useRef(false);
   // Ref to track previous URL params
   const prevSearchParamsRef = useRef<string>('');
 
@@ -274,6 +276,13 @@ export default function HomePage() {
 
   // Sync URL params to state (URL -> State)
   useEffect(() => {
+    // Skip if URL was just updated by state
+    if (updatingUrlFromStateRef.current) {
+      updatingUrlFromStateRef.current = false;
+      prevSearchParamsRef.current = searchParams.toString();
+      return;
+    }
+
     const currentParamsString = searchParams.toString();
     
     // Only update if URL actually changed
@@ -302,10 +311,10 @@ export default function HomePage() {
     setSelectedTypes(types);
     setSelectedIndustries(industries);
 
-    // Reset flag after state updates are processed
-    setTimeout(() => {
+    // Reset flag after React's state batching completes
+    queueMicrotask(() => {
       syncingFromUrlRef.current = false;
-    }, 100);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -327,6 +336,8 @@ export default function HomePage() {
     if (selectedIndustries.length > 0) params.set('industries', selectedIndustries.join(','));
     if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
+    // Mark that we're updating URL from state
+    updatingUrlFromStateRef.current = true;
     setSearchParams(params, { replace: true });
   }, [
     currentPage,
