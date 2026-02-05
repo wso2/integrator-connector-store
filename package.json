@@ -7,6 +7,8 @@
     "dev": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",
     "start": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",
     "build": "DISABLE_ESLINT_PLUGIN=true react-app-rewired build",
+    "prebuild": "bash scripts/prebuild.sh",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
     "test": "react-app-rewired test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

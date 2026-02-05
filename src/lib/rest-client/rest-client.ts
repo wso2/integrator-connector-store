@@ -44,6 +44,7 @@ export interface SearchParams {
   areas?: string[];
   vendors?: string[];
   types?: string[];
+  industries?: string[];
   offset: number;
   limit: number;
   sort: SortOption;
@@ -175,7 +176,7 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
  *   → "org:ballerinax AND keyword:Area/Finance AND keyword:Vendor/Amazon"
  */
 function buildSolrQuery(
-  params: Pick<SearchParams, 'areas' | 'vendors' | 'types' | 'query' | 'orgName'>
+  params: Pick<SearchParams, 'areas' | 'vendors' | 'types' | 'industries' | 'query' | 'orgName'>
 ): string {
   const filters: string[] = [];
 
@@ -227,6 +228,14 @@ function buildSolrQuery(
     });
   }
 
+  // Add industry filter (required with AND operator)
+  if (params.industries && params.industries.length > 0) {
+    params.industries.forEach((industry) => {
+      const escaped = escapeLuceneValue(industry);
+      filters.push(`keyword:Industry/${escaped}`);
+    });
+  }
+
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
     // Trim the query first
@@ -272,10 +281,10 @@ const MAX_COMBINATIONS = 50;
  * Since Solr doesn't support parenthetical grouping, we need to make multiple queries
  */
 function generateFilterCombinations(params: SearchParams): SearchParams[] {
-  const { areas = [], vendors = [], types = [], ...rest } = params;
+  const { areas = [], vendors = [], types = [], industries = [], ...rest } = params;
 
   // If all filters have 0 or 1 values, no combinations needed
-  if (areas.length <= 1 && vendors.length <= 1 && types.length <= 1) {
+  if (areas.length <= 1 && vendors.length <= 1 && types.length <= 1 && industries.length <= 1) {
     return [params];
   }
 
@@ -283,9 +292,10 @@ function generateFilterCombinations(params: SearchParams): SearchParams[] {
   const areaList = areas.length > 0 ? areas : [undefined];
   const vendorList = vendors.length > 0 ? vendors : [undefined];
   const typeList = types.length > 0 ? types : [undefined];
+  const industryList = industries.length > 0 ? industries : [undefined];
 
   // Check if Cartesian product would exceed threshold
-  const comboCount = areaList.length * vendorList.length * typeList.length;
+  const comboCount = areaList.length * vendorList.length * typeList.length * industryList.length;
   if (comboCount > MAX_COMBINATIONS) {
     console.warn(
       `Filter combination count (${comboCount}) exceeds MAX_COMBINATIONS (${MAX_COMBINATIONS}). ` +
@@ -299,12 +309,15 @@ function generateFilterCombinations(params: SearchParams): SearchParams[] {
   for (const area of areaList) {
     for (const vendor of vendorList) {
       for (const type of typeList) {
-        combinations.push({
-          ...rest,
-          areas: area ? [area] : [],
-          vendors: vendor ? [vendor] : [],
-          types: type ? [type] : [],
-        });
+        for (const industry of industryList) {
+          combinations.push({
+            ...rest,
+            areas: area ? [area] : [],
+            vendors: vendor ? [vendor] : [],
+            types: type ? [type] : [],
+            industries: industry ? [industry] : [],
+          });
+        }
       }
     }
   }
@@ -456,6 +469,14 @@ function getCachedFilters(): FilterOptions | null {
 
     const { filters, timestamp }: CachedFilters = JSON.parse(cached);
     const age = Date.now() - timestamp;
+
+    // Validate that cached filters have all required fields (including industries)
+    if (!filters.industries) {
+      // eslint-disable-next-line no-console
+      console.log('Cached filters missing industries field, invalidating cache');
+      localStorage.removeItem(FILTER_CACHE_KEY);
+      return null;
+    }
 
     // Return cached filters if less than 24 hours old
     if (age < FILTER_CACHE_TTL) {

@@ -189,8 +189,9 @@ export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
   const area = keywords.find((k) => k.startsWith('Area/'))?.replace('Area/', '') || 'Other';
   const vendor = keywords.find((k) => k.startsWith('Vendor/'))?.replace('Vendor/', '') || 'Other';
   const type = keywords.find((k) => k.startsWith('Type/'))?.replace('Type/', '') || 'Other';
+  const industry = keywords.find((k) => k.startsWith('Industry/'))?.replace('Industry/', '') || 'Other';
 
-  return { area, vendor, type };
+  return { area, vendor, type, industry };
 }
 
 /**
@@ -201,18 +202,21 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
   const areas = new Set<string>();
   const vendors = new Set<string>();
   const types = new Set<string>();
+  const industries = new Set<string>();
 
   connectors.forEach((connector) => {
     const metadata = parseConnectorMetadata(connector.keywords);
     areas.add(metadata.area);
     vendors.add(metadata.vendor);
     types.add(metadata.type);
+    industries.add(metadata.industry);
   });
 
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
     types: Array.from(types).sort(),
+    industries: Array.from(industries).sort(),
   };
 }
 
