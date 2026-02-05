@@ -171,6 +171,30 @@ npm run build
 
 Creates an optimized production build in the `build/` folder.
 
+**Sitemap Generation (Optional):**
+By default, the build process skips sitemap generation. To generate a sitemap with connector URLs:
+
+```bash
+# Generate sitemap before building
+GENERATE_SITEMAP=true npm run build
+
+# Or generate sitemap separately
+npm run generate-sitemap
+
+# Set production domain (optional, defaults to https://example.com)
+SITE_URL=https://yourdomain.com npm run generate-sitemap
+```
+
+**For CI/CD pipelines**, set the `GENERATE_SITEMAP=true` environment variable:
+```yaml
+# GitHub Actions example
+- name: Build with sitemap
+  run: npm run build
+  env:
+    GENERATE_SITEMAP: true
+    SITE_URL: https://yourdomain.com
+```
+
 ### Production Server
 
 ```bash

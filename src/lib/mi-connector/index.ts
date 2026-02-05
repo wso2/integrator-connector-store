@@ -73,7 +73,7 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
     }
 
     // Step 3: Fetch full connector details to get documentation URL
-    const detailsResponse = await fetch(`${MI_CONNECTOR_API_BASE}/connectors/${matchingConnector.id}`);
+    const detailsResponse = await fetch(`${MI_CONNECTOR_API_BASE}/connectors/${encodeURIComponent(matchingConnector.id)}`);
     if (!detailsResponse.ok) {
       console.warn('Failed to fetch MI connector details:', detailsResponse.status);
       return null;
