@@ -8,6 +8,22 @@
 const fs = require('fs');
 const path = require('path');
 
+// Check Node.js version and ensure fetch is available
+const nodeVersion = process.version;
+const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0], 10);
+
+if (majorVersion < 18) {
+  console.error(`Error: Node.js 18 or higher is required (current: ${nodeVersion})`);
+  console.error('Please upgrade Node.js or install node-fetch: npm install node-fetch');
+  process.exit(1);
+}
+
+// Ensure fetch is available (Node 18+ has it built-in)
+if (typeof fetch === 'undefined') {
+  console.error('Error: fetch is not available. Please use Node.js 18+ or install node-fetch.');
+  process.exit(1);
+}
+
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 // Use environment variable or default placeholder
 // Set this via: SITE_URL=https://yourdomain.com npm run generate-sitemap
@@ -45,12 +61,29 @@ async function fetchAllPackages() {
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error(`Failed to fetch batch at offset ${offset}:`, error);
-      break;
+      throw new Error(`Failed to fetch connector packages at offset ${offset}: ${error.message}`);
     }
   }
 
   console.log(`Total packages fetched: ${allPackages.length}`);
   return allPackages;
+}
+
+/**
+ * Escape XML special characters to prevent XML injection
+ * @param {string} str - String to escape
+ * @returns {string} XML-safe string
+ */
+function escapeXml(str) {
+  if (typeof str !== 'string') {
+    return String(str);
+  }
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 function generateSitemap(packages) {
@@ -87,10 +120,10 @@ function generateSitemap(packages) {
 
   urls.forEach(url => {
     xml += '  <url>\n';
-    xml += `    <loc>${url.loc}</loc>\n`;
-    xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
-    xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
-    xml += `    <priority>${url.priority}</priority>\n`;
+    xml += `    <loc>${escapeXml(url.loc)}</loc>\n`;
+    xml += `    <lastmod>${escapeXml(url.lastmod)}</lastmod>\n`;
+    xml += `    <changefreq>${escapeXml(url.changefreq)}</changefreq>\n`;
+    xml += `    <priority>${escapeXml(url.priority)}</priority>\n`;
     xml += '  </url>\n';
   });
 

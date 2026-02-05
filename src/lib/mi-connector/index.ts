@@ -48,11 +48,25 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
 
     const connectors: MIConnector[] = await namesResponse.json();
     
-    // Step 2: Search for matching connector (case-insensitive)
-    const searchName = connectorName.toLowerCase();
-    const matchingConnector = connectors.find(c => 
-      c.name.toLowerCase().includes(searchName)
+    // Step 2: Search for matching connector with two-step lookup
+    // First try exact match (trimmed, case-insensitive)
+    const trimmedSearchName = connectorName.trim().toLowerCase();
+    
+    // Return early if search name is empty
+    if (!trimmedSearchName) {
+      return null;
+    }
+    
+    let matchingConnector = connectors.find(c => 
+      c.name.trim().toLowerCase() === trimmedSearchName
     );
+    
+    // Fall back to substring search if exact match fails
+    if (!matchingConnector) {
+      matchingConnector = connectors.find(c => 
+        c.name.toLowerCase().includes(trimmedSearchName)
+      );
+    }
 
     if (!matchingConnector) {
       return null;

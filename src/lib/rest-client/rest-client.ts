@@ -472,6 +472,7 @@ function getCachedFilters(): FilterOptions | null {
 
     // Validate that cached filters have all required fields (including industries)
     if (!filters.industries) {
+      // eslint-disable-next-line no-console
       console.log('Cached filters missing industries field, invalidating cache');
       localStorage.removeItem(FILTER_CACHE_KEY);
       return null;
