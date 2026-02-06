@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Prebuild script - runs before build
 # Optionally generates sitemap if GENERATE_SITEMAP=true is set
