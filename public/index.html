@@ -41,8 +41,12 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
     />
     
-    <!-- Configuration -->
-    <script src="%PUBLIC_URL%/config.js"></script>
+    <!-- Configuration (optional, falls back to defaults if missing) -->
+    <script>
+      // Fallback configuration if config.js is missing
+      window.configs = window.configs || { lightGalleryKey: '' };
+    </script>
+    <script src="%PUBLIC_URL%/config.js" defer onerror="console.log('config.js not found, using defaults')"></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
