@@ -29,6 +29,14 @@ import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 
+declare global {
+  interface Window {
+    configs?: {
+      lightGalleryKey?: string;
+    };
+  }
+}
+
 interface MarkdownContentProps {
   content: string;
   effectiveMode: 'light' | 'dark';
@@ -48,6 +56,9 @@ export default function MarkdownContent({ content, effectiveMode }: MarkdownCont
     }
   }, [content]);
 
+  // Access license key from window.configs
+  const lightGalleryKey = window.configs?.lightGalleryKey || '';
+
   return (
     <Box ref={galleryContainerRef}>
       <LightGallery
@@ -56,6 +67,7 @@ export default function MarkdownContent({ content, effectiveMode }: MarkdownCont
         speed={500}
         selector=".markdown-image"
         elementClassNames="markdown-gallery"
+        licenseKey={lightGalleryKey}
       >
         <Box
           sx={{
