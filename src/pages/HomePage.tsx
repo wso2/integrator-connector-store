@@ -323,7 +323,6 @@ export default function HomePage() {
     queueMicrotask(() => {
       syncingFromUrlRef.current = false;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Sync state to URL params (State -> URL)

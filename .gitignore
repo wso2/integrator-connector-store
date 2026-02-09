@@ -25,6 +25,9 @@ yarn-error.log*
 # Local env files
 .env*.local
 
+# Config files (use deployment environment config)
+public/config.js
+
 # Vercel
 .vercel
 
