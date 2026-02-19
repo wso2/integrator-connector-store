@@ -32,7 +32,7 @@ export default function Hero({ effectiveMode }: HeroProps) {
       sx={{
         borderBottom: 1,
         borderColor: 'divider',
-        background: effectiveMode === 'dark' 
+        background: effectiveMode === 'dark'
           ? 'linear-gradient(to right, #18181B, #18181B, rgba(255, 115, 0, 0.1))'
           : 'linear-gradient(to right, #F3F4F6, #FFFFFF, #FFF7ED)',
       }}
@@ -41,21 +41,35 @@ export default function Hero({ effectiveMode }: HeroProps) {
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'flex-start', md: 'center' },
+            justifyContent: { xs: 'flex-start', md: 'space-between' },
             gap: 3,
           }}
         >
-          <Box>
+          <Box
+            sx={{
+              width: { xs: '100%', md: '50%' },
+              mb: { xs: 3, md: 0 },
+            }}
+          >
             <Typography variant="h1" fontWeight="bold">
               Connector Store
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-              Discover and integrate with 600+ pre-built connectors for enterprise platforms
+              Discover pre-built connectors and accelerate integration across SaaS, legacy systems, databases, messaging platforms, AI services, and cloud providers.
             </Typography>
           </Box>
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
+          <Box
+            sx={{
+              width: { xs: '100%', md: '50%' },
+              display: { xs: 'none', md: 'flex' },
+              flexDirection: { md: 'row' },
+              gap: 4,
+              alignItems: { md: 'center' },
+              justifyContent: { md: 'flex-end' },
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Zap size={20} style={{ color: WSO2_ORANGE }} />
               <Typography variant="body2" color="text.secondary">
