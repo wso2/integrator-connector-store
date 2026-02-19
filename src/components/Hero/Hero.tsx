@@ -52,7 +52,7 @@ export default function Hero({ effectiveMode }: HeroProps) {
               Connector Store
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-              Discover and integrate with 600+ pre-built connectors for enterprise platforms
+              Discover pre-built connectors, and accelerate integration across SaaS, legacy systems, databases, messaging platforms, AI services, and cloud providers.
             </Typography>
           </Box>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
