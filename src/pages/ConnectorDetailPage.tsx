@@ -63,7 +63,31 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
   for (const section of sections) {
     const lowerSection = section.toLowerCase();
     if (lowerSection.startsWith('## overview')) {
-      overview = removeCodeBlocks(section);
+      let content = section;
+      // Truncate after ### Key Features and its bullet list
+      const keyFeaturesMatch = content.match(/^###\s+key features\b.*$/im);
+      if (keyFeaturesMatch && keyFeaturesMatch.index !== undefined) {
+        const afterKeyFeatures = content.substring(keyFeaturesMatch.index + keyFeaturesMatch[0].length);
+        // Find the last bullet line in the list, then cut everything after it
+        const lines = afterKeyFeatures.split('\n');
+        let lastBulletIndex = -1;
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const isBullet = /^\s*[-*+]\s/.test(line);
+          const isContinuation = /^\s{2,}\S/.test(line);
+          if (isBullet) {
+            lastBulletIndex = i;
+          } else if (lastBulletIndex !== -1 && line.trim() !== '' && !isContinuation) {
+            // Non-empty, non-bullet, non-continuation line after bullets — stop here
+            break;
+          }
+        }
+        if (lastBulletIndex !== -1) {
+          const keptLines = lines.slice(0, lastBulletIndex + 1).join('\n');
+          content = content.substring(0, keyFeaturesMatch.index + keyFeaturesMatch[0].length) + keptLines;
+        }
+      }
+      overview = removeCodeBlocks(content);
     } else if (lowerSection.startsWith('## setup') || lowerSection.startsWith('## prerequisites')) {
       setup = removeCodeBlocks(section);
     }
