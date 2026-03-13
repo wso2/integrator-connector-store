@@ -65,17 +65,20 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
     if (lowerSection.startsWith('## overview')) {
       let content = section;
       // Truncate after ### Key Features and its bullet list
-      const keyFeaturesMatch = content.match(/### key features/i);
+      const keyFeaturesMatch = content.match(/^###\s+key features\b.*$/im);
       if (keyFeaturesMatch && keyFeaturesMatch.index !== undefined) {
         const afterKeyFeatures = content.substring(keyFeaturesMatch.index + keyFeaturesMatch[0].length);
         // Find the last bullet line in the list, then cut everything after it
         const lines = afterKeyFeatures.split('\n');
         let lastBulletIndex = -1;
         for (let i = 0; i < lines.length; i++) {
-          if (/^\s*[-*+]\s/.test(lines[i])) {
+          const line = lines[i];
+          const isBullet = /^\s*[-*+]\s/.test(line);
+          const isContinuation = /^\s{2,}\S/.test(line);
+          if (isBullet) {
             lastBulletIndex = i;
-          } else if (lastBulletIndex !== -1 && lines[i].trim() !== '') {
-            // Non-empty, non-bullet line after bullets — stop here
+          } else if (lastBulletIndex !== -1 && line.trim() !== '' && !isContinuation) {
+            // Non-empty, non-bullet, non-continuation line after bullets — stop here
             break;
           }
         }
