@@ -63,7 +63,28 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
   for (const section of sections) {
     const lowerSection = section.toLowerCase();
     if (lowerSection.startsWith('## overview')) {
-      overview = removeCodeBlocks(section);
+      let content = section;
+      // Truncate after ### Key Features and its bullet list
+      const keyFeaturesMatch = content.match(/### key features/i);
+      if (keyFeaturesMatch && keyFeaturesMatch.index !== undefined) {
+        const afterKeyFeatures = content.substring(keyFeaturesMatch.index + keyFeaturesMatch[0].length);
+        // Find the last bullet line in the list, then cut everything after it
+        const lines = afterKeyFeatures.split('\n');
+        let lastBulletIndex = -1;
+        for (let i = 0; i < lines.length; i++) {
+          if (/^\s*[-*+]\s/.test(lines[i])) {
+            lastBulletIndex = i;
+          } else if (lastBulletIndex !== -1 && lines[i].trim() !== '') {
+            // Non-empty, non-bullet line after bullets — stop here
+            break;
+          }
+        }
+        if (lastBulletIndex !== -1) {
+          const keptLines = lines.slice(0, lastBulletIndex + 1).join('\n');
+          content = content.substring(0, keyFeaturesMatch.index + keyFeaturesMatch[0].length) + keptLines;
+        }
+      }
+      overview = removeCodeBlocks(content);
     } else if (lowerSection.startsWith('## setup') || lowerSection.startsWith('## prerequisites')) {
       setup = removeCodeBlocks(section);
     }
