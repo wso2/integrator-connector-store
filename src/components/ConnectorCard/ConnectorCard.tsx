@@ -156,7 +156,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
             sx={{
               width: 48,
               height: 48,
-              borderRadius: 1,
+              borderRadius: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

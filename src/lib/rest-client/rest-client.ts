@@ -130,10 +130,27 @@ function toRestSortParam(sortOption: SortOption): string {
 }
 
 /**
+ * Compute a relevance score for a package based on how well its name matches the query.
+ * Lower score = better match (used for sorting).
+ *   0 = exact name match
+ *   1 = name starts with query
+ *   2 = name contains query
+ *   3 = no name match (matched on other fields)
+ */
+function nameRelevanceScore(pkg: BallerinaPackage, query: string): number {
+  const q = query.toLowerCase();
+  const name = pkg.name.toLowerCase();
+  if (name === q) return 0;
+  if (name.startsWith(q)) return 1;
+  if (name.includes(q)) return 2;
+  return 3;
+}
+
+/**
  * Sort merged packages according to the specified sort option
  * Used after deduplicating results from multiple queries
  */
-function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): BallerinaPackage[] {
+function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption, query?: string): BallerinaPackage[] {
   const sorted = [...packages];
 
   switch (sort) {
@@ -150,6 +167,15 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
         return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
       });
     case 'pullCount-desc':
+      if (query) {
+        // When searching, sort by name relevance first, then by pull count within same relevance
+        return sorted.sort((a, b) => {
+          const scoreA = nameRelevanceScore(a, query);
+          const scoreB = nameRelevanceScore(b, query);
+          if (scoreA !== scoreB) return scoreA - scoreB;
+          return (b.totalPullCount || 0) - (a.totalPullCount || 0);
+        });
+      }
       return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
     case 'pullCount-asc':
       return sorted.sort((a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0));
@@ -252,7 +278,7 @@ function buildSolrQuery(
     
     // Add wildcards for partial matching only if query doesn't already have them
     const searchTerm = hasWildcards ? trimmedQuery : `*${escapedQuery}*`;
-    
+
     const finalQuery = `${searchTerm} AND ${filters.join(' AND ')}`;
     return finalQuery;
   }
@@ -356,6 +382,22 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
 }
 
 /**
+ * Filter packages to only those whose name or keywords contain the search query.
+ * The API wildcard search matches across all fields (including summary), which
+ * returns too many irrelevant results. This narrows results to relevant matches.
+ */
+function filterByRelevance(packages: BallerinaPackage[], query?: string): BallerinaPackage[] {
+  if (!query) return packages;
+  const q = query.trim().toLowerCase();
+  if (!q) return packages;
+  return packages.filter((pkg) => {
+    const name = pkg.name.toLowerCase();
+    const keywords = pkg.keywords.map((k) => k.toLowerCase());
+    return name.includes(q) || keywords.some((k) => k.includes(q));
+  });
+}
+
+/**
  * Search packages with server-side filtering, sorting, and pagination
  * Handles OR logic by making multiple API calls when needed
  */
@@ -364,8 +406,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    // For name-asc/name-desc, fetch all results, sort, then slice for pagination
-    if (params.sort === 'name-asc' || params.sort === 'name-desc') {
+    const needsClientFilter = !!params.query;
+    // When searching or sorting by name, we need all results for client-side processing
+    if (needsClientFilter || params.sort === 'name-asc' || params.sort === 'name-desc') {
       // Step 1: Fetch count only
       const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
       const totalCount = countResult.count;
@@ -376,9 +419,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         const batchResult = await executeSingleSearch({ ...combinations[0], offset, limit: batchSize });
         allPackages = allPackages.concat(batchResult.packages);
       }
-      // Sort client-side
-      const sorted = sortMergedPackages(allPackages, params.sort);
-      // Slice for pagination
+      // Filter to relevant matches (name/keyword), then sort and paginate
+      const filtered = filterByRelevance(allPackages, params.query);
+      const sorted = sortMergedPackages(filtered, params.sort, params.query);
       const paged = sorted.slice(params.offset, params.offset + params.limit);
       return {
         packages: paged,
@@ -387,9 +430,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         limit: params.limit,
       };
     } else {
-      // Other sorts: keep existing behavior
+      // No search query, non-name sort: keep existing behavior
       const result = await executeSingleSearch(combinations[0]);
-      result.packages = sortMergedPackages(result.packages, params.sort);
+      result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       return result;
     }
   }
@@ -419,8 +462,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Re-sort merged packages to respect params.sort
-  const sortedPackages = sortMergedPackages(mergedPackages, params.sort);
+  // Filter to relevant matches, then re-sort
+  const filteredPackages = filterByRelevance(mergedPackages, params.query);
+  const sortedPackages = sortMergedPackages(filteredPackages, params.sort, params.query);
 
   // Total count is the deduplicated set size
   const totalCount = sortedPackages.length;

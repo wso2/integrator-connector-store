@@ -261,15 +261,17 @@ export default function ConnectorDetailPage() {
       <Box sx={{ mb: 2 }}>
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Tags</Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-          {details.keywords.map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              size="small"
-              clickable
-              onClick={() => navigate(`/?search=${encodeURIComponent(tag)}`)}
-            />
-          ))}
+          {details.keywords
+            .filter((tag) => tag.startsWith('Area/') || tag.startsWith('Vendor/') || tag.startsWith('Type/'))
+            .map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="small"
+                clickable
+                onClick={() => navigate(`/?search=${encodeURIComponent(tag)}`)}
+              />
+            ))}
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
