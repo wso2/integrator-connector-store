@@ -414,7 +414,6 @@ export default function ConnectorDetailPage() {
                 </Box>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>{displayName}</Typography>
-                  <Typography variant="body2" sx={{ fontFamily: "monospace", color: "text.secondary" }}>{packageDetails.organization}/{packageDetails.name}</Typography>
                 </Box>
               </Box>
 

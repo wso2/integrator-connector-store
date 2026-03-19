@@ -18,9 +18,7 @@
 
 import React from 'react';
 import { Box, Container, Typography } from '@wso2/oxygen-ui';
-import { Zap, Shield, Globe } from '@wso2/oxygen-ui-icons-react';
 
-const WSO2_ORANGE = '#FF7300';
 
 interface HeroProps {
   effectiveMode: 'light' | 'dark';
@@ -59,35 +57,6 @@ export default function Hero({ effectiveMode }: HeroProps) {
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
               Discover pre-built connectors and accelerate integration across SaaS, legacy systems, databases, messaging platforms, AI services, and cloud providers.
             </Typography>
-          </Box>
-          <Box
-            sx={{
-              width: { xs: '100%', md: '50%' },
-              display: { xs: 'none', md: 'flex' },
-              flexDirection: { md: 'row' },
-              gap: 4,
-              alignItems: { md: 'center' },
-              justifyContent: { md: 'flex-end' },
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Zap size={20} style={{ color: WSO2_ORANGE }} />
-              <Typography variant="body2" color="text.secondary">
-                Fast Integration
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Shield size={20} style={{ color: WSO2_ORANGE }} />
-              <Typography variant="body2" color="text.secondary">
-                Enterprise Ready
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Globe size={20} style={{ color: WSO2_ORANGE }} />
-              <Typography variant="body2" color="text.secondary">
-                Global Support
-              </Typography>
-            </Box>
           </Box>
         </Box>
       </Container>
