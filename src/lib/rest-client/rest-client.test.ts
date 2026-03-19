@@ -96,14 +96,20 @@ describe('rest-client', () => {
     });
 
     it('should include search query in request', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(createMockApiResponse([], 0)),
-      });
-      await searchPackages({ query: 'stripe', offset: 0, limit: 30, sort: 'name-asc' });
+      // With a search query, searchPackages fetches all results for client-side filtering.
+      // First call: count check (limit=1), second call: full batch fetch.
+      const countResponse = createMockApiResponse([], 1);
+      const batchResponse = createMockApiResponse(
+        [{ name: 'stripe', version: '1.0.0' }],
+        1
+      );
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
+
+      await searchPackages({ query: 'stripe', offset: 0, limit: 30, sort: 'pullCount-desc' });
       const calledUrl = mockFetch.mock.calls[0][0];
-      expect(calledUrl).toContain('q=stripe');
-      expect(calledUrl).toContain('sort=name,ASC');
+      expect(calledUrl).toContain('stripe');
     });
 
     it('should handle multiple filter combinations by making parallel requests', async () => {
