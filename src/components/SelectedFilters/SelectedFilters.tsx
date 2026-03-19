@@ -5,11 +5,9 @@ interface SelectedFiltersProps {
   selectedAreas: string[];
   selectedTypes: string[];
   selectedVendors: string[];
-  selectedIndustries: string[];
   onAreaDelete: (area: string) => void;
   onTypeDelete: (type: string) => void;
   onVendorDelete: (vendor: string) => void;
-  onIndustryDelete: (industry: string) => void;
   onClearAll: () => void;
   WSO2_ORANGE?: string;
   effectiveMode?: 'light' | 'dark';
@@ -19,11 +17,9 @@ const SelectedFilters: React.FC<SelectedFiltersProps> = ({
   selectedAreas,
   selectedTypes,
   selectedVendors,
-  selectedIndustries,
   onAreaDelete,
   onTypeDelete,
   onVendorDelete,
-  onIndustryDelete,
   onClearAll,
   WSO2_ORANGE = '#FF7300',
   effectiveMode = 'light',
@@ -31,8 +27,7 @@ const SelectedFilters: React.FC<SelectedFiltersProps> = ({
   if (
     selectedAreas.length === 0 &&
     selectedTypes.length === 0 &&
-    selectedVendors.length === 0 &&
-    selectedIndustries.length === 0
+    selectedVendors.length === 0
   ) {
     return null;
   }
@@ -91,26 +86,6 @@ const SelectedFilters: React.FC<SelectedFiltersProps> = ({
           size="small"
           onDelete={() => onVendorDelete(vendor)}
           color="primary"
-        />
-      ))}
-
-      {selectedIndustries.map((industry) => (
-        <Chip
-          key={`industry-${industry}`}
-          label={industry}
-          size="small"
-          onDelete={() => onIndustryDelete(industry)}
-          sx={{
-            bgcolor: effectiveMode === 'dark' ? 'transparent' : '#18181B',
-            color: effectiveMode === 'dark' ? '#FFFFFF' : '#FFFFFF',
-            border: effectiveMode === 'dark' ? '1px solid #FFFFFF' : 'none',
-            '& .MuiChip-deleteIcon': {
-              color: '#FFFFFF',
-              '&:hover': {
-                color: effectiveMode === 'dark' ? '#D1D5DB' : '#D1D5DB',
-              },
-            },
-          }}
         />
       ))}
 

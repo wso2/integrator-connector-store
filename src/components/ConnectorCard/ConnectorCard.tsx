@@ -348,22 +348,6 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
             />
           )}
 
-          {metadata.industry !== 'Other' && (
-            <Chip
-              label={metadata.industry}
-              size="small"
-              sx={{
-                fontSize: '0.7rem',
-                height: '24px',
-                bgcolor: effectiveMode === 'dark' ? 'transparent' : '#18181B',
-                color: '#FFFFFF',
-                border: effectiveMode === 'dark' ? '1px solid #FFFFFF' : 'none',
-                '& .MuiChip-label': {
-                  textTransform: 'none',
-                }
-              }}
-            />
-          )}
         </Box>
 
         {/* Bottom section - always at bottom */}

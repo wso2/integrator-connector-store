@@ -138,12 +138,32 @@ export default function HomePage() {
   }, [mode]);
 
   const [connectors, setConnectors] = useState<BallerinaPackage[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    areas: [],
+  const predefinedAreas = [
+    'CRM & Sales',
+    'Finance & Accounting',
+    'AI & Machine Learning',
+    'E-Commerce',
+    'Database',
+    'Communication',
+    'ERP & Business Operations',
+    'Productivity & Collaboration',
+    'Marketing & Social Media',
+    'Cloud & Infrastructure',
+    'Security & Identity',
+    'Developer Tools',
+    'Storage & File Management',
+    'Messaging',
+    'HRMS',
+    'Healthcare',
+  ];
+  const [filterOptions, setFilterOptionsState] = useState<FilterOptions>({
+    areas: predefinedAreas,
     vendors: [],
     types: [],
-    industries: [],
   });
+  const setFilterOptions = (filters: FilterOptions) => {
+    setFilterOptionsState({ ...filters, areas: predefinedAreas });
+  };
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,9 +179,6 @@ export default function HomePage() {
   );
   const [selectedTypes, setSelectedTypes] = useState<string[]>(() => 
     searchParams.get('types')?.split(',').filter(Boolean) || []
-  );
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(() => 
-    searchParams.get('industries')?.split(',').filter(Boolean) || []
   );
   const [currentPage, setCurrentPage] = useState(() => parsePageParam(searchParams.get('page')));
   const [pageSize, setPageSize] = useState(() => parsePageSizeParam(searchParams.get('size')));
@@ -200,17 +217,10 @@ export default function HomePage() {
     );
   };
 
-  const toggleIndustryFilter = (industry: string) => {
-    setSelectedIndustries((prev) =>
-      prev.includes(industry) ? prev.filter((i) => i !== industry) : [...prev, industry]
-    );
-  };
-
   const clearAllFilters = () => {
     setSelectedAreas([]);
     setSelectedTypes([]);
     setSelectedVendors([]);
-    setSelectedIndustries([]);
     setSearchQuery('');
   };
 
@@ -225,7 +235,6 @@ export default function HomePage() {
         areas: selectedAreas,
         vendors: selectedVendors,
         types: selectedTypes,
-        industries: selectedIndustries,
         offset: (currentPage - 1) * pageSize,
         limit: pageSize,
         sort: sortBy,
@@ -243,7 +252,7 @@ export default function HomePage() {
       setError(errorMessage);
       setLoading(false);
     }
-  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes, selectedIndustries, currentPage, pageSize, sortBy]);
+  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes, currentPage, pageSize, sortBy]);
 
   // Load filter options once on mount, then load first page
   useEffect(() => {
@@ -308,8 +317,6 @@ export default function HomePage() {
     const areas = searchParams.get('areas')?.split(',').filter(Boolean) || [];
     const vendors = searchParams.get('vendors')?.split(',').filter(Boolean) || [];
     const types = searchParams.get('types')?.split(',').filter(Boolean) || [];
-    const industries = searchParams.get('industries')?.split(',').filter(Boolean) || [];
-
     setCurrentPage(page);
     setPageSize(size);
     setSortBy(sort);
@@ -317,7 +324,6 @@ export default function HomePage() {
     setSelectedAreas(areas);
     setSelectedVendors(vendors);
     setSelectedTypes(types);
-    setSelectedIndustries(industries);
 
     // Reset flag after React's state batching completes
     queueMicrotask(() => {
@@ -340,7 +346,6 @@ export default function HomePage() {
     if (selectedAreas.length > 0) params.set('areas', selectedAreas.join(','));
     if (selectedVendors.length > 0) params.set('vendors', selectedVendors.join(','));
     if (selectedTypes.length > 0) params.set('types', selectedTypes.join(','));
-    if (selectedIndustries.length > 0) params.set('industries', selectedIndustries.join(','));
     if (sortBy !== 'pullCount-desc') params.set('sort', sortBy);
 
     const newParamsString = params.toString();
@@ -359,7 +364,6 @@ export default function HomePage() {
     selectedAreas,
     selectedVendors,
     selectedTypes,
-    selectedIndustries,
     sortBy,
     searchParams,
     setSearchParams,
@@ -376,7 +380,7 @@ export default function HomePage() {
       return;
     }
     setCurrentPage(1);
-  }, [selectedAreas, selectedVendors, selectedTypes, selectedIndustries, searchQuery, pageSize]);
+  }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -391,8 +395,8 @@ export default function HomePage() {
     if (searchQuery) {
       pageTitle = `Search: "${searchQuery}" - WSO2 Integrator Connector Store`;
       description = `Search results for "${searchQuery}" - Find Ballerina connectors matching your query.`;
-    } else if (selectedAreas.length > 0 || selectedVendors.length > 0 || selectedTypes.length > 0 || selectedIndustries.length > 0) {
-      const filters = [...selectedAreas, ...selectedVendors, ...selectedTypes, ...selectedIndustries];
+    } else if (selectedAreas.length > 0 || selectedVendors.length > 0 || selectedTypes.length > 0) {
+      const filters = [...selectedAreas, ...selectedVendors, ...selectedTypes];
       pageTitle = `${filters.join(', ')} Connectors - WSO2 Integrator Connector Store`;
       description = `Browse ${filters.join(', ')} connectors for Ballerina integration.`;
     }
@@ -426,7 +430,7 @@ export default function HomePage() {
     // Set robots meta tag based on hostname
     const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
     updateMetaTag('meta[name="robots"]', robotsContent);
-  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes, selectedIndustries]);
+  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes]);
 
   return (
     <>
@@ -456,13 +460,11 @@ export default function HomePage() {
                   selectedAreas={selectedAreas}
                   selectedVendors={selectedVendors}
                   selectedTypes={selectedTypes}
-                  selectedIndustries={selectedIndustries}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onAreaChange={toggleAreaFilter}
                   onVendorChange={toggleVendorFilter}
                   onTypeChange={toggleTypeFilter}
-                  onIndustryChange={toggleIndustryFilter}
                   onClearAll={clearAllFilters}
                   effectiveMode={effectiveMode}
                 />
@@ -512,11 +514,9 @@ export default function HomePage() {
                   selectedAreas={selectedAreas}
                   selectedTypes={selectedTypes}
                   selectedVendors={selectedVendors}
-                  selectedIndustries={selectedIndustries}
                   onAreaDelete={toggleAreaFilter}
                   onTypeDelete={toggleTypeFilter}
                   onVendorDelete={toggleVendorFilter}
-                  onIndustryDelete={toggleIndustryFilter}
                   onClearAll={clearAllFilters}
                   WSO2_ORANGE={WSO2_ORANGE}
                   effectiveMode={effectiveMode}
@@ -564,11 +564,9 @@ export default function HomePage() {
                   selectedAreas={selectedAreas}
                   selectedTypes={selectedTypes}
                   selectedVendors={selectedVendors}
-                  selectedIndustries={selectedIndustries}
                   onAreaDelete={toggleAreaFilter}
                   onTypeDelete={toggleTypeFilter}
                   onVendorDelete={toggleVendorFilter}
-                  onIndustryDelete={toggleIndustryFilter}
                   onClearAll={clearAllFilters}
                   WSO2_ORANGE={WSO2_ORANGE}
                   effectiveMode={effectiveMode}
@@ -662,13 +660,11 @@ export default function HomePage() {
             selectedAreas={selectedAreas}
             selectedVendors={selectedVendors}
             selectedTypes={selectedTypes}
-            selectedIndustries={selectedIndustries}
             searchQuery=""
             onSearchChange={() => {}}
             onAreaChange={toggleAreaFilter}
             onVendorChange={toggleVendorFilter}
             onTypeChange={toggleTypeFilter}
-            onIndustryChange={toggleIndustryFilter}
             onClearAll={clearAllFilters}
             effectiveMode={effectiveMode}            hideSearch={true}          />
         </Box>

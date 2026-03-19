@@ -37,7 +37,7 @@ import WSO2Header from "@/components/WSO2Header";
 import { Clock, Download, ChevronDown } from '@wso2/oxygen-ui-icons-react';
 import { OpenInNew } from "@mui/icons-material";
 import BreadcrumbsNav from "@/components/BreadcrumbsNav";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PackageDetails } from '@/types/connector';
 import { fetchPackageDetails } from '@/lib/rest-client';
 import { fetchMIConnector } from '@/lib/mi-connector';
@@ -109,6 +109,7 @@ export default function ConnectorDetailPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down('lg'));
   const { org, name, version } = useParams<{ org: string; name: string; version?: string }>();
+  const navigate = useNavigate();
 
   const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -261,7 +262,13 @@ export default function ConnectorDetailPage() {
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Tags</Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
           {details.keywords.map((tag) => (
-            <Chip key={tag} label={tag} size="small" />
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              clickable
+              onClick={() => navigate(`/?search=${encodeURIComponent(tag)}`)}
+            />
           ))}
         </Box>
       </Box>
