@@ -51,7 +51,7 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
                   }
                   alt="WSO2 Integrator"
                   sx={{
-                    height: 32,
+                    height: 40,
                     width: 'auto',
                     objectFit: 'contain',
                     display: 'block',
