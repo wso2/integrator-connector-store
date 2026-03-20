@@ -3,8 +3,8 @@
 
 /* eslint-disable no-undef */
 window.configs = {
-    // LightGallery license key
-    // Leave empty for local development
-    // For Choreo deployment: add your license key
-    lightGalleryKey: ''
-}
+  // LightGallery license key
+  // Leave empty for local development
+  // For Choreo deployment: add your license key
+  lightGalleryKey: '',
+};

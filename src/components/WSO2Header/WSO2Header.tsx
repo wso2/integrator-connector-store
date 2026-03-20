@@ -30,10 +30,10 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
       position="static"
       color="default"
       elevation={0}
-      sx={{ 
-        borderBottom: 1, 
+      sx={{
+        borderBottom: 1,
         borderColor: 'divider',
-        bgcolor: 'background.paper'
+        bgcolor: 'background.paper',
       }}
     >
       <Container maxWidth="xl">
@@ -44,13 +44,17 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
                 <Box
                   component="img"
-                  src={effectiveMode === 'dark' ? '/images/WSO2-Integrator-white.svg' : '/images/WSO2-Integrator-black.svg'}
+                  src={
+                    effectiveMode === 'dark'
+                      ? '/images/WSO2-Integrator-white.svg'
+                      : '/images/WSO2-Integrator-black.svg'
+                  }
                   alt="WSO2 Integrator"
-                  sx={{ 
+                  sx={{
                     height: 32,
                     width: 'auto',
                     objectFit: 'contain',
-                    display: 'block'
+                    display: 'block',
                   }}
                 />
               </Box>

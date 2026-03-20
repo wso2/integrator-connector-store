@@ -24,11 +24,7 @@ const SelectedFilters: React.FC<SelectedFiltersProps> = ({
   WSO2_ORANGE = '#FF7300',
   effectiveMode = 'light',
 }) => {
-  if (
-    selectedAreas.length === 0 &&
-    selectedTypes.length === 0 &&
-    selectedVendors.length === 0
-  ) {
+  if (selectedAreas.length === 0 && selectedTypes.length === 0 && selectedVendors.length === 0) {
     return null;
   }
 

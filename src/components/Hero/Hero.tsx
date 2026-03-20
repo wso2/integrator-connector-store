@@ -19,7 +19,6 @@
 import React from 'react';
 import { Box, Container, Typography } from '@wso2/oxygen-ui';
 
-
 interface HeroProps {
   effectiveMode: 'light' | 'dark';
 }
@@ -30,9 +29,10 @@ export default function Hero({ effectiveMode }: HeroProps) {
       sx={{
         borderBottom: 1,
         borderColor: 'divider',
-        background: effectiveMode === 'dark'
-          ? 'linear-gradient(to right, #18181B, #18181B, rgba(255, 115, 0, 0.1))'
-          : 'linear-gradient(to right, #F3F4F6, #FFFFFF, #FFF7ED)',
+        background:
+          effectiveMode === 'dark'
+            ? 'linear-gradient(to right, #18181B, #18181B, rgba(255, 115, 0, 0.1))'
+            : 'linear-gradient(to right, #F3F4F6, #FFFFFF, #FFF7ED)',
       }}
     >
       <Container maxWidth="xl" sx={{ py: 5 }}>
@@ -55,7 +55,8 @@ export default function Hero({ effectiveMode }: HeroProps) {
               Connector Store
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-              Discover pre-built connectors and accelerate integration across SaaS, legacy systems, databases, messaging platforms, AI services, and cloud providers.
+              Discover pre-built connectors and accelerate integration across SaaS, legacy systems,
+              databases, messaging platforms, AI services, and cloud providers.
             </Typography>
           </Box>
         </Box>

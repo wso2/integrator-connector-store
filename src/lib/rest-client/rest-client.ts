@@ -24,7 +24,6 @@ const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-pack
 const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
 const GRAPHQL_ENDPOINT = 'https://api.central.ballerina.io/2.0/graphql';
 
-
 /**
  * Sort options used in the UI
  */
@@ -150,7 +149,11 @@ function nameRelevanceScore(pkg: BallerinaPackage, query: string): number {
  * Sort merged packages according to the specified sort option
  * Used after deduplicating results from multiple queries
  */
-function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption, query?: string): BallerinaPackage[] {
+function sortMergedPackages(
+  packages: BallerinaPackage[],
+  sort: SortOption,
+  query?: string
+): BallerinaPackage[] {
   const sorted = [...packages];
 
   switch (sort) {
@@ -223,7 +226,7 @@ function buildSolrQuery(
     // Trim whitespace first
     const trimmed = query.trim();
     if (!trimmed) return '';
-    
+
     // Escape special Solr characters
     // Note: We escape * and ? here but will add them back if needed for wildcards
     return trimmed.replace(/([+\-&|!(){}[\]^"~*?:\\/ ])/g, '\\$1');
@@ -257,25 +260,25 @@ function buildSolrQuery(
   if (params.query) {
     // Trim the query first
     const trimmedQuery = params.query.trim();
-    
+
     // If query is empty after trimming, just use filters
     if (!trimmedQuery) {
       const finalQuery = filters.join(' AND ');
       return finalQuery || 'org:ballerinax'; // Fallback to org filter
     }
-    
+
     // Check if query already contains wildcards before escaping
     const hasWildcards = trimmedQuery.includes('*') || trimmedQuery.includes('?');
-    
+
     // Escape Solr special characters
     const escapedQuery = escapeSolrQuery(trimmedQuery);
-    
+
     // If query is empty after escaping, just use filters
     if (!escapedQuery) {
       const finalQuery = filters.join(' AND ');
       return finalQuery || 'org:ballerinax';
     }
-    
+
     // Add wildcards for partial matching only if query doesn't already have them
     const searchTerm = hasWildcards ? trimmedQuery : `*${escapedQuery}*`;
 
@@ -416,7 +419,11 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
       const batchSize = 500;
       let allPackages: typeof countResult.packages = [];
       for (let offset = 0; offset < totalCount; offset += batchSize) {
-        const batchResult = await executeSingleSearch({ ...combinations[0], offset, limit: batchSize });
+        const batchResult = await executeSingleSearch({
+          ...combinations[0],
+          offset,
+          limit: batchSize,
+        });
         allPackages = allPackages.concat(batchResult.packages);
       }
       // Filter to relevant matches (name/keyword), then sort and paginate
@@ -629,7 +636,7 @@ export async function fetchPackageVersionsNoRetry(
   }
   const data = await response.json();
   // If data is an array of strings, return as is
-  if (Array.isArray(data) && data.every(v => typeof v === 'string')) {
+  if (Array.isArray(data) && data.every((v) => typeof v === 'string')) {
     return data;
   }
   // If data is an object with a versions array of strings, return that
@@ -664,14 +671,14 @@ export async function fetchPackageDetails(
   return withRetry(async () => {
     // Fetch all versions for the package
     const allVersions = await fetchPackageVersionsNoRetry(orgName, packageName);
-    
+
     // If no version provided or version is "latest", determine latest version
     let targetVersion = version;
 
     if (!targetVersion || targetVersion === 'latest') {
       // Map to objects with both raw and sanitized semver
       const sanitized = allVersions
-        .map(v => {
+        .map((v) => {
           const valid = semver.valid(v) || semver.coerce(v)?.version;
           return valid ? { raw: v, semver: valid } : null;
         })
@@ -684,19 +691,17 @@ export async function fetchPackageDetails(
       targetVersion = sanitized[0].raw; // Use the original/raw version string
     }
 
-    const response = await fetch(
-      `${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`
-    );
+    const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const packageData = await response.json();
-    
+
     // Add versions array to the response
     packageData.versions = allVersions;
-    
+
     // Fetch totalPullCount from GraphQL API (more accurate than REST API)
     try {
       const graphqlQuery = {
@@ -706,7 +711,7 @@ export async function fetchPackageDetails(
               totalPullCount
             }
           }
-        `
+        `,
       };
 
       const graphqlResponse = await fetch(GRAPHQL_ENDPOINT, {

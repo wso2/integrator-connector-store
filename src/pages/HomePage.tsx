@@ -99,7 +99,7 @@ function parseSortParam(value: string | null): SortOption {
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { mode } = useColorScheme();
-  
+
   // Handle system mode by detecting actual system preference
   const [effectiveMode, setEffectiveMode] = useState<'light' | 'dark'>(() => {
     if (mode === 'system') {
@@ -171,14 +171,14 @@ export default function HomePage() {
 
   // Initialize state from URL params to ensure deep-linked values are used immediately
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
-  const [selectedAreas, setSelectedAreas] = useState<string[]>(() => 
-    searchParams.get('areas')?.split(',').filter(Boolean) || []
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(
+    () => searchParams.get('areas')?.split(',').filter(Boolean) || []
   );
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(() => 
-    searchParams.get('vendors')?.split(',').filter(Boolean) || []
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(
+    () => searchParams.get('vendors')?.split(',').filter(Boolean) || []
   );
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => 
-    searchParams.get('types')?.split(',').filter(Boolean) || []
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    () => searchParams.get('types')?.split(',').filter(Boolean) || []
   );
   const [currentPage, setCurrentPage] = useState(() => parsePageParam(searchParams.get('page')));
   const [pageSize, setPageSize] = useState(() => parsePageSizeParam(searchParams.get('size')));
@@ -301,15 +301,15 @@ export default function HomePage() {
     }
 
     const currentParamsString = searchParams.toString();
-    
+
     // Only update if URL actually changed
     if (currentParamsString === prevSearchParamsRef.current) {
       return;
     }
-    
+
     prevSearchParamsRef.current = currentParamsString;
     syncingFromUrlRef.current = true;
-    
+
     const page = parsePageParam(searchParams.get('page'));
     const size = parsePageSizeParam(searchParams.get('size'));
     const sort = parseSortParam(searchParams.get('sort'));
@@ -390,7 +390,8 @@ export default function HomePage() {
   // Update meta tags dynamically based on search/filters
   useEffect(() => {
     let pageTitle = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
-    let description = 'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
+    let description =
+      'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
 
     if (searchQuery) {
       pageTitle = `Search: "${searchQuery}" - WSO2 Integrator Connector Store`;
@@ -426,9 +427,11 @@ export default function HomePage() {
     updateMetaTag('meta[property="og:description"]', description);
     updateMetaTag('meta[name="twitter:title"]', pageTitle);
     updateMetaTag('meta[name="twitter:description"]', description);
-    
+
     // Set robots meta tag based on hostname
-    const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
+    const robotsContent = window.location.hostname.includes('wso2.com')
+      ? 'index, follow'
+      : 'noindex';
     updateMetaTag('meta[name="robots"]', robotsContent);
   }, [searchQuery, selectedAreas, selectedVendors, selectedTypes]);
 
@@ -441,17 +444,16 @@ export default function HomePage() {
       <Hero effectiveMode={effectiveMode} />
 
       <Box sx={{ minHeight: '100vh' }}>
+        {/* Initial Loading State */}
+        {initialLoading && (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+            <CircularProgress />
+          </Box>
+        )}
 
-      {/* Initial Loading State */}
-      {initialLoading && (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {/* Main Content */}
-      {!initialLoading && (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Main Content */}
+        {!initialLoading && (
+          <Container maxWidth="xl" sx={{ py: 4 }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
               {/* Sidebar Filters - Hidden on mobile */}
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
@@ -490,7 +492,7 @@ export default function HomePage() {
                   </Box>
                   <Button
                     variant="outlined"
-                    startIcon={<Filter size={16}/>}
+                    startIcon={<Filter size={16} />}
                     onClick={() => setMobileFilterOpen(true)}
                     sx={{
                       minWidth: 'auto',
@@ -509,44 +511,47 @@ export default function HomePage() {
 
                 {totalCount === 0 && !loading ? (
                   <>
-                  {/* Selected Filters (always show if active) */}
-                <SelectedFilters
-                  selectedAreas={selectedAreas}
-                  selectedTypes={selectedTypes}
-                  selectedVendors={selectedVendors}
-                  onAreaDelete={toggleAreaFilter}
-                  onTypeDelete={toggleTypeFilter}
-                  onVendorDelete={toggleVendorFilter}
-                  onClearAll={clearAllFilters}
-                  WSO2_ORANGE={WSO2_ORANGE}
-                  effectiveMode={effectiveMode}
-                />
+                    {/* Selected Filters (always show if active) */}
+                    <SelectedFilters
+                      selectedAreas={selectedAreas}
+                      selectedTypes={selectedTypes}
+                      selectedVendors={selectedVendors}
+                      onAreaDelete={toggleAreaFilter}
+                      onTypeDelete={toggleTypeFilter}
+                      onVendorDelete={toggleVendorFilter}
+                      onClearAll={clearAllFilters}
+                      WSO2_ORANGE={WSO2_ORANGE}
+                      effectiveMode={effectiveMode}
+                    />
 
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                    justifyContent="center"
-                    minHeight={300}
-                  >
-                    <Typography variant="h6" gutterBottom>
-                      No connectors found
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Try adjusting your search or filters
-                    </Typography>
-                  </Box>
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      justifyContent="center"
+                      minHeight={300}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        No connectors found
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Try adjusting your search or filters
+                      </Typography>
+                    </Box>
                   </>
                 ) : (
                   <>
                     {/* Top Pagination Bar */}
-                    <Paper sx={{ 
-                      p: 1.5, 
-                      mb: 2.5,
-                      bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
-                      border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
-                      boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                    }}>
+                    <Paper
+                      sx={{
+                        p: 1.5,
+                        mb: 2.5,
+                        bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                        border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                        boxShadow:
+                          effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                      }}
+                    >
                       <Pagination
                         currentPage={currentPage}
                         totalItems={totalCount}
@@ -560,17 +565,17 @@ export default function HomePage() {
                     </Paper>
 
                     {/* Selected Filters (always show if active) */}
-                <SelectedFilters
-                  selectedAreas={selectedAreas}
-                  selectedTypes={selectedTypes}
-                  selectedVendors={selectedVendors}
-                  onAreaDelete={toggleAreaFilter}
-                  onTypeDelete={toggleTypeFilter}
-                  onVendorDelete={toggleVendorFilter}
-                  onClearAll={clearAllFilters}
-                  WSO2_ORANGE={WSO2_ORANGE}
-                  effectiveMode={effectiveMode}
-                />
+                    <SelectedFilters
+                      selectedAreas={selectedAreas}
+                      selectedTypes={selectedTypes}
+                      selectedVendors={selectedVendors}
+                      onAreaDelete={toggleAreaFilter}
+                      onTypeDelete={toggleTypeFilter}
+                      onVendorDelete={toggleVendorFilter}
+                      onClearAll={clearAllFilters}
+                      WSO2_ORANGE={WSO2_ORANGE}
+                      effectiveMode={effectiveMode}
+                    />
 
                     {/* Loading Overlay */}
                     {loading && (
@@ -603,13 +608,16 @@ export default function HomePage() {
                     )}
 
                     {/* Bottom Pagination Bar */}
-                    <Paper sx={{ 
-                      p: 1.5, 
-                      mt: 3,
-                      bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
-                      border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
-                      boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                    }}>
+                    <Paper
+                      sx={{
+                        p: 1.5,
+                        mt: 3,
+                        bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                        border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                        boxShadow:
+                          effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                      }}
+                    >
                       <Pagination
                         currentPage={currentPage}
                         totalItems={totalCount}
@@ -628,7 +636,7 @@ export default function HomePage() {
           </Container>
         )}
       </Box>
-      
+
       {/* Mobile Filter Drawer */}
       <Drawer
         anchor="right"
@@ -643,18 +651,17 @@ export default function HomePage() {
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}
+          >
             <Typography variant="h6" fontWeight={600}>
               Filters
             </Typography>
-            <IconButton
-              onClick={() => setMobileFilterOpen(false)}
-              size="small"
-            >
+            <IconButton onClick={() => setMobileFilterOpen(false)} size="small">
               <ChevronRight />
             </IconButton>
           </Box>
-          
+
           <FilterSidebar
             filterOptions={filterOptions}
             selectedAreas={selectedAreas}
@@ -666,7 +673,9 @@ export default function HomePage() {
             onVendorChange={toggleVendorFilter}
             onTypeChange={toggleTypeFilter}
             onClearAll={clearAllFilters}
-            effectiveMode={effectiveMode}            hideSearch={true}          />
+            effectiveMode={effectiveMode}
+            hideSearch={true}
+          />
         </Box>
       </Drawer>
 

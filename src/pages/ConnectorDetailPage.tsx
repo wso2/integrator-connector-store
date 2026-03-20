@@ -16,27 +16,27 @@
  under the License.
 */
 
-import React, { useEffect, useMemo, useState } from "react";
-import { 
-  useColorScheme, 
-  Box, 
-  Container, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Chip, 
-  Divider, 
-  useMediaQuery, 
-  Button, 
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  useColorScheme,
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  useMediaQuery,
+  Button,
   CircularProgress,
   Accordion,
   AccordionSummary,
-  AccordionDetails 
-} from "@wso2/oxygen-ui";
-import WSO2Header from "@/components/WSO2Header";
+  AccordionDetails,
+} from '@wso2/oxygen-ui';
+import WSO2Header from '@/components/WSO2Header';
 import { Clock, Download, ChevronDown } from '@wso2/oxygen-ui-icons-react';
-import { OpenInNew } from "@mui/icons-material";
-import BreadcrumbsNav from "@/components/BreadcrumbsNav";
+import { OpenInNew } from '@mui/icons-material';
+import BreadcrumbsNav from '@/components/BreadcrumbsNav';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PackageDetails } from '@/types/connector';
 import { fetchPackageDetails } from '@/lib/rest-client';
@@ -48,7 +48,7 @@ import {
   getDisplayName,
 } from '@/lib/connector-utils';
 import MarkdownContent from '@/components/MarkdownContent';
-import Footer from "@/components/Footer";
+import Footer from '@/components/Footer';
 
 /**
  * Extracts Overview and Setup sections from README content.
@@ -67,7 +67,9 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
       // Truncate after ### Key Features and its bullet list
       const keyFeaturesMatch = content.match(/^###\s+key features\b.*$/im);
       if (keyFeaturesMatch && keyFeaturesMatch.index !== undefined) {
-        const afterKeyFeatures = content.substring(keyFeaturesMatch.index + keyFeaturesMatch[0].length);
+        const afterKeyFeatures = content.substring(
+          keyFeaturesMatch.index + keyFeaturesMatch[0].length
+        );
         // Find the last bullet line in the list, then cut everything after it
         const lines = afterKeyFeatures.split('\n');
         let lastBulletIndex = -1;
@@ -84,7 +86,8 @@ function extractOverviewAndSetup(readme: string): { overview: string; setup: str
         }
         if (lastBulletIndex !== -1) {
           const keptLines = lines.slice(0, lastBulletIndex + 1).join('\n');
-          content = content.substring(0, keyFeaturesMatch.index + keyFeaturesMatch[0].length) + keptLines;
+          content =
+            content.substring(0, keyFeaturesMatch.index + keyFeaturesMatch[0].length) + keptLines;
         }
       }
       overview = removeCodeBlocks(content);
@@ -114,7 +117,10 @@ export default function ConnectorDetailPage() {
   const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [miConnector, setMiConnector] = useState<{ name: string; documentationUrl?: string } | null>(null);
+  const [miConnector, setMiConnector] = useState<{
+    name: string;
+    documentationUrl?: string;
+  } | null>(null);
 
   const effectiveMode = useMemo(() => {
     if (mode === 'system') {
@@ -130,19 +136,19 @@ export default function ConnectorDetailPage() {
         setLoading(false);
         return;
       }
-      
+
       // Check if "latest" ended up as the package name (routing error)
       if (name === 'latest') {
         setError('Invalid package URL - missing package name');
         setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
         const details = await fetchPackageDetails(org, name, version);
         setPackageDetails(details);
-        
+
         // Check for matching MI connector
         const miConnectorDetails = await fetchMIConnector(name);
         if (miConnectorDetails?.documentationUrl) {
@@ -158,16 +164,33 @@ export default function ConnectorDetailPage() {
     loadPackageDetails();
   }, [org, name, version]);
 
-  const metadata = useMemo(() => packageDetails ? parseConnectorMetadata(packageDetails.keywords) : null, [packageDetails]);
-  const displayName = useMemo(() => packageDetails && metadata ? getDisplayName(packageDetails.name, metadata.vendor) : name || '', [packageDetails, metadata, name]);
-  const { overview, setup } = useMemo(() => packageDetails ? extractOverviewAndSetup(String(packageDetails?.readme || '')) : { overview: '', setup: '' }, [packageDetails]);
+  const metadata = useMemo(
+    () => (packageDetails ? parseConnectorMetadata(packageDetails.keywords) : null),
+    [packageDetails]
+  );
+  const displayName = useMemo(
+    () =>
+      packageDetails && metadata
+        ? getDisplayName(packageDetails.name, metadata.vendor)
+        : name || '',
+    [packageDetails, metadata, name]
+  );
+  const { overview, setup } = useMemo(
+    () =>
+      packageDetails
+        ? extractOverviewAndSetup(String(packageDetails?.readme || ''))
+        : { overview: '', setup: '' },
+    [packageDetails]
+  );
 
   // Update meta tags dynamically when package details load
   useEffect(() => {
     if (!packageDetails) return;
 
     const pageTitle = `${displayName} - WSO2 Integrator Connector Store`;
-    const description = packageDetails.summary || `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
+    const description =
+      packageDetails.summary ||
+      `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
     const url = `${window.location.origin}/connector/${org}/${name}/${version || packageDetails.version}`;
     const imageUrl = `${window.location.origin}/images/og-image.png`;
 
@@ -179,7 +202,7 @@ export default function ConnectorDetailPage() {
       let tag = document.querySelector(selector);
       const isLinkTag = selector.startsWith('link[');
       const attributeName = isLinkTag ? 'href' : 'content';
-      
+
       if (tag) {
         tag.setAttribute(attributeName, content);
       } else {
@@ -199,9 +222,11 @@ export default function ConnectorDetailPage() {
     // Update primary meta tags
     updateMetaTag('meta[name="description"]', description);
     updateMetaTag('meta[name="title"]', pageTitle);
-    
+
     // Set robots meta tag based on hostname
-    const robotsContent = window.location.hostname.includes('wso2.com') ? 'index, follow' : 'noindex';
+    const robotsContent = window.location.hostname.includes('wso2.com')
+      ? 'index, follow'
+      : 'noindex';
     updateMetaTag('meta[name="robots"]', robotsContent);
 
     // Update Open Graph tags
@@ -231,38 +256,72 @@ export default function ConnectorDetailPage() {
 
   const MetadataContent = ({ details }: { details: PackageDetails }) => (
     <Box>
-      <Box display='flex' flexDirection={isMobile ? 'row' : 'column'} flexWrap="wrap" gap={isMobile ? 4 : 2}>
+      <Box
+        display="flex"
+        flexDirection={isMobile ? 'row' : 'column'}
+        flexWrap="wrap"
+        gap={isMobile ? 4 : 2}
+      >
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Version</Typography>
-          <Typography variant="body2" sx={{ fontFamily: "monospace" }}>v{details.version}</Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600, display: 'block' }}
+          >
+            Version
+          </Typography>
+          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+            v{details.version}
+          </Typography>
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Downloads</Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600, display: 'block' }}
+          >
+            Downloads
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Download size={14} />
             <Typography variant="body2">{formatPullCount(details.totalPullCount ?? 0)}</Typography>
           </Box>
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>Updated</Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600, display: 'block' }}
+          >
+            Updated
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Clock size={14} />
             <Typography variant="body2">{formatDaysSince(details.createdDate)}</Typography>
           </Box>
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>License</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+            License
+          </Typography>
           {(packageDetails?.licenses ?? []).map((license, index) => (
-            <Typography key={index} variant="body2" mt={0.5}>{license}</Typography>
+            <Typography key={index} variant="body2" mt={0.5}>
+              {license}
+            </Typography>
           ))}
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
       <Box sx={{ mb: 2 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Tags</Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          Tags
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
           {details.keywords
-            .filter((tag) => tag.startsWith('Area/') || tag.startsWith('Vendor/') || tag.startsWith('Type/'))
+            .filter(
+              (tag) =>
+                tag.startsWith('Area/') || tag.startsWith('Vendor/') || tag.startsWith('Type/')
+            )
             .map((tag) => {
               const value = tag.split('/').slice(1).join('/');
               let filterParam = 'search';
@@ -309,13 +368,13 @@ export default function ConnectorDetailPage() {
                   },
                 }}
               >
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600}}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Version History
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0, maxHeight: 200, overflowY: 'auto' }}>
                 {details.versions
-                  .filter(v => v !== details.version)
+                  .filter((v) => v !== details.version)
                   .slice(0, 10)
                   .map((ver) => (
                     <Box
@@ -327,7 +386,7 @@ export default function ConnectorDetailPage() {
                         py: 0.5,
                       }}
                     >
-                      <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                         v{ver}
                       </Typography>
                     </Box>
@@ -341,7 +400,7 @@ export default function ConnectorDetailPage() {
               </Typography>
               <Box sx={{ mt: 1, maxHeight: 200, overflowY: 'auto' }}>
                 {details.versions
-                  .filter(v => v !== details.version)
+                  .filter((v) => v !== details.version)
                   .slice(0, 10)
                   .map((ver) => (
                     <Box
@@ -353,7 +412,7 @@ export default function ConnectorDetailPage() {
                         py: 0.5,
                       }}
                     >
-                      <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                         v{ver}
                       </Typography>
                     </Box>
@@ -368,7 +427,9 @@ export default function ConnectorDetailPage() {
         fullWidth
         variant="contained"
         color="primary"
-        onClick={() => window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')}
+        onClick={() =>
+          window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')
+        }
         endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
       >
         View on Ballerina Central
@@ -387,22 +448,41 @@ export default function ConnectorDetailPage() {
       )}
     </Box>
   );
-  
+
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: effectiveMode === 'dark' ? 'rgba(0, 0, 0, 0.27)' : '#F9FAFB' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: effectiveMode === 'dark' ? 'rgba(0, 0, 0, 0.27)' : '#F9FAFB',
+      }}
+    >
       <WSO2Header effectiveMode={effectiveMode} />
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF' }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+        }}
+      >
         <Container maxWidth="xl" sx={{ py: 1.5 }}>
           <BreadcrumbsNav connectorName={displayName} />
         </Container>
       </Box>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}><CircularProgress /></Box>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+          <CircularProgress />
+        </Box>
       ) : !packageDetails ? (
         <Container maxWidth="xl" sx={{ py: 5 }}>
-          <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight={400}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            minHeight={400}
+          >
             <Typography variant="h5" color="error" gutterBottom>
               Failed to load connector details
             </Typography>
@@ -413,48 +493,86 @@ export default function ConnectorDetailPage() {
         </Container>
       ) : (
         <Container maxWidth="xl" sx={{ py: 5 }}>
-          <Box sx={{ 
-            display: "flex", 
-            gap: 6
-          }}>
-            
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 6,
+            }}
+          >
             {/* Main Content */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 5 }}>
-                <Box sx={{
-                  width: 64, height: 64, borderRadius: 3,
-                  bgcolor: packageDetails.icon ? 'transparent' : iconColor,
-                  display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 24, flexShrink: 0
-                }}>
-                  {packageDetails.icon ? <img src={packageDetails.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : displayName.charAt(0).toUpperCase()}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 5 }}>
+                <Box
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 3,
+                    bgcolor: packageDetails.icon ? 'transparent' : iconColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: 24,
+                    flexShrink: 0,
+                  }}
+                >
+                  {packageDetails.icon ? (
+                    <img
+                      src={packageDetails.icon}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
                 </Box>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>{displayName}</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    {displayName}
+                  </Typography>
                 </Box>
               </Box>
 
               {isMobile && (
-                <Card sx={{ mb: 4 }}><CardContent><MetadataContent details={packageDetails} /></CardContent></Card>
+                <Card sx={{ mb: 4 }}>
+                  <CardContent>
+                    <MetadataContent details={packageDetails} />
+                  </CardContent>
+                </Card>
               )}
 
               <Box sx={{ minHeight: '100vh' }}>
-                {overview && <Box component="section" sx={{ mb: 6 }}><MarkdownContent content={overview} effectiveMode={effectiveMode} /></Box>}
-                {setup && <Box component="section"><MarkdownContent content={setup} effectiveMode={effectiveMode} /></Box>}
+                {overview && (
+                  <Box component="section" sx={{ mb: 6 }}>
+                    <MarkdownContent content={overview} effectiveMode={effectiveMode} />
+                  </Box>
+                )}
+                {setup && (
+                  <Box component="section">
+                    <MarkdownContent content={setup} effectiveMode={effectiveMode} />
+                  </Box>
+                )}
               </Box>
             </Box>
 
             {/* Sticky Sidebar */}
             {!isMobile && (
               <Box sx={{ width: 340, flexShrink: 0 }}>
-                <Box sx={{ 
-                  position: "sticky", 
-                  top: 100
-                }}>
-                  <Card sx={{
-                    bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
-                    border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
-                    boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                  }}>
+                <Box
+                  sx={{
+                    position: 'sticky',
+                    top: 100,
+                  }}
+                >
+                  <Card
+                    sx={{
+                      bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
+                      border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
+                      boxShadow:
+                        effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                    }}
+                  >
                     <CardContent sx={{ p: 3 }}>
                       <MetadataContent details={packageDetails} />
                     </CardContent>
@@ -466,8 +584,8 @@ export default function ConnectorDetailPage() {
         </Container>
       )}
 
-       {/* Footer */}
-            <Footer effectiveMode={effectiveMode} />
+      {/* Footer */}
+      <Footer effectiveMode={effectiveMode} />
     </Box>
   );
 }

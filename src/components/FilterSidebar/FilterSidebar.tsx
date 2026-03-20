@@ -63,28 +63,22 @@ export default function FilterSidebar({
   const [expandedArea, setExpandedArea] = useState(true);
   const [expandedType, setExpandedType] = useState(false);
   const [expandedVendor, setExpandedVendor] = useState(false);
-  
 
   return (
     <Paper
-      sx={{ 
-        width: { xs: '100%', md: 288 }, 
-        flexShrink: 0, 
-        p: 2.5, 
+      sx={{
+        width: { xs: '100%', md: 288 },
+        flexShrink: 0,
+        p: 2.5,
         height: 'fit-content',
         bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
         border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
         boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
       }}
     >
-
       {/* Search - conditionally rendered */}
       {!hideSearch && (
-        <SearchBar 
-          value={searchQuery}
-          onChange={onSearchChange}
-          effectiveMode={effectiveMode}
-        />
+        <SearchBar value={searchQuery} onChange={onSearchChange} effectiveMode={effectiveMode} />
       )}
 
       {/* Filter Accordions */}
@@ -104,7 +98,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -119,11 +113,13 @@ export default function FilterSidebar({
               Area
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.areas.map((area) => (
                 <FormControlLabel
@@ -145,7 +141,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{area}</Typography>}
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {area}
+                    </Typography>
+                  }
                   sx={{
                     mx: 0,
                     px: 1,
@@ -179,7 +179,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -194,11 +194,13 @@ export default function FilterSidebar({
               Vendor
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.vendors.map((vendor) => (
                 <FormControlLabel
@@ -220,7 +222,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{vendor}</Typography>}
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {vendor}
+                    </Typography>
+                  }
                   sx={{
                     mx: 0,
                     px: 1,
@@ -254,7 +260,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -269,11 +275,13 @@ export default function FilterSidebar({
               Type
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.types.map((type) => (
                 <FormControlLabel
@@ -295,7 +303,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{type}</Typography>}
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {type}
+                    </Typography>
+                  }
                   sx={{
                     mx: 0,
                     px: 1,
@@ -313,9 +325,7 @@ export default function FilterSidebar({
             </FormGroup>
           </AccordionDetails>
         </Accordion>
-
       </Box>
     </Paper>
   );
 }
-

@@ -99,10 +99,7 @@ describe('rest-client', () => {
       // With a search query, searchPackages fetches all results for client-side filtering.
       // First call: count check (limit=1), second call: full batch fetch.
       const countResponse = createMockApiResponse([], 1);
-      const batchResponse = createMockApiResponse(
-        [{ name: 'stripe', version: '1.0.0' }],
-        1
-      );
+      const batchResponse = createMockApiResponse([{ name: 'stripe', version: '1.0.0' }], 1);
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });

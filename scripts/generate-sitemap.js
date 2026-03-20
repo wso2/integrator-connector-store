@@ -58,7 +58,7 @@ async function fetchAllPackages() {
       hasMore = offset < data.count;
 
       // Add a small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
       console.error(`Failed to fetch batch at offset ${offset}:`, error);
       throw new Error(`Failed to fetch connector packages at offset ${offset}: ${error.message}`);
@@ -98,7 +98,7 @@ function generateSitemap(packages) {
   });
 
   // Add connector URLs
-  packages.forEach(pkg => {
+  packages.forEach((pkg) => {
     // Parse URL to extract org and package name
     const urlPath = pkg.URL.replace(/^packages\//, '').replace(/^\//, '');
     const urlParts = urlPath.split('/').filter(Boolean);
@@ -109,7 +109,9 @@ function generateSitemap(packages) {
         loc: `${BASE_URL}/connector/${org}/${packageName}/latest`,
         changefreq: 'weekly',
         priority: '0.8',
-        lastmod: pkg.createdDate ? new Date(pkg.createdDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        lastmod: pkg.createdDate
+          ? new Date(pkg.createdDate).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
       });
     }
   });
@@ -118,7 +120,7 @@ function generateSitemap(packages) {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-  urls.forEach(url => {
+  urls.forEach((url) => {
     xml += '  <url>\n';
     xml += `    <loc>${escapeXml(url.loc)}</loc>\n`;
     xml += `    <lastmod>${escapeXml(url.lastmod)}</lastmod>\n`;
@@ -137,7 +139,9 @@ async function main() {
     // Validate BASE_URL
     if (BASE_URL === 'https://example.com') {
       console.warn('⚠️  WARNING: Using placeholder domain "https://example.com"');
-      console.warn('⚠️  Set your domain via: SITE_URL=https://yourdomain.com npm run generate-sitemap');
+      console.warn(
+        '⚠️  Set your domain via: SITE_URL=https://yourdomain.com npm run generate-sitemap'
+      );
       console.warn('');
     }
 
@@ -160,7 +164,6 @@ async function main() {
     fs.writeFileSync(sitemapPath, sitemap, 'utf8');
     console.log(`✓ Sitemap generated successfully at: ${sitemapPath}`);
     console.log(`✓ Total URLs: ${packages.length + 1}`); // +1 for homepage
-
   } catch (error) {
     console.error('Error generating sitemap:', error);
     process.exit(1);
