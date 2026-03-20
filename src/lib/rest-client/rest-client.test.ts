@@ -56,12 +56,12 @@ const createMockApiResponse = (
 
 describe('rest-client', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
-    mockFetch.mockClear();
-    localStorageMock.getItem.mockClear();
-    localStorageMock.setItem.mockClear();
-    localStorageMock.removeItem.mockClear();
-    localStorageMock.clear.mockClear();
+    // Reset all mocks before each test (clears calls, instances, and implementations)
+    mockFetch.mockReset();
+    localStorageMock.getItem.mockReset();
+    localStorageMock.setItem.mockReset();
+    localStorageMock.removeItem.mockReset();
+    localStorageMock.clear.mockReset();
 
     // Suppress console warnings and errors during tests
     jest.spyOn(console, 'warn').mockImplementation(() => {});
