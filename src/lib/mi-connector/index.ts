@@ -19,7 +19,8 @@
 /**
  * MI Connector Store API
  */
-const MI_CONNECTOR_API_BASE = 'https://apis.wso2.com/qgpf/connector-store-backend/endpoint-9090-803/v1.0';
+const MI_CONNECTOR_API_BASE =
+  'https://apis.wso2.com/qgpf/connector-store-backend/endpoint-9090-803/v1.0';
 
 interface MIConnector {
   id: string;
@@ -47,25 +48,23 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
     }
 
     const connectors: MIConnector[] = await namesResponse.json();
-    
+
     // Step 2: Search for matching connector with two-step lookup
     // First try exact match (trimmed, case-insensitive)
     const trimmedSearchName = connectorName.trim().toLowerCase();
-    
+
     // Return early if search name is empty
     if (!trimmedSearchName) {
       return null;
     }
-    
-    let matchingConnector = connectors.find(c => 
-      c.name.trim().toLowerCase() === trimmedSearchName
+
+    let matchingConnector = connectors.find(
+      (c) => c.name.trim().toLowerCase() === trimmedSearchName
     );
-    
+
     // Fall back to substring search if exact match fails
     if (!matchingConnector) {
-      matchingConnector = connectors.find(c => 
-        c.name.toLowerCase().includes(trimmedSearchName)
-      );
+      matchingConnector = connectors.find((c) => c.name.toLowerCase().includes(trimmedSearchName));
     }
 
     if (!matchingConnector) {
@@ -73,7 +72,9 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
     }
 
     // Step 3: Fetch full connector details to get documentation URL
-    const detailsResponse = await fetch(`${MI_CONNECTOR_API_BASE}/connectors/${encodeURIComponent(matchingConnector.id)}`);
+    const detailsResponse = await fetch(
+      `${MI_CONNECTOR_API_BASE}/connectors/${encodeURIComponent(matchingConnector.id)}`
+    );
     if (!detailsResponse.ok) {
       console.warn('Failed to fetch MI connector details:', detailsResponse.status);
       return null;
@@ -81,7 +82,6 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
 
     const details: MIConnectorDetails = await detailsResponse.json();
     return details;
-
   } catch (error) {
     console.error('Error fetching MI connector:', error);
     return null;

@@ -24,7 +24,6 @@ const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-pack
 const PACKAGES_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/packages';
 const GRAPHQL_ENDPOINT = 'https://api.central.ballerina.io/2.0/graphql';
 
-
 /**
  * Sort options used in the UI
  */
@@ -44,7 +43,6 @@ export interface SearchParams {
   areas?: string[];
   vendors?: string[];
   types?: string[];
-  industries?: string[];
   offset: number;
   limit: number;
   sort: SortOption;
@@ -131,10 +129,31 @@ function toRestSortParam(sortOption: SortOption): string {
 }
 
 /**
+ * Compute a relevance score for a package based on how well its name matches the query.
+ * Lower score = better match (used for sorting).
+ *   0 = exact name match
+ *   1 = name starts with query
+ *   2 = name contains query
+ *   3 = no name match (matched on other fields)
+ */
+function nameRelevanceScore(pkg: BallerinaPackage, query: string): number {
+  const q = query.toLowerCase();
+  const name = pkg.name.toLowerCase();
+  if (name === q) return 0;
+  if (name.startsWith(q)) return 1;
+  if (name.includes(q)) return 2;
+  return 3;
+}
+
+/**
  * Sort merged packages according to the specified sort option
  * Used after deduplicating results from multiple queries
  */
-function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): BallerinaPackage[] {
+function sortMergedPackages(
+  packages: BallerinaPackage[],
+  sort: SortOption,
+  query?: string
+): BallerinaPackage[] {
   const sorted = [...packages];
 
   switch (sort) {
@@ -151,6 +170,15 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
         return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
       });
     case 'pullCount-desc':
+      if (query) {
+        // When searching, sort by name relevance first, then by pull count within same relevance
+        return sorted.sort((a, b) => {
+          const scoreA = nameRelevanceScore(a, query);
+          const scoreB = nameRelevanceScore(b, query);
+          if (scoreA !== scoreB) return scoreA - scoreB;
+          return (b.totalPullCount || 0) - (a.totalPullCount || 0);
+        });
+      }
       return sorted.sort((a, b) => (b.totalPullCount || 0) - (a.totalPullCount || 0));
     case 'pullCount-asc':
       return sorted.sort((a, b) => (a.totalPullCount || 0) - (b.totalPullCount || 0));
@@ -176,7 +204,7 @@ function sortMergedPackages(packages: BallerinaPackage[], sort: SortOption): Bal
  *   → "org:ballerinax AND keyword:Area/Finance AND keyword:Vendor/Amazon"
  */
 function buildSolrQuery(
-  params: Pick<SearchParams, 'areas' | 'vendors' | 'types' | 'industries' | 'query' | 'orgName'>
+  params: Pick<SearchParams, 'areas' | 'vendors' | 'types' | 'query' | 'orgName'>
 ): string {
   const filters: string[] = [];
 
@@ -198,7 +226,7 @@ function buildSolrQuery(
     // Trim whitespace first
     const trimmed = query.trim();
     if (!trimmed) return '';
-    
+
     // Escape special Solr characters
     // Note: We escape * and ? here but will add them back if needed for wildcards
     return trimmed.replace(/([+\-&|!(){}[\]^"~*?:\\/ ])/g, '\\$1');
@@ -228,40 +256,32 @@ function buildSolrQuery(
     });
   }
 
-  // Add industry filter (required with AND operator)
-  if (params.industries && params.industries.length > 0) {
-    params.industries.forEach((industry) => {
-      const escaped = escapeLuceneValue(industry);
-      filters.push(`keyword:Industry/${escaped}`);
-    });
-  }
-
   // Build the query: text search first (if provided), then AND with filters
   if (params.query) {
     // Trim the query first
     const trimmedQuery = params.query.trim();
-    
+
     // If query is empty after trimming, just use filters
     if (!trimmedQuery) {
       const finalQuery = filters.join(' AND ');
       return finalQuery || 'org:ballerinax'; // Fallback to org filter
     }
-    
+
     // Check if query already contains wildcards before escaping
     const hasWildcards = trimmedQuery.includes('*') || trimmedQuery.includes('?');
-    
+
     // Escape Solr special characters
     const escapedQuery = escapeSolrQuery(trimmedQuery);
-    
+
     // If query is empty after escaping, just use filters
     if (!escapedQuery) {
       const finalQuery = filters.join(' AND ');
       return finalQuery || 'org:ballerinax';
     }
-    
+
     // Add wildcards for partial matching only if query doesn't already have them
     const searchTerm = hasWildcards ? trimmedQuery : `*${escapedQuery}*`;
-    
+
     const finalQuery = `${searchTerm} AND ${filters.join(' AND ')}`;
     return finalQuery;
   }
@@ -281,10 +301,10 @@ const MAX_COMBINATIONS = 50;
  * Since Solr doesn't support parenthetical grouping, we need to make multiple queries
  */
 function generateFilterCombinations(params: SearchParams): SearchParams[] {
-  const { areas = [], vendors = [], types = [], industries = [], ...rest } = params;
+  const { areas = [], vendors = [], types = [], ...rest } = params;
 
   // If all filters have 0 or 1 values, no combinations needed
-  if (areas.length <= 1 && vendors.length <= 1 && types.length <= 1 && industries.length <= 1) {
+  if (areas.length <= 1 && vendors.length <= 1 && types.length <= 1) {
     return [params];
   }
 
@@ -292,10 +312,9 @@ function generateFilterCombinations(params: SearchParams): SearchParams[] {
   const areaList = areas.length > 0 ? areas : [undefined];
   const vendorList = vendors.length > 0 ? vendors : [undefined];
   const typeList = types.length > 0 ? types : [undefined];
-  const industryList = industries.length > 0 ? industries : [undefined];
 
   // Check if Cartesian product would exceed threshold
-  const comboCount = areaList.length * vendorList.length * typeList.length * industryList.length;
+  const comboCount = areaList.length * vendorList.length * typeList.length;
   if (comboCount > MAX_COMBINATIONS) {
     console.warn(
       `Filter combination count (${comboCount}) exceeds MAX_COMBINATIONS (${MAX_COMBINATIONS}). ` +
@@ -309,15 +328,12 @@ function generateFilterCombinations(params: SearchParams): SearchParams[] {
   for (const area of areaList) {
     for (const vendor of vendorList) {
       for (const type of typeList) {
-        for (const industry of industryList) {
-          combinations.push({
-            ...rest,
-            areas: area ? [area] : [],
-            vendors: vendor ? [vendor] : [],
-            types: type ? [type] : [],
-            industries: industry ? [industry] : [],
-          });
-        }
+        combinations.push({
+          ...rest,
+          areas: area ? [area] : [],
+          vendors: vendor ? [vendor] : [],
+          types: type ? [type] : [],
+        });
       }
     }
   }
@@ -369,6 +385,22 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
 }
 
 /**
+ * Filter packages to only those whose name or keywords contain the search query.
+ * The API wildcard search matches across all fields (including summary), which
+ * returns too many irrelevant results. This narrows results to relevant matches.
+ */
+function filterByRelevance(packages: BallerinaPackage[], query?: string): BallerinaPackage[] {
+  if (!query) return packages;
+  const q = query.trim().toLowerCase();
+  if (!q) return packages;
+  return packages.filter((pkg) => {
+    const name = pkg.name.toLowerCase();
+    const keywords = pkg.keywords.map((k) => k.toLowerCase());
+    return name.includes(q) || keywords.some((k) => k.includes(q));
+  });
+}
+
+/**
  * Search packages with server-side filtering, sorting, and pagination
  * Handles OR logic by making multiple API calls when needed
  */
@@ -377,8 +409,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    // For name-asc/name-desc, fetch all results, sort, then slice for pagination
-    if (params.sort === 'name-asc' || params.sort === 'name-desc') {
+    const needsClientFilter = !!params.query;
+    // When searching or sorting by name, we need all results for client-side processing
+    if (needsClientFilter || params.sort === 'name-asc' || params.sort === 'name-desc') {
       // Step 1: Fetch count only
       const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
       const totalCount = countResult.count;
@@ -386,12 +419,16 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
       const batchSize = 500;
       let allPackages: typeof countResult.packages = [];
       for (let offset = 0; offset < totalCount; offset += batchSize) {
-        const batchResult = await executeSingleSearch({ ...combinations[0], offset, limit: batchSize });
+        const batchResult = await executeSingleSearch({
+          ...combinations[0],
+          offset,
+          limit: batchSize,
+        });
         allPackages = allPackages.concat(batchResult.packages);
       }
-      // Sort client-side
-      const sorted = sortMergedPackages(allPackages, params.sort);
-      // Slice for pagination
+      // Filter to relevant matches (name/keyword), then sort and paginate
+      const filtered = filterByRelevance(allPackages, params.query);
+      const sorted = sortMergedPackages(filtered, params.sort, params.query);
       const paged = sorted.slice(params.offset, params.offset + params.limit);
       return {
         packages: paged,
@@ -400,9 +437,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         limit: params.limit,
       };
     } else {
-      // Other sorts: keep existing behavior
+      // No search query, non-name sort: keep existing behavior
       const result = await executeSingleSearch(combinations[0]);
-      result.packages = sortMergedPackages(result.packages, params.sort);
+      result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       return result;
     }
   }
@@ -432,8 +469,9 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Re-sort merged packages to respect params.sort
-  const sortedPackages = sortMergedPackages(mergedPackages, params.sort);
+  // Filter to relevant matches, then re-sort
+  const filteredPackages = filterByRelevance(mergedPackages, params.query);
+  const sortedPackages = sortMergedPackages(filteredPackages, params.sort, params.query);
 
   // Total count is the deduplicated set size
   const totalCount = sortedPackages.length;
@@ -469,14 +507,6 @@ function getCachedFilters(): FilterOptions | null {
 
     const { filters, timestamp }: CachedFilters = JSON.parse(cached);
     const age = Date.now() - timestamp;
-
-    // Validate that cached filters have all required fields (including industries)
-    if (!filters.industries) {
-      // eslint-disable-next-line no-console
-      console.log('Cached filters missing industries field, invalidating cache');
-      localStorage.removeItem(FILTER_CACHE_KEY);
-      return null;
-    }
 
     // Return cached filters if less than 24 hours old
     if (age < FILTER_CACHE_TTL) {
@@ -606,7 +636,7 @@ export async function fetchPackageVersionsNoRetry(
   }
   const data = await response.json();
   // If data is an array of strings, return as is
-  if (Array.isArray(data) && data.every(v => typeof v === 'string')) {
+  if (Array.isArray(data) && data.every((v) => typeof v === 'string')) {
     return data;
   }
   // If data is an object with a versions array of strings, return that
@@ -641,14 +671,14 @@ export async function fetchPackageDetails(
   return withRetry(async () => {
     // Fetch all versions for the package
     const allVersions = await fetchPackageVersionsNoRetry(orgName, packageName);
-    
+
     // If no version provided or version is "latest", determine latest version
     let targetVersion = version;
 
     if (!targetVersion || targetVersion === 'latest') {
       // Map to objects with both raw and sanitized semver
       const sanitized = allVersions
-        .map(v => {
+        .map((v) => {
           const valid = semver.valid(v) || semver.coerce(v)?.version;
           return valid ? { raw: v, semver: valid } : null;
         })
@@ -661,19 +691,17 @@ export async function fetchPackageDetails(
       targetVersion = sanitized[0].raw; // Use the original/raw version string
     }
 
-    const response = await fetch(
-      `${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`
-    );
+    const response = await fetch(`${PACKAGES_ENDPOINT}/${orgName}/${packageName}/${targetVersion}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const packageData = await response.json();
-    
+
     // Add versions array to the response
     packageData.versions = allVersions;
-    
+
     // Fetch totalPullCount from GraphQL API (more accurate than REST API)
     try {
       const graphqlQuery = {
@@ -683,7 +711,7 @@ export async function fetchPackageDetails(
               totalPullCount
             }
           }
-        `
+        `,
       };
 
       const graphqlResponse = await fetch(GRAPHQL_ENDPOINT, {

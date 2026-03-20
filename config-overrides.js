@@ -5,7 +5,7 @@ module.exports = function override(config) {
     ...config.resolve.alias,
     '@': path.resolve(__dirname, 'src'),
   };
-  
+
   // Fix for prismjs module resolution in oxygen-ui
   config.module.rules.push({
     test: /\.m?js$/,
@@ -13,7 +13,7 @@ module.exports = function override(config) {
       fullySpecified: false,
     },
   });
-  
+
   // Ignore source map warnings from node_modules
   config.ignoreWarnings = [
     function ignoreSourcemapsloaderWarnings(warning) {
@@ -25,6 +25,6 @@ module.exports = function override(config) {
       );
     },
   ];
-  
+
   return config;
 };

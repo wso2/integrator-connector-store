@@ -31,21 +31,18 @@ export interface ConnectorMetadata {
   area: string;
   vendor: string;
   type: string;
-  industry: string;
 }
 
 export interface FilterOptions {
   areas: string[];
   vendors: string[];
   types: string[];
-  industries: string[];
 }
 
 export interface ConnectorFilters {
   selectedAreas: string[];
   selectedVendors: string[];
   selectedTypes: string[];
-  selectedIndustries: string[];
   searchQuery: string;
 }
 

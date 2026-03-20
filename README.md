@@ -85,17 +85,18 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - Touch-friendly interface
 - Optimized for all devices
 
-
 ---
 
 ## Technology Stack
 
 ### Core Framework
+
 - **React 18.2** - Modern React with concurrent features
 - **TypeScript 5.9** - Type-safe development
 - **React Router 6** - Client-side routing
 
 ### UI Framework
+
 - **WSO2 Oxygen UI 0.2.1** - WSO2's official design system
   - Built on Material-UI v7.3.7
   - Includes pre-built WSO2 themes (OxygenTheme, AcrylicOrangeTheme, etc.)
@@ -105,11 +106,13 @@ The WSO2 Integrator Connector Store provides a user-friendly interface to discov
 - **@emotion/react & @emotion/styled** - CSS-in-JS styling
 
 ### Build & Development
+
 - **Create React App** - Zero-config build setup
 - **react-app-rewired** - Custom webpack configuration
 - **TypeScript Compiler** - Type checking and compilation
 
 ### Key Dependencies
+
 ```json
 {
   "@wso2/oxygen-ui": "^0.2.1",
@@ -186,6 +189,7 @@ SITE_URL=https://yourdomain.com npm run generate-sitemap
 ```
 
 **For CI/CD pipelines**, set the `GENERATE_SITEMAP=true` environment variable:
+
 ```yaml
 # GitHub Actions example
 - name: Build with sitemap
@@ -316,6 +320,7 @@ Required to resolve TypeScript 5.x peer dependency conflicts with react-scripts 
 Custom webpack configuration for Create React App (using react-app-rewired).
 
 **Includes:**
+
 - Module resolution fix for prismjs ESM compatibility
 - Handles `.mjs` files from dependencies properly
 
@@ -363,6 +368,7 @@ const theme = extendTheme(OxygenTheme);
 - Text Secondary: `#494848` / `#cccccc`
 
 **Typography:**
+
 - Font: **Plus Jakarta Sans** (bundled with Oxygen UI)
 - Automatically imported via Oxygen UI's font system
 

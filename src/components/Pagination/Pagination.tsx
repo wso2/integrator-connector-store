@@ -23,7 +23,13 @@ import {
   ChevronRight as NavigateNextIcon,
 } from '@wso2/oxygen-ui-icons-react';
 
-type SortOption = 'name-asc' | 'name-desc' | 'pullCount-desc' | 'pullCount-asc' | 'date-desc' | 'date-asc';
+type SortOption =
+  | 'name-asc'
+  | 'name-desc'
+  | 'pullCount-desc'
+  | 'pullCount-asc'
+  | 'date-desc'
+  | 'date-asc';
 
 interface PaginationProps {
   currentPage: number;

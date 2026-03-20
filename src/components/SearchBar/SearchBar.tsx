@@ -51,7 +51,10 @@ export default function SearchBar({
           paddingX: '12px',
           fontSize: '14px',
           '& fieldset': {
-            border: effectiveMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #E5E7EB',
+            border:
+              effectiveMode === 'dark'
+                ? '1px solid rgba(255, 255, 255, 0.12)'
+                : '1px solid #E5E7EB',
           },
           '&:hover fieldset': {
             borderColor: effectiveMode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#FF7300',
@@ -72,9 +75,9 @@ export default function SearchBar({
       }}
       InputProps={{
         startAdornment: (
-          <InputAdornment 
-            position="start" 
-            sx={{ 
+          <InputAdornment
+            position="start"
+            sx={{
               marginRight: '8px',
               color: effectiveMode === 'dark' ? '#A1A1AA' : '#71717A',
             }}

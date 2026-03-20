@@ -16,9 +16,9 @@
  under the License.
 */
 
-import React from "react";
-import { Breadcrumbs, Link, Typography } from "@wso2/oxygen-ui";
-import { ChevronRight } from "@wso2/oxygen-ui-icons-react";
+import React from 'react';
+import { Breadcrumbs, Link, Typography } from '@wso2/oxygen-ui';
+import { ChevronRight } from '@wso2/oxygen-ui-icons-react';
 
 interface BreadcrumbsNavProps {
   connectorName: string;
@@ -29,7 +29,7 @@ const BreadcrumbsNav: React.FC<BreadcrumbsNavProps> = ({ connectorName }) => (
     <Link
       href="/"
       underline="hover"
-      sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}
+      sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}
     >
       Connector Store
     </Link>

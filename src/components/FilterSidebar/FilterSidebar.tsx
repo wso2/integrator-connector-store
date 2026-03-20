@@ -37,13 +37,11 @@ interface FilterSidebarProps {
   selectedAreas: string[];
   selectedVendors: string[];
   selectedTypes: string[];
-  selectedIndustries: string[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onAreaChange: (area: string) => void;
   onVendorChange: (vendor: string) => void;
   onTypeChange: (type: string) => void;
-  onIndustryChange: (industry: string) => void;
   onClearAll: () => void;
   effectiveMode: 'light' | 'dark';
   hideSearch?: boolean;
@@ -54,42 +52,33 @@ export default function FilterSidebar({
   selectedAreas,
   selectedVendors,
   selectedTypes,
-  selectedIndustries,
   searchQuery,
   onSearchChange,
   onAreaChange,
   onVendorChange,
   onTypeChange,
-  onIndustryChange,
   effectiveMode,
   hideSearch = false,
 }: FilterSidebarProps) {
   const [expandedArea, setExpandedArea] = useState(true);
   const [expandedType, setExpandedType] = useState(false);
   const [expandedVendor, setExpandedVendor] = useState(false);
-  const [expandedIndustry, setExpandedIndustry] = useState(false);
-  
 
   return (
     <Paper
-      sx={{ 
-        width: { xs: '100%', md: 288 }, 
-        flexShrink: 0, 
-        p: 2.5, 
+      sx={{
+        width: { xs: '100%', md: 288 },
+        flexShrink: 0,
+        p: 2.5,
         height: 'fit-content',
         bgcolor: effectiveMode === 'dark' ? '#18181B' : '#FFFFFF',
         border: effectiveMode === 'dark' ? 'none' : '1px solid #E5E7EB',
         boxShadow: effectiveMode === 'dark' ? 'none' : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
       }}
     >
-
       {/* Search - conditionally rendered */}
       {!hideSearch && (
-        <SearchBar 
-          value={searchQuery}
-          onChange={onSearchChange}
-          effectiveMode={effectiveMode}
-        />
+        <SearchBar value={searchQuery} onChange={onSearchChange} effectiveMode={effectiveMode} />
       )}
 
       {/* Filter Accordions */}
@@ -109,7 +98,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -124,11 +113,13 @@ export default function FilterSidebar({
               Area
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.areas.map((area) => (
                 <FormControlLabel
@@ -150,7 +141,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{area}</Typography>}
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {area}
+                    </Typography>
+                  }
                   sx={{
                     mx: 0,
                     px: 1,
@@ -184,7 +179,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -199,11 +194,13 @@ export default function FilterSidebar({
               Vendor
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.vendors.map((vendor) => (
                 <FormControlLabel
@@ -225,7 +222,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{vendor}</Typography>}
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {vendor}
+                    </Typography>
+                  }
                   sx={{
                     mx: 0,
                     px: 1,
@@ -259,7 +260,7 @@ export default function FilterSidebar({
             },
           }}
         >
-          <AccordionSummary 
+          <AccordionSummary
             expandIcon={<ChevronDown size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
@@ -274,11 +275,13 @@ export default function FilterSidebar({
               Type
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
+          <AccordionDetails
+            sx={{
+              pt: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}
+          >
             <FormGroup>
               {filterOptions.types.map((type) => (
                 <FormControlLabel
@@ -300,82 +303,11 @@ export default function FilterSidebar({
                       }}
                     />
                   }
-                  label={<Typography variant="body2" fontSize={14}>{type}</Typography>}
-                  sx={{
-                    mx: 0,
-                    px: 1,
-                    py: 0.75,
-                    borderRadius: '6px',
-                    gap: 1,
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    '&:hover': {
-                      bgcolor: effectiveMode === 'dark' ? '#3F3F46' : '#E5E7EB',
-                    },
-                  }}
-                />
-              ))}
-            </FormGroup>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Industry Filter */}
-        <Accordion
-          expanded={expandedIndustry}
-          onChange={() => setExpandedIndustry(!expandedIndustry)}
-          disableGutters
-          sx={{
-            bgcolor: effectiveMode === 'dark' ? 'rgba(39, 39, 46, 0.5)' : '#F9FAFB',
-            borderRadius: '8px',
-            boxShadow: 'none',
-            border: 'none',
-            '&:before': {
-              display: 'none',
-            },
-          }}
-        >
-          <AccordionSummary 
-            expandIcon={<ChevronDown size={16} />}
-            sx={{
-              '& .MuiAccordionSummary-expandIconWrapper': {
-                transition: 'transform 0.2s',
-              },
-              '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-                transform: 'rotate(90deg)',
-              },
-            }}
-          >
-            <Typography variant="body2" fontSize={14} fontWeight={500}>
-              Industry
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ 
-            pt: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}>
-            <FormGroup>
-              {(filterOptions.industries || []).map((industry) => (
-                <FormControlLabel
-                  key={industry}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={selectedIndustries.includes(industry)}
-                      onChange={() => onIndustryChange(industry)}
-                      sx={{
-                        padding: 0,
-                        color: '#52525B',
-                        '&.Mui-checked': {
-                          color: '#FF7300',
-                        },
-                        '& .MuiSvgIcon-root': {
-                          fontSize: 16,
-                        },
-                      }}
-                    />
+                  label={
+                    <Typography variant="body2" fontSize={14}>
+                      {type}
+                    </Typography>
                   }
-                  label={<Typography variant="body2" fontSize={14}>{industry}</Typography>}
                   sx={{
                     mx: 0,
                     px: 1,
@@ -397,4 +329,3 @@ export default function FilterSidebar({
     </Paper>
   );
 }
-

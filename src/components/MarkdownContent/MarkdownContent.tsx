@@ -114,7 +114,8 @@ export default function MarkdownContent({ content, effectiveMode }: MarkdownCont
               borderBottom: '0.1px solid',
               borderTop: '0.1px solid',
               borderColor: 'primary.main',
-              bgcolor: effectiveMode === 'dark' ? 'rgba(255, 115, 0, 0.15)' : 'rgba(255, 115, 0, 0.05)',
+              bgcolor:
+                effectiveMode === 'dark' ? 'rgba(255, 115, 0, 0.15)' : 'rgba(255, 115, 0, 0.05)',
               borderRadius: 1,
               fontStyle: 'italic',
               color: 'text.primary',
@@ -131,7 +132,12 @@ export default function MarkdownContent({ content, effectiveMode }: MarkdownCont
             rehypePlugins={[rehypeRaw, rehypeSanitize]}
             components={{
               a: ({ href, children }) => (
-                <a href={href} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'underline', fontWeight: '500'}}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline', fontWeight: '500' }}
+                >
                   {children}
                 </a>
               ),

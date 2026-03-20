@@ -31,7 +31,14 @@ describe('SearchBar', () => {
 
   it('should render with custom placeholder', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} placeholder="Custom placeholder" effectiveMode="light" />);
+    render(
+      <SearchBar
+        value=""
+        onChange={onChange}
+        placeholder="Custom placeholder"
+        effectiveMode="light"
+      />
+    );
 
     expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
   });
