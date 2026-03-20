@@ -263,15 +263,22 @@ export default function ConnectorDetailPage() {
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
           {details.keywords
             .filter((tag) => tag.startsWith('Area/') || tag.startsWith('Vendor/') || tag.startsWith('Type/'))
-            .map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                size="small"
-                clickable
-                onClick={() => navigate(`/?search=${encodeURIComponent(tag)}`)}
-              />
-            ))}
+            .map((tag) => {
+              const value = tag.split('/').slice(1).join('/');
+              let filterParam = 'search';
+              if (tag.startsWith('Area/')) filterParam = 'areas';
+              else if (tag.startsWith('Vendor/')) filterParam = 'vendors';
+              else if (tag.startsWith('Type/')) filterParam = 'types';
+              return (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  size="small"
+                  clickable
+                  onClick={() => navigate(`/?${filterParam}=${encodeURIComponent(value)}`)}
+                />
+              );
+            })}
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
