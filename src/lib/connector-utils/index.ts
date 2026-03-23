@@ -8,5 +8,6 @@ export {
   getDaysSinceUpdate,
   formatDaysSince,
   sortConnectors,
+  METADATA_FALLBACK,
 } from './connector-utils';
 export type { SortOption } from './connector-utils';

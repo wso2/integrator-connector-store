@@ -18,6 +18,9 @@
 
 import { BallerinaPackage, ConnectorMetadata, FilterOptions } from '@/types/connector';
 
+/** Default metadata value for connectors missing Area/Vendor/Type keywords */
+export const METADATA_FALLBACK = 'Other';
+
 /**
  * Dictionary for proper brand/term capitalization
  * Maps lowercase to proper capitalization
@@ -162,7 +165,7 @@ export function getDisplayName(packageName: string, vendor?: string): string {
     }
 
     // If we have vendor info and this is the first part, try to match with vendor
-    if (index === 0 && vendor && vendor.toLowerCase() !== 'other') {
+    if (index === 0 && vendor && vendor.toLowerCase() !== METADATA_FALLBACK.toLowerCase()) {
       const vendorLower = vendor.toLowerCase();
       // Check if the part matches or is contained in the vendor name
       if (
@@ -186,9 +189,12 @@ export function getDisplayName(packageName: string, vendor?: string): string {
  * Extracts metadata from connector keywords
  */
 export function parseConnectorMetadata(keywords: string[]): ConnectorMetadata {
-  const area = keywords.find((k) => k.startsWith('Area/'))?.replace('Area/', '') || 'Other';
-  const vendor = keywords.find((k) => k.startsWith('Vendor/'))?.replace('Vendor/', '') || 'Other';
-  const type = keywords.find((k) => k.startsWith('Type/'))?.replace('Type/', '') || 'Other';
+  const area =
+    keywords.find((k) => k.startsWith('Area/'))?.replace('Area/', '') || METADATA_FALLBACK;
+  const vendor =
+    keywords.find((k) => k.startsWith('Vendor/'))?.replace('Vendor/', '') || METADATA_FALLBACK;
+  const type =
+    keywords.find((k) => k.startsWith('Type/'))?.replace('Type/', '') || METADATA_FALLBACK;
   return { area, vendor, type };
 }
 
@@ -211,7 +217,9 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
-    types: Array.from(types).sort(),
+    types: Array.from(types)
+      .filter((t) => t !== METADATA_FALLBACK)
+      .sort(),
   };
 }
 
