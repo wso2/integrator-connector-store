@@ -155,6 +155,25 @@ describe('rest-client', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
+    it('should exclude Type/Other packages from results', async () => {
+      const mockResponse = createMockApiResponse(
+        [
+          { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
+          { name: 'internal-module', version: '1.0.0', keywords: [] }, // defaults to Type/Other
+        ],
+        2
+      );
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
+
+      expect(result.packages).toHaveLength(1);
+      expect(result.packages[0].name).toBe('visible-connector');
+    });
+
     it('should handle API errors with retry', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce({
         ok: true,

@@ -22,7 +22,7 @@ import { Card, CardContent, Typography, Chip, Box, Divider, ButtonBase } from '@
 import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
 import ReactMarkdown from 'react-markdown';
 import { BallerinaPackage } from '@/types/connector';
-import { parseConnectorMetadata, getDisplayName } from '@/lib/connector-utils';
+import { parseConnectorMetadata, getDisplayName, METADATA_FALLBACK } from '@/lib/connector-utils';
 
 interface ConnectorCardProps {
   connector: BallerinaPackage;
@@ -313,7 +313,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               }}
             />
 
-            {metadata.vendor !== 'Other' && (
+            {metadata.vendor !== METADATA_FALLBACK && (
               <Chip
                 label={metadata.vendor}
                 size="small"
@@ -328,7 +328,7 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               />
             )}
 
-            {metadata.area !== 'Other' && (
+            {metadata.area !== METADATA_FALLBACK && (
               <Chip
                 label={metadata.area}
                 size="small"
