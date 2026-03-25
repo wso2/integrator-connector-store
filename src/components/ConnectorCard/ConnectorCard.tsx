@@ -88,8 +88,8 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
   const iconLetter = useMemo(() => getIconLetter(connector.name), [connector.name]);
   const iconColor = useMemo(() => getIconColor(connector.name), [connector.name]);
   const displayName = useMemo(
-    () => getDisplayName(connector.name, metadata.vendor),
-    [connector.name, metadata.vendor]
+    () => getDisplayName(connector.name, metadata.vendor, connector.keywords),
+    [connector.name, metadata.vendor, connector.keywords]
   );
 
   // Parse org and package name from connector URL
