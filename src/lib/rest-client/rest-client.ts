@@ -166,13 +166,17 @@ function sortMergedPackages(
       return sorted.sort((a, b) => {
         const vendorA = parseConnectorMetadata(a.keywords).vendor;
         const vendorB = parseConnectorMetadata(b.keywords).vendor;
-        return getDisplayName(a.name, vendorA).localeCompare(getDisplayName(b.name, vendorB));
+        return getDisplayName(a.name, vendorA, a.keywords).localeCompare(
+          getDisplayName(b.name, vendorB, b.keywords)
+        );
       });
     case 'name-desc':
       return sorted.sort((a, b) => {
         const vendorA = parseConnectorMetadata(a.keywords).vendor;
         const vendorB = parseConnectorMetadata(b.keywords).vendor;
-        return getDisplayName(b.name, vendorB).localeCompare(getDisplayName(a.name, vendorA));
+        return getDisplayName(b.name, vendorB, b.keywords).localeCompare(
+          getDisplayName(a.name, vendorA, a.keywords)
+        );
       });
     case 'pullCount-desc':
       if (query) {
