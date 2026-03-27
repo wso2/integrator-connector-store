@@ -399,7 +399,7 @@ export default function HomePage() {
 
   // Scroll to top when page changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentPage]);
 
   // Update meta tags dynamically based on search/filters
