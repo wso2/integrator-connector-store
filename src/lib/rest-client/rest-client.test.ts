@@ -105,11 +105,16 @@ describe('rest-client', () => {
 
   describe('searchPackages', () => {
     it('should fetch packages with correct parameters', async () => {
-      const mockResponse = createMockApiResponse([{ name: 'test-connector', version: '1.0.0' }], 1);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      // With HIDDEN_PACKAGES non-empty, searchPackages uses client-side pagination:
+      // first call fetches count (limit=1), second fetches all results in a batch.
+      const countResponse = createMockApiResponse([], 1);
+      const batchResponse = createMockApiResponse(
+        [{ name: 'test-connector', version: '1.0.0' }],
+        1
+      );
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
 
       const params: SearchParams = {
         offset: 0,
@@ -119,7 +124,7 @@ describe('rest-client', () => {
 
       const result = await searchPackages(params);
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.packages).toHaveLength(1);
       expect(result.packages[0].name).toBe('test-connector');
       expect(result.packages[0].totalPullCount).toBe(1000);
@@ -159,17 +164,17 @@ describe('rest-client', () => {
       const { HIDDEN_PACKAGES } = await import('../connector-utils');
       HIDDEN_PACKAGES.add('internal-module');
 
-      const mockResponse = createMockApiResponse(
+      const countResponse = createMockApiResponse([], 2);
+      const batchResponse = createMockApiResponse(
         [
           { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
           { name: 'internal-module', version: '1.0.0', keywords: [] },
         ],
         2
       );
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
 
       const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
 
@@ -226,6 +231,7 @@ describe('rest-client', () => {
     });
 
     it('should fetch and cache filters when cache is empty', async () => {
+      // searchPackages uses client-side path: count call (limit=1) + batch call
       mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(createMockApiResponse([], 50)), // count <= 100
@@ -233,31 +239,29 @@ describe('rest-client', () => {
 
       await fetchFiltersProgressively();
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
     });
 
     it('should trigger onUpdate for background fetch when count > 100', async () => {
-      const initialResponse = createMockApiResponse([], 150); // count > 100
-      const batch1 = createMockApiResponse(
-        Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}`, version: '1.0.0' })),
-        150
-      );
-      const batch2 = createMockApiResponse(
-        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}`, version: '1.0.0' })),
-        150
-      );
-
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(initialResponse) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch1) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch2) });
+      // searchPackages uses client-side path: count call then batch call.
+      // The count call returns 150, batch returns 150 packages → client-side
+      // pagination returns count=150 which triggers the background fetch.
+      const packages = Array.from({ length: 150 }, (_, i) => ({
+        name: `pkg-${i}`,
+        version: '1.0.0',
+      }));
+      const response = createMockApiResponse(packages, 150);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(response),
+      });
 
       const onUpdate = jest.fn();
       await fetchFiltersProgressively('ballerinax', onUpdate);
 
       // Give the background async task time to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       expect(onUpdate).toHaveBeenCalled();
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));

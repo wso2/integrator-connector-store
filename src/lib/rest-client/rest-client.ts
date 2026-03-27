@@ -425,13 +425,19 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    const needsClientFilter = !!params.query;
-    // When searching or sorting by name, we need all results for client-side processing
-    if (needsClientFilter || params.sort === 'name-asc' || params.sort === 'name-desc') {
-      // Step 1: Fetch count only
+    const needsClientSidePagination =
+      !!params.query ||
+      params.sort === 'name-asc' ||
+      params.sort === 'name-desc' ||
+      HIDDEN_PACKAGES.size > 0;
+
+    if (needsClientSidePagination) {
+      // Fetch all results for client-side filtering, sorting, and pagination.
+      // Required when: searching (wildcard matches need relevance filtering),
+      // sorting by name (server can't sort display names), or hidden packages
+      // exist (server offset doesn't account for removed items).
       const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
       const totalCount = countResult.count;
-      // Step 2: Fetch all pages in batches
       const batchSize = 500;
       let allPackages: typeof countResult.packages = [];
       for (let offset = 0; offset < totalCount; offset += batchSize) {
@@ -443,8 +449,8 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         allPackages = allPackages.concat(batchResult.packages);
       }
       // Exclude hidden packages, filter to relevant matches, then sort and paginate
-      const withoutOther = excludeHidden(allPackages);
-      const filtered = filterByRelevance(withoutOther, params.query);
+      const visible = excludeHidden(allPackages);
+      const filtered = filterByRelevance(visible, params.query);
       const sorted = sortMergedPackages(filtered, params.sort, params.query);
       const paged = sorted.slice(params.offset, params.offset + params.limit);
       return {
@@ -454,18 +460,8 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         limit: params.limit,
       };
     } else {
-      // No search query, non-name sort: use server-side pagination directly.
-      // Overfetch by the hidden list size to guarantee full pages after filtering.
-      const buffer = HIDDEN_PACKAGES.size;
-      const result = await executeSingleSearch({
-        ...combinations[0],
-        limit: params.limit + buffer,
-      });
-      const beforeCount = result.packages.length;
-      result.packages = excludeHidden(result.packages);
-      const removedCount = beforeCount - result.packages.length;
-      result.count -= removedCount;
-      result.packages = result.packages.slice(0, params.limit);
+      // No search query, no hidden packages, non-name sort: safe to use server-side pagination.
+      const result = await executeSingleSearch(combinations[0]);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       return result;
     }

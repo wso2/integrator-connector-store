@@ -266,7 +266,15 @@ export default function HomePage() {
       setError(errorMessage);
       setLoading(false);
     }
-  }, [debouncedQuery, selectedAreas, selectedVendors, selectedTypes, currentPage, pageSize, sortBy]);
+  }, [
+    debouncedQuery,
+    selectedAreas,
+    selectedVendors,
+    selectedTypes,
+    currentPage,
+    pageSize,
+    sortBy,
+  ]);
 
   // Load filter options once on mount, then load first page
   useEffect(() => {
