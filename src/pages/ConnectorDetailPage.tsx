@@ -51,60 +51,61 @@ import MarkdownContent from '@/components/MarkdownContent';
 import Footer from '@/components/Footer';
 
 /**
- * Extracts Overview and Setup sections from README content.
+ * Extracts only Overview text and Key Features from README content.
+ * Strips all other subsections (setup, quickstart, etc.) that may appear
+ * under the ## Overview heading.
  */
-function extractOverviewAndSetup(readme: string): { overview: string; setup: string } {
+function extractOverview(readme: string): string {
   const removeCodeBlocks = (text: string) => text.replace(/```[\s\S]*?```/g, '').trim();
   const sections = readme.split(/(?=^## )/m);
 
-  let overview = '';
-  let setup = '';
-
   for (const section of sections) {
     const lowerSection = section.toLowerCase();
-    if (lowerSection.startsWith('## overview')) {
-      let content = section;
-      // Truncate after ### Key Features and its bullet list
-      const keyFeaturesMatch = content.match(/^###\s+key features\b.*$/im);
-      if (keyFeaturesMatch && keyFeaturesMatch.index !== undefined) {
-        const afterKeyFeatures = content.substring(
-          keyFeaturesMatch.index + keyFeaturesMatch[0].length
-        );
-        // Find the last bullet line in the list, then cut everything after it
-        const lines = afterKeyFeatures.split('\n');
-        let lastBulletIndex = -1;
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          const isBullet = /^\s*[-*+]\s/.test(line);
-          const isContinuation = /^\s{2,}\S/.test(line);
-          if (isBullet) {
-            lastBulletIndex = i;
-          } else if (lastBulletIndex !== -1 && line.trim() !== '' && !isContinuation) {
-            // Non-empty, non-bullet, non-continuation line after bullets — stop here
-            break;
+    // Match both "## Overview" and "## Package overview"
+    if (lowerSection.startsWith('## overview') || lowerSection.startsWith('## package overview')) {
+      // Split into subsections by ### headings
+      const subsections = section.split(/(?=^### )/m);
+      let content = subsections[0]; // Text before any ### heading (the overview prose)
+
+      // Append Key Features subsection if present
+      for (const sub of subsections) {
+        if (/^###\s+key features\b/im.test(sub)) {
+          // Keep only the heading and its bullet list, discard trailing non-bullet content
+          const lines = sub.split('\n');
+          let lastBulletIndex = -1;
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            const isBullet = /^\s*[-*+]\s/.test(line);
+            const isContinuation = /^\s{2,}\S/.test(line);
+            if (isBullet) {
+              lastBulletIndex = i;
+            } else if (lastBulletIndex !== -1 && line.trim() !== '' && !isContinuation) {
+              break;
+            }
           }
-        }
-        if (lastBulletIndex !== -1) {
-          const keptLines = lines.slice(0, lastBulletIndex + 1).join('\n');
-          content =
-            content.substring(0, keyFeaturesMatch.index + keyFeaturesMatch[0].length) + keptLines;
+          if (lastBulletIndex !== -1) {
+            content += '\n' + lines.slice(0, lastBulletIndex + 1).join('\n');
+          } else {
+            content += '\n' + sub;
+          }
+          break;
         }
       }
-      overview = removeCodeBlocks(content);
-    } else if (lowerSection.startsWith('## setup') || lowerSection.startsWith('## prerequisites')) {
-      setup = removeCodeBlocks(section);
+
+      return removeCodeBlocks(content);
     }
   }
 
-  if (!overview && readme) {
+  // Fallback: use text before the first ## heading
+  if (readme) {
     const firstHeaderIndex = readme.indexOf('## ');
     if (firstHeaderIndex > 0) {
       const introText = readme.substring(0, firstHeaderIndex).trim();
-      if (introText) overview = removeCodeBlocks(introText);
+      if (introText) return removeCodeBlocks(introText);
     }
   }
 
-  return { overview, setup };
+  return '';
 }
 
 export default function ConnectorDetailPage() {
@@ -175,11 +176,8 @@ export default function ConnectorDetailPage() {
         : getDisplayName(name || ''),
     [packageDetails, metadata, name]
   );
-  const { overview, setup } = useMemo(
-    () =>
-      packageDetails
-        ? extractOverviewAndSetup(String(packageDetails?.readme || ''))
-        : { overview: '', setup: '' },
+  const overview = useMemo(
+    () => (packageDetails ? extractOverview(String(packageDetails?.readme || '')) : ''),
     [packageDetails]
   );
 
@@ -546,11 +544,6 @@ export default function ConnectorDetailPage() {
                 {overview && (
                   <Box component="section" sx={{ mb: 6 }}>
                     <MarkdownContent content={overview} effectiveMode={effectiveMode} />
-                  </Box>
-                )}
-                {setup && (
-                  <Box component="section">
-                    <MarkdownContent content={setup} effectiveMode={effectiveMode} />
                   </Box>
                 )}
               </Box>
