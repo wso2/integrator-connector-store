@@ -461,8 +461,10 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         ...combinations[0],
         limit: params.limit + buffer,
       });
+      const beforeCount = result.packages.length;
       result.packages = excludeHidden(result.packages);
-      result.count -= buffer;
+      const removedCount = beforeCount - result.packages.length;
+      result.count -= removedCount;
       result.packages = result.packages.slice(0, params.limit);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       return result;
