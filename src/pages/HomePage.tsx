@@ -169,8 +169,15 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Initialize state from URL params to ensure deep-linked values are used immediately
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
+  // Search input is immediate (for responsive typing), debouncedQuery drives API calls
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') || '');
+  const [debouncedQuery, setDebouncedQuery] = useState(() => searchParams.get('search') || '');
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>(
     () => searchParams.get('areas')?.split(',').filter(Boolean) || []
   );
@@ -184,6 +191,8 @@ export default function HomePage() {
   const [pageSize, setPageSize] = useState(() => parsePageSizeParam(searchParams.get('size')));
   const [sortBy, setSortBy] = useState<SortOption>(() => parseSortParam(searchParams.get('sort')));
 
+  // Ref to discard stale fetch responses
+  const fetchIdRef = useRef(0);
   // Ref to track if initial fetch is done
   const initialFetchDoneRef = useRef(false);
   // Ref to track if component just mounted (to avoid resetting page on mount)
@@ -221,17 +230,18 @@ export default function HomePage() {
     setSelectedAreas([]);
     setSelectedTypes([]);
     setSelectedVendors([]);
-    setSearchQuery('');
+    setSearchInput('');
   };
 
   // Fetch page data from REST API
   const fetchPageData = useCallback(async () => {
+    const fetchId = ++fetchIdRef.current;
     try {
       setLoading(true);
       setError(null);
 
       const response = await searchPackages({
-        query: searchQuery,
+        query: debouncedQuery,
         areas: selectedAreas,
         vendors: selectedVendors,
         types: selectedTypes,
@@ -240,10 +250,14 @@ export default function HomePage() {
         sort: sortBy,
       });
 
+      // Discard stale responses
+      if (fetchId !== fetchIdRef.current) return;
+
       setConnectors(response.packages);
       setTotalCount(response.count);
       setLoading(false);
     } catch (error) {
+      if (fetchId !== fetchIdRef.current) return;
       console.error('Failed to fetch page data:', error);
       const errorMessage =
         error instanceof Error
@@ -252,7 +266,15 @@ export default function HomePage() {
       setError(errorMessage);
       setLoading(false);
     }
-  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes, currentPage, pageSize, sortBy]);
+  }, [
+    debouncedQuery,
+    selectedAreas,
+    selectedVendors,
+    selectedTypes,
+    currentPage,
+    pageSize,
+    sortBy,
+  ]);
 
   // Load filter options once on mount, then load first page
   useEffect(() => {
@@ -320,7 +342,8 @@ export default function HomePage() {
     setCurrentPage(page);
     setPageSize(size);
     setSortBy(sort);
-    setSearchQuery(search);
+    setSearchInput(search);
+    setDebouncedQuery(search);
     setSelectedAreas(areas);
     setSelectedVendors(vendors);
     setSelectedTypes(types);
@@ -342,7 +365,7 @@ export default function HomePage() {
 
     if (currentPage > 1) params.set('page', currentPage.toString());
     if (pageSize !== 30) params.set('size', pageSize.toString());
-    if (searchQuery) params.set('search', searchQuery);
+    if (debouncedQuery) params.set('search', debouncedQuery);
     if (selectedAreas.length > 0) params.set('areas', selectedAreas.join(','));
     if (selectedVendors.length > 0) params.set('vendors', selectedVendors.join(','));
     if (selectedTypes.length > 0) params.set('types', selectedTypes.join(','));
@@ -360,7 +383,7 @@ export default function HomePage() {
   }, [
     currentPage,
     pageSize,
-    searchQuery,
+    debouncedQuery,
     selectedAreas,
     selectedVendors,
     selectedTypes,
@@ -380,11 +403,11 @@ export default function HomePage() {
       return;
     }
     setCurrentPage(1);
-  }, [selectedAreas, selectedVendors, selectedTypes, searchQuery, pageSize]);
+  }, [selectedAreas, selectedVendors, selectedTypes, debouncedQuery, pageSize]);
 
   // Scroll to top when page changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentPage]);
 
   // Update meta tags dynamically based on search/filters
@@ -393,9 +416,9 @@ export default function HomePage() {
     let description =
       'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
 
-    if (searchQuery) {
-      pageTitle = `Search: "${searchQuery}" - WSO2 Integrator Connector Store`;
-      description = `Search results for "${searchQuery}" - Find Ballerina connectors matching your query.`;
+    if (debouncedQuery) {
+      pageTitle = `Search: "${debouncedQuery}" - WSO2 Integrator Connector Store`;
+      description = `Search results for "${debouncedQuery}" - Find Ballerina connectors matching your query.`;
     } else if (selectedAreas.length > 0 || selectedVendors.length > 0 || selectedTypes.length > 0) {
       const filters = [...selectedAreas, ...selectedVendors, ...selectedTypes];
       pageTitle = `${filters.join(', ')} Connectors - WSO2 Integrator Connector Store`;
@@ -433,7 +456,7 @@ export default function HomePage() {
       ? 'index, follow'
       : 'noindex';
     updateMetaTag('meta[name="robots"]', robotsContent);
-  }, [searchQuery, selectedAreas, selectedVendors, selectedTypes]);
+  }, [debouncedQuery, selectedAreas, selectedVendors, selectedTypes]);
 
   return (
     <>
@@ -462,8 +485,8 @@ export default function HomePage() {
                   selectedAreas={selectedAreas}
                   selectedVendors={selectedVendors}
                   selectedTypes={selectedTypes}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
+                  searchQuery={searchInput}
+                  onSearchChange={setSearchInput}
                   onAreaChange={toggleAreaFilter}
                   onVendorChange={toggleVendorFilter}
                   onTypeChange={toggleTypeFilter}
@@ -485,8 +508,8 @@ export default function HomePage() {
                 <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, mb: 2.5 }}>
                   <Box sx={{ flex: 1 }}>
                     <SearchBar
-                      value={searchQuery}
-                      onChange={setSearchQuery}
+                      value={searchInput}
+                      onChange={setSearchInput}
                       effectiveMode={effectiveMode}
                     />
                   </Box>

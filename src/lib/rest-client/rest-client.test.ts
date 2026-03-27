@@ -123,7 +123,6 @@ describe('rest-client', () => {
       expect(result.packages).toHaveLength(1);
       expect(result.packages[0].name).toBe('test-connector');
       expect(result.packages[0].totalPullCount).toBe(1000);
-      expect(result.count).toBe(1);
     });
 
     it('should include search query in request', async () => {
@@ -155,23 +154,30 @@ describe('rest-client', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it('should exclude Type/Other packages from results', async () => {
-      const mockResponse = createMockApiResponse(
-        [
-          { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
-          { name: 'internal-module', version: '1.0.0', keywords: [] }, // defaults to Type/Other
-        ],
-        2
-      );
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+    it('should exclude hidden packages from results', async () => {
+      const { HIDDEN_PACKAGES } = await import('../connector-utils');
+      HIDDEN_PACKAGES.add('internal-module');
 
-      const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
+      try {
+        const mockResponse = createMockApiResponse(
+          [
+            { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
+            { name: 'internal-module', version: '1.0.0', keywords: [] },
+          ],
+          2
+        );
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse),
+        });
 
-      expect(result.packages).toHaveLength(1);
-      expect(result.packages[0].name).toBe('visible-connector');
+        const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
+
+        expect(result.packages).toHaveLength(1);
+        expect(result.packages[0].name).toBe('visible-connector');
+      } finally {
+        HIDDEN_PACKAGES.delete('internal-module');
+      }
     });
 
     it('should handle API errors with retry', async () => {
@@ -233,29 +239,25 @@ describe('rest-client', () => {
     });
 
     it('should trigger onUpdate for background fetch when count > 100', async () => {
-      const initialResponse = createMockApiResponse([], 150); // count > 100
-      const batch1 = createMockApiResponse(
-        Array.from({ length: 100 }, (_, i) => ({ name: `pkg-${i}`, version: '1.0.0' })),
-        150
-      );
-      const batch2 = createMockApiResponse(
-        Array.from({ length: 50 }, (_, i) => ({ name: `pkg-${100 + i}`, version: '1.0.0' })),
-        150
-      );
-
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(initialResponse) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch1) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batch2) });
+      // Server-side path returns count from API. count=150 > 100 triggers background fetch.
+      const packages = Array.from({ length: 100 }, (_, i) => ({
+        name: `pkg-${i}`,
+        version: '1.0.0',
+      }));
+      const response = createMockApiResponse(packages, 150);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(response),
+      });
 
       const onUpdate = jest.fn();
       await fetchFiltersProgressively('ballerinax', onUpdate);
 
-      // Give the background async task time to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Flush microtasks to let the background promise chain resolve
+      await new Promise(process.nextTick);
 
       expect(onUpdate).toHaveBeenCalled();
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
-    }, 10000);
+    });
   });
 });

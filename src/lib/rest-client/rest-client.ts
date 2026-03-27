@@ -21,7 +21,7 @@ import {
   extractFilterOptions,
   parseConnectorMetadata,
   getDisplayName,
-  METADATA_FALLBACK,
+  HIDDEN_PACKAGES,
 } from '../connector-utils';
 import semver from 'semver';
 
@@ -410,13 +410,10 @@ function filterByRelevance(packages: BallerinaPackage[], query?: string): Baller
 }
 
 /**
- * Exclude internal packages that have Type/Other metadata
+ * Exclude packages listed in the HIDDEN_PACKAGES set
  */
-function excludeTypeOther(packages: BallerinaPackage[]): BallerinaPackage[] {
-  return packages.filter((pkg) => {
-    const metadata = parseConnectorMetadata(pkg.keywords);
-    return metadata.type !== METADATA_FALLBACK;
-  });
+function excludeHidden(packages: BallerinaPackage[]): BallerinaPackage[] {
+  return packages.filter((pkg) => !HIDDEN_PACKAGES.has(pkg.name));
 }
 
 /**
@@ -428,26 +425,27 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   // If only one combination, execute directly
   if (combinations.length === 1) {
-    const needsClientFilter = !!params.query;
-    // When searching or sorting by name, we need all results for client-side processing
-    if (needsClientFilter || params.sort === 'name-asc' || params.sort === 'name-desc') {
-      // Step 1: Fetch count only
-      const countResult = await executeSingleSearch({ ...combinations[0], offset: 0, limit: 1 });
+    const needsClientSidePagination =
+      !!params.query || params.sort === 'name-asc' || params.sort === 'name-desc';
+
+    if (needsClientSidePagination) {
+      // Search queries need relevance filtering and name sorts need client-side
+      // display name sorting — fetch all results, then filter/sort/paginate.
+      const countResult = await executeSingleSearch({
+        ...combinations[0],
+        offset: 0,
+        limit: 1,
+      });
       const totalCount = countResult.count;
-      // Step 2: Fetch all pages in batches
       const batchSize = 500;
-      let allPackages: typeof countResult.packages = [];
+      const batchPromises = [];
       for (let offset = 0; offset < totalCount; offset += batchSize) {
-        const batchResult = await executeSingleSearch({
-          ...combinations[0],
-          offset,
-          limit: batchSize,
-        });
-        allPackages = allPackages.concat(batchResult.packages);
+        batchPromises.push(executeSingleSearch({ ...combinations[0], offset, limit: batchSize }));
       }
-      // Exclude internal Type/Other packages, filter to relevant matches, then sort and paginate
-      const withoutOther = excludeTypeOther(allPackages);
-      const filtered = filterByRelevance(withoutOther, params.query);
+      const batchResults = await Promise.all(batchPromises);
+      const allPackages = batchResults.flatMap((r) => r.packages);
+      const visible = excludeHidden(allPackages);
+      const filtered = filterByRelevance(visible, params.query);
       const sorted = sortMergedPackages(filtered, params.sort, params.query);
       const paged = sorted.slice(params.offset, params.offset + params.limit);
       return {
@@ -457,15 +455,20 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         limit: params.limit,
       };
     } else {
-      // No search query, non-name sort: use server-side pagination directly.
-      // Type/Other packages (5-10 out of 800+) are filtered client-side, which may
-      // occasionally result in slightly fewer items per page — acceptable trade-off
-      // to avoid fetching all packages on every page load.
-      const result = await executeSingleSearch(combinations[0]);
-      const before = result.packages.length;
-      result.packages = excludeTypeOther(result.packages);
-      result.count -= before - result.packages.length;
+      // No search, non-name sort: use server-side pagination for performance.
+      // Hidden packages (~20 out of 800+) are filtered client-side after fetching.
+      // Overfetch by the hidden list size to compensate for any removed in this page.
+      // Total count is adjusted globally by HIDDEN_PACKAGES.size for consistent pagination.
+      const buffer = HIDDEN_PACKAGES.size;
+      const result = await executeSingleSearch({
+        ...combinations[0],
+        limit: params.limit + buffer,
+      });
+      result.packages = excludeHidden(result.packages);
+      result.count -= HIDDEN_PACKAGES.size;
+      result.packages = result.packages.slice(0, params.limit);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
+      result.limit = params.limit;
       return result;
     }
   }
@@ -495,10 +498,8 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Exclude internal Type/Other packages, filter to relevant matches, then re-sort.
-  // Note: excludeTypeOther may cause slightly fewer results than params.limit on a page
-  // (5-10 Type/Other packages out of 800+ total — acceptable trade-off).
-  const withoutOther = excludeTypeOther(mergedPackages);
+  // Exclude hidden packages, filter to relevant matches, then re-sort.
+  const withoutOther = excludeHidden(mergedPackages);
   const filteredPackages = filterByRelevance(withoutOther, params.query);
   const sortedPackages = sortMergedPackages(filteredPackages, params.sort, params.query);
 
