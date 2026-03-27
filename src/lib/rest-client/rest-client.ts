@@ -21,7 +21,7 @@ import {
   extractFilterOptions,
   parseConnectorMetadata,
   getDisplayName,
-  METADATA_FALLBACK,
+  HIDDEN_PACKAGES,
 } from '../connector-utils';
 import semver from 'semver';
 
@@ -410,13 +410,10 @@ function filterByRelevance(packages: BallerinaPackage[], query?: string): Baller
 }
 
 /**
- * Exclude internal packages that have Type/Other metadata
+ * Exclude packages listed in the HIDDEN_PACKAGES set
  */
-function excludeTypeOther(packages: BallerinaPackage[]): BallerinaPackage[] {
-  return packages.filter((pkg) => {
-    const metadata = parseConnectorMetadata(pkg.keywords);
-    return metadata.type !== METADATA_FALLBACK;
-  });
+function excludeHidden(packages: BallerinaPackage[]): BallerinaPackage[] {
+  return packages.filter((pkg) => !HIDDEN_PACKAGES.has(pkg.name));
 }
 
 /**
@@ -445,8 +442,8 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         });
         allPackages = allPackages.concat(batchResult.packages);
       }
-      // Exclude internal Type/Other packages, filter to relevant matches, then sort and paginate
-      const withoutOther = excludeTypeOther(allPackages);
+      // Exclude hidden packages, filter to relevant matches, then sort and paginate
+      const withoutOther = excludeHidden(allPackages);
       const filtered = filterByRelevance(withoutOther, params.query);
       const sorted = sortMergedPackages(filtered, params.sort, params.query);
       const paged = sorted.slice(params.offset, params.offset + params.limit);
@@ -458,13 +455,15 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
       };
     } else {
       // No search query, non-name sort: use server-side pagination directly.
-      // Type/Other packages (5-10 out of 800+) are filtered client-side, which may
-      // occasionally result in slightly fewer items per page — acceptable trade-off
-      // to avoid fetching all packages on every page load.
-      const result = await executeSingleSearch(combinations[0]);
-      const before = result.packages.length;
-      result.packages = excludeTypeOther(result.packages);
-      result.count -= before - result.packages.length;
+      // Overfetch by the hidden list size to guarantee full pages after filtering.
+      const buffer = HIDDEN_PACKAGES.size;
+      const result = await executeSingleSearch({
+        ...combinations[0],
+        limit: params.limit + buffer,
+      });
+      result.packages = excludeHidden(result.packages);
+      result.count -= buffer;
+      result.packages = result.packages.slice(0, params.limit);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       return result;
     }
@@ -495,10 +494,8 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
 
   const mergedPackages = Array.from(packageMap.values());
 
-  // Exclude internal Type/Other packages, filter to relevant matches, then re-sort.
-  // Note: excludeTypeOther may cause slightly fewer results than params.limit on a page
-  // (5-10 Type/Other packages out of 800+ total — acceptable trade-off).
-  const withoutOther = excludeTypeOther(mergedPackages);
+  // Exclude hidden packages, filter to relevant matches, then re-sort.
+  const withoutOther = excludeHidden(mergedPackages);
   const filteredPackages = filterByRelevance(withoutOther, params.query);
   const sortedPackages = sortMergedPackages(filteredPackages, params.sort, params.query);
 

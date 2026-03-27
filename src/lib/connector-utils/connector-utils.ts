@@ -142,6 +142,15 @@ const CAPITALIZATION_DICTIONARY: Record<string, string> = {
 };
 
 /**
+ * Packages to hide from the connector store.
+ * These are excluded from all search results, pagination, and filter options.
+ */
+export const HIDDEN_PACKAGES = new Set<string>([
+  'choreo',
+  'client.config',
+]);
+
+/**
  * Full package name to display name overrides.
  * These take highest priority and bypass all other name resolution.
  */
@@ -206,6 +215,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   'googleapis.gcalendar': 'Google Calendar',
   'googleapis.gmail': 'Gmail',
   'ibm.ctg': 'IBM CTG',
+  'ibm.ibmmq': 'IBM MQ',
   idetraceprovider: 'IDE Trace Provider',
   ip2whois: 'IP2WHOIS',
   'java.jdbc': 'Java JDBC',
@@ -345,9 +355,7 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
-    types: Array.from(types)
-      .filter((t) => t !== METADATA_FALLBACK)
-      .sort(),
+    types: Array.from(types).sort(),
   };
 }
 

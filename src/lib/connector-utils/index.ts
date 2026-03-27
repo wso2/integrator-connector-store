@@ -9,5 +9,6 @@ export {
   formatDaysSince,
   sortConnectors,
   METADATA_FALLBACK,
+  HIDDEN_PACKAGES,
 } from './connector-utils';
 export type { SortOption } from './connector-utils';

@@ -155,11 +155,14 @@ describe('rest-client', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it('should exclude Type/Other packages from results', async () => {
+    it('should exclude hidden packages from results', async () => {
+      const { HIDDEN_PACKAGES } = await import('../connector-utils');
+      HIDDEN_PACKAGES.add('internal-module');
+
       const mockResponse = createMockApiResponse(
         [
           { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
-          { name: 'internal-module', version: '1.0.0', keywords: [] }, // defaults to Type/Other
+          { name: 'internal-module', version: '1.0.0', keywords: [] },
         ],
         2
       );
@@ -172,6 +175,8 @@ describe('rest-client', () => {
 
       expect(result.packages).toHaveLength(1);
       expect(result.packages[0].name).toBe('visible-connector');
+
+      HIDDEN_PACKAGES.delete('internal-module');
     });
 
     it('should handle API errors with retry', async () => {
