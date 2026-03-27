@@ -105,16 +105,11 @@ describe('rest-client', () => {
 
   describe('searchPackages', () => {
     it('should fetch packages with correct parameters', async () => {
-      // With HIDDEN_PACKAGES non-empty, searchPackages uses client-side pagination:
-      // first call fetches count (limit=1), second fetches all results in a batch.
-      const countResponse = createMockApiResponse([], 1);
-      const batchResponse = createMockApiResponse(
-        [{ name: 'test-connector', version: '1.0.0' }],
-        1
-      );
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
+      const mockResponse = createMockApiResponse([{ name: 'test-connector', version: '1.0.0' }], 1);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
 
       const params: SearchParams = {
         offset: 0,
@@ -124,11 +119,10 @@ describe('rest-client', () => {
 
       const result = await searchPackages(params);
 
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(result.packages).toHaveLength(1);
       expect(result.packages[0].name).toBe('test-connector');
       expect(result.packages[0].totalPullCount).toBe(1000);
-      expect(result.count).toBe(1);
     });
 
     it('should include search query in request', async () => {
@@ -164,24 +158,26 @@ describe('rest-client', () => {
       const { HIDDEN_PACKAGES } = await import('../connector-utils');
       HIDDEN_PACKAGES.add('internal-module');
 
-      const countResponse = createMockApiResponse([], 2);
-      const batchResponse = createMockApiResponse(
-        [
-          { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
-          { name: 'internal-module', version: '1.0.0', keywords: [] },
-        ],
-        2
-      );
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
+      try {
+        const mockResponse = createMockApiResponse(
+          [
+            { name: 'visible-connector', version: '1.0.0', keywords: ['Type/Connector'] },
+            { name: 'internal-module', version: '1.0.0', keywords: [] },
+          ],
+          2
+        );
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse),
+        });
 
-      const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
+        const result = await searchPackages({ offset: 0, limit: 30, sort: 'pullCount-desc' });
 
-      expect(result.packages).toHaveLength(1);
-      expect(result.packages[0].name).toBe('visible-connector');
-
-      HIDDEN_PACKAGES.delete('internal-module');
+        expect(result.packages).toHaveLength(1);
+        expect(result.packages[0].name).toBe('visible-connector');
+      } finally {
+        HIDDEN_PACKAGES.delete('internal-module');
+      }
     });
 
     it('should handle API errors with retry', async () => {
@@ -231,7 +227,6 @@ describe('rest-client', () => {
     });
 
     it('should fetch and cache filters when cache is empty', async () => {
-      // searchPackages uses client-side path: count call (limit=1) + batch call
       mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(createMockApiResponse([], 50)), // count <= 100
@@ -239,15 +234,13 @@ describe('rest-client', () => {
 
       await fetchFiltersProgressively();
 
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
     });
 
     it('should trigger onUpdate for background fetch when count > 100', async () => {
-      // searchPackages uses client-side path: count call then batch call.
-      // The count call returns 150, batch returns 150 packages → client-side
-      // pagination returns count=150 which triggers the background fetch.
-      const packages = Array.from({ length: 150 }, (_, i) => ({
+      // Server-side path returns count from API. count=150 > 100 triggers background fetch.
+      const packages = Array.from({ length: 100 }, (_, i) => ({
         name: `pkg-${i}`,
         version: '1.0.0',
       }));
@@ -260,11 +253,11 @@ describe('rest-client', () => {
       const onUpdate = jest.fn();
       await fetchFiltersProgressively('ballerinax', onUpdate);
 
-      // Give the background async task time to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Flush microtasks to let the background promise chain resolve
+      await new Promise(process.nextTick);
 
       expect(onUpdate).toHaveBeenCalled();
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
-    }, 10000);
+    });
   });
 });
