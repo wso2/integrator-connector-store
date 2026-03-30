@@ -46,6 +46,7 @@ import {
   formatPullCount,
   formatDaysSince,
   getDisplayName,
+  getConnectorDocsUrl,
 } from '@/lib/connector-utils';
 import MarkdownContent from '@/components/MarkdownContent';
 import Footer from '@/components/Footer';
@@ -421,17 +422,29 @@ export default function ConnectorDetailPage() {
           <Divider sx={{ my: 2 }} />
         </>
       )}
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        onClick={() =>
-          window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')
-        }
-        endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
-      >
-        View on Ballerina Central
-      </Button>
+      {getConnectorDocsUrl(details.name) ? (
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={() => window.open(getConnectorDocsUrl(details.name), '_blank')}
+          endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
+        >
+          Documentation
+        </Button>
+      ) : (
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={() =>
+            window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')
+          }
+          endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
+        >
+          View on Ballerina Central
+        </Button>
+      )}
       {miConnector?.documentationUrl && (
         <Button
           fullWidth

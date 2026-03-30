@@ -173,6 +173,178 @@ export const HIDDEN_PACKAGES = new Set<string>([
   'trigger.twilio',
 ]);
 
+const DOCS_BASE = 'https://wso2.github.io/docs-integrator/docs/connectors/catalog';
+
+/**
+ * Package name to documentation URL path (category/package).
+ * Connectors in this map get a "Documentation" button instead of "View on Ballerina Central".
+ */
+const CONNECTOR_DOCS: Record<string, string> = {
+  // AI & Machine Learning
+  'ai.anthropic': `${DOCS_BASE}/ai-ml/ai.anthropic/overview`,
+  'ai.azure': `${DOCS_BASE}/ai-ml/ai.azure/overview`,
+  'ai.deepseek': `${DOCS_BASE}/ai-ml/ai.deepseek/overview`,
+  'ai.devant': `${DOCS_BASE}/ai-ml/ai.devant/overview`,
+  'ai.memory.mssql': `${DOCS_BASE}/ai-ml/ai.memory.mssql/overview`,
+  'ai.mistral': `${DOCS_BASE}/ai-ml/ai.mistral/overview`,
+  'ai.ollama': `${DOCS_BASE}/ai-ml/ai.ollama/overview`,
+  'ai.openai': `${DOCS_BASE}/ai-ml/ai.openai/overview`,
+  'ai.pgvector': `${DOCS_BASE}/ai-ml/ai.pgvector/overview`,
+  'ai.pinecone': `${DOCS_BASE}/ai-ml/ai.pinecone/overview`,
+  'ai.weaviate': `${DOCS_BASE}/ai-ml/ai.weaviate/overview`,
+  'azure.ai.search': `${DOCS_BASE}/ai-ml/azure.ai.search/overview`,
+  'azure.ai.search.index': `${DOCS_BASE}/ai-ml/azure.ai.search.index/overview`,
+  milvus: `${DOCS_BASE}/ai-ml/milvus/overview`,
+  mistral: `${DOCS_BASE}/ai-ml/mistral/overview`,
+  np: `${DOCS_BASE}/ai-ml/np/overview`,
+  openai: `${DOCS_BASE}/ai-ml/openai/overview`,
+  'openai.audio': `${DOCS_BASE}/ai-ml/openai.audio/overview`,
+  'openai.finetunes': `${DOCS_BASE}/ai-ml/openai.finetunes/overview`,
+
+  // Cloud & Infrastructure
+  'aws.lambda': `${DOCS_BASE}/cloud-infrastructure/aws.lambda/overview`,
+  'aws.marketplace.mpe': `${DOCS_BASE}/cloud-infrastructure/aws.marketplace.mpe/overview`,
+  'aws.marketplace.mpm': `${DOCS_BASE}/cloud-infrastructure/aws.marketplace.mpm/overview`,
+  'azure.functions': `${DOCS_BASE}/cloud-infrastructure/azure.functions/overview`,
+  'elastic.elasticcloud': `${DOCS_BASE}/cloud-infrastructure/elastic.elasticcloud/overview`,
+
+  // Communication
+  'aws.sns': `${DOCS_BASE}/communication/aws.sns/overview`,
+  discord: `${DOCS_BASE}/communication/discord/overview`,
+  'googleapis.gmail': `${DOCS_BASE}/communication/googleapis.gmail/overview`,
+  slack: `${DOCS_BASE}/communication/slack/overview`,
+  twilio: `${DOCS_BASE}/communication/twilio/overview`,
+  'zoom.meetings': `${DOCS_BASE}/communication/zoom.meetings/overview`,
+  'zoom.scheduler': `${DOCS_BASE}/communication/zoom.scheduler/overview`,
+
+  // CRM & Sales
+  'hubspot.automation.actions': `${DOCS_BASE}/crm-sales/hubspot.automation.actions/overview`,
+  'hubspot.crm.associations': `${DOCS_BASE}/crm-sales/hubspot.crm.associations/overview`,
+  'hubspot.crm.associations.schema': `${DOCS_BASE}/crm-sales/hubspot.crm.associations.schema/overview`,
+  'hubspot.crm.commerce.carts': `${DOCS_BASE}/crm-sales/hubspot.crm.commerce.carts/overview`,
+  'hubspot.crm.commerce.discounts': `${DOCS_BASE}/crm-sales/hubspot.crm.commerce.discounts/overview`,
+  'hubspot.crm.commerce.orders': `${DOCS_BASE}/crm-sales/hubspot.crm.commerce.orders/overview`,
+  'hubspot.crm.commerce.quotes': `${DOCS_BASE}/crm-sales/hubspot.crm.commerce.quotes/overview`,
+  'hubspot.crm.commerce.taxes': `${DOCS_BASE}/crm-sales/hubspot.crm.commerce.taxes/overview`,
+  'hubspot.crm.engagement.meeting': `${DOCS_BASE}/crm-sales/hubspot.crm.engagement.meeting/overview`,
+  'hubspot.crm.engagement.notes': `${DOCS_BASE}/crm-sales/hubspot.crm.engagement.notes/overview`,
+  'hubspot.crm.engagements.calls': `${DOCS_BASE}/crm-sales/hubspot.crm.engagements.calls/overview`,
+  'hubspot.crm.engagements.communications': `${DOCS_BASE}/crm-sales/hubspot.crm.engagements.communications/overview`,
+  'hubspot.crm.engagements.email': `${DOCS_BASE}/crm-sales/hubspot.crm.engagements.email/overview`,
+  'hubspot.crm.engagements.tasks': `${DOCS_BASE}/crm-sales/hubspot.crm.engagements.tasks/overview`,
+  'hubspot.crm.extensions.timelines': `${DOCS_BASE}/crm-sales/hubspot.crm.extensions.timelines/overview`,
+  'hubspot.crm.extensions.videoconferencing': `${DOCS_BASE}/crm-sales/hubspot.crm.extensions.videoconferencing/overview`,
+  'hubspot.crm.import': `${DOCS_BASE}/crm-sales/hubspot.crm.import/overview`,
+  'hubspot.crm.lists': `${DOCS_BASE}/crm-sales/hubspot.crm.lists/overview`,
+  'hubspot.crm.obj.companies': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.companies/overview`,
+  'hubspot.crm.obj.contacts': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.contacts/overview`,
+  'hubspot.crm.obj.deals': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.deals/overview`,
+  'hubspot.crm.obj.feedback': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.feedback/overview`,
+  'hubspot.crm.obj.leads': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.leads/overview`,
+  'hubspot.crm.obj.lineitems': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.lineitems/overview`,
+  'hubspot.crm.obj.products': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.products/overview`,
+  'hubspot.crm.obj.schemas': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.schemas/overview`,
+  'hubspot.crm.obj.tickets': `${DOCS_BASE}/crm-sales/hubspot.crm.obj.tickets/overview`,
+  'hubspot.crm.owners': `${DOCS_BASE}/crm-sales/hubspot.crm.owners/overview`,
+  'hubspot.crm.pipelines': `${DOCS_BASE}/crm-sales/hubspot.crm.pipelines/overview`,
+  'hubspot.crm.properties': `${DOCS_BASE}/crm-sales/hubspot.crm.properties/overview`,
+  salesforce: `${DOCS_BASE}/crm-sales/salesforce/overview`,
+
+  // Database
+  'aws.redshift': `${DOCS_BASE}/database/aws.redshift/overview`,
+  'aws.redshiftdata': `${DOCS_BASE}/database/aws.redshiftdata/overview`,
+  cdc: `${DOCS_BASE}/database/cdc/overview`,
+  'java.jdbc': `${DOCS_BASE}/database/java.jdbc/overview`,
+  mongodb: `${DOCS_BASE}/database/mongodb/overview`,
+  mssql: `${DOCS_BASE}/database/mssql/overview`,
+  mysql: `${DOCS_BASE}/database/mysql/overview`,
+  oracledb: `${DOCS_BASE}/database/oracledb/overview`,
+  postgresql: `${DOCS_BASE}/database/postgresql/overview`,
+  redis: `${DOCS_BASE}/database/redis/overview`,
+  snowflake: `${DOCS_BASE}/database/snowflake/overview`,
+
+  // Developer Tools
+  amp: `${DOCS_BASE}/developer-tools/amp/overview`,
+  copybook: `${DOCS_BASE}/developer-tools/copybook/overview`,
+  github: `${DOCS_BASE}/developer-tools/github/overview`,
+  idetraceprovider: `${DOCS_BASE}/developer-tools/idetraceprovider/overview`,
+  moesif: `${DOCS_BASE}/developer-tools/moesif/overview`,
+  newrelic: `${DOCS_BASE}/developer-tools/newrelic/overview`,
+  'wso2.apim.catalog': `${DOCS_BASE}/developer-tools/wso2.apim.catalog/overview`,
+
+  // ERP & Business Operations
+  'guidewire.insnow': `${DOCS_BASE}/erp-business/guidewire.insnow/overview`,
+  'ibm.ctg': `${DOCS_BASE}/erp-business/ibm.ctg/overview`,
+  sap: `${DOCS_BASE}/erp-business/sap/overview`,
+  'sap.s4hana.api_sales_inquiry_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_inquiry_srv/overview`,
+  'sap.s4hana.api_sales_order_simulation_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_order_simulation_srv/overview`,
+  'sap.s4hana.api_sales_order_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_order_srv/overview`,
+  'sap.s4hana.api_sales_quotation_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_quotation_srv/overview`,
+  'sap.s4hana.api_salesdistrict_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_salesdistrict_srv/overview`,
+  'sap.s4hana.api_salesorganization_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_salesorganization_srv/overview`,
+  'sap.s4hana.api_sd_incoterms_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sd_incoterms_srv/overview`,
+  'sap.s4hana.api_sd_sa_soldtopartydetn': `${DOCS_BASE}/erp-business/sap.s4hana.api_sd_sa_soldtopartydetn/overview`,
+  'sap.s4hana.ce_salesorder_0001': `${DOCS_BASE}/erp-business/sap.s4hana.ce_salesorder_0001/overview`,
+  'sap.s4hana.salesarea_0001': `${DOCS_BASE}/erp-business/sap.s4hana.salesarea_0001/overview`,
+
+  // Finance & Accounting
+  'paypal.invoices': `${DOCS_BASE}/finance-accounting/paypal.invoices/overview`,
+  'paypal.orders': `${DOCS_BASE}/finance-accounting/paypal.orders/overview`,
+  'paypal.payments': `${DOCS_BASE}/finance-accounting/paypal.payments/overview`,
+  'paypal.subscriptions': `${DOCS_BASE}/finance-accounting/paypal.subscriptions/overview`,
+  stripe: `${DOCS_BASE}/finance-accounting/stripe/overview`,
+
+  // HRMS
+  peoplehr: `${DOCS_BASE}/hrms/peoplehr/overview`,
+
+  // Marketing & Social Media
+  'hubspot.marketing.campaigns': `${DOCS_BASE}/marketing-social/hubspot.marketing.campaigns/overview`,
+  'hubspot.marketing.emails': `${DOCS_BASE}/marketing-social/hubspot.marketing.emails/overview`,
+  'hubspot.marketing.events': `${DOCS_BASE}/marketing-social/hubspot.marketing.events/overview`,
+  'hubspot.marketing.forms': `${DOCS_BASE}/marketing-social/hubspot.marketing.forms/overview`,
+  'hubspot.marketing.subscriptions': `${DOCS_BASE}/marketing-social/hubspot.marketing.subscriptions/overview`,
+  'hubspot.marketing.transactional': `${DOCS_BASE}/marketing-social/hubspot.marketing.transactional/overview`,
+  'mailchimp.marketing': `${DOCS_BASE}/marketing-social/mailchimp.marketing/overview`,
+  'mailchimp.transactional': `${DOCS_BASE}/marketing-social/mailchimp.transactional/overview`,
+  'salesforce.marketingcloud': `${DOCS_BASE}/marketing-social/salesforce.marketingcloud/overview`,
+  twitter: `${DOCS_BASE}/marketing-social/twitter/overview`,
+
+  // Messaging
+  asb: `${DOCS_BASE}/messaging/asb/overview`,
+  'aws.sqs': `${DOCS_BASE}/messaging/aws.sqs/overview`,
+  'confluent.cavroserdes': `${DOCS_BASE}/messaging/confluent.cavroserdes/overview`,
+  'confluent.cregistry': `${DOCS_BASE}/messaging/confluent.cregistry/overview`,
+  'gcloud.pubsub': `${DOCS_BASE}/messaging/gcloud.pubsub/overview`,
+  'ibm.ibmmq': `${DOCS_BASE}/messaging/ibm.ibmmq/overview`,
+  'java.jms': `${DOCS_BASE}/messaging/java.jms/overview`,
+  kafka: `${DOCS_BASE}/messaging/kafka/overview`,
+  nats: `${DOCS_BASE}/messaging/nats/overview`,
+  rabbitmq: `${DOCS_BASE}/messaging/rabbitmq/overview`,
+  solace: `${DOCS_BASE}/messaging/solace/overview`,
+
+  // Productivity & Collaboration
+  asana: `${DOCS_BASE}/productivity-collaboration/asana/overview`,
+  candid: `${DOCS_BASE}/productivity-collaboration/candid/overview`,
+  'docusign.dsadmin': `${DOCS_BASE}/productivity-collaboration/docusign.dsadmin/overview`,
+  'googleapis.calendar': `${DOCS_BASE}/productivity-collaboration/googleapis.calendar/overview`,
+  'googleapis.gcalendar': `${DOCS_BASE}/productivity-collaboration/googleapis.gcalendar/overview`,
+  'googleapis.sheets': `${DOCS_BASE}/productivity-collaboration/googleapis.sheets/overview`,
+  jira: `${DOCS_BASE}/productivity-collaboration/jira/overview`,
+  smartsheet: `${DOCS_BASE}/productivity-collaboration/smartsheet/overview`,
+  trello: `${DOCS_BASE}/productivity-collaboration/trello/overview`,
+
+  // Security & Identity
+  'aws.secretmanager': `${DOCS_BASE}/security-identity/aws.secretmanager/overview`,
+  scim: `${DOCS_BASE}/security-identity/scim/overview`,
+};
+
+/**
+ * Returns the documentation URL for a connector, or undefined if none exists.
+ */
+export function getConnectorDocsUrl(packageName: string): string | undefined {
+  return CONNECTOR_DOCS[packageName];
+}
+
 /**
  * Full package name to display name overrides.
  * These take highest priority and bypass all other name resolution.
