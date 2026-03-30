@@ -427,7 +427,9 @@ export default function ConnectorDetailPage() {
           fullWidth
           variant="contained"
           color="primary"
-          onClick={() => window.open(getConnectorDocsUrl(details.name), '_blank')}
+          onClick={() =>
+            window.open(getConnectorDocsUrl(details.name), '_blank', 'noopener,noreferrer')
+          }
           endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
         >
           Documentation
@@ -438,7 +440,11 @@ export default function ConnectorDetailPage() {
           variant="contained"
           color="primary"
           onClick={() =>
-            window.open(new URL(details.URL, 'https://central.ballerina.io').toString(), '_blank')
+            window.open(
+              new URL(details.URL, 'https://central.ballerina.io').toString(),
+              '_blank',
+              'noopener,noreferrer'
+            )
           }
           endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
         >
@@ -450,7 +456,7 @@ export default function ConnectorDetailPage() {
           fullWidth
           variant="outlined"
           color="primary"
-          onClick={() => window.open(miConnector.documentationUrl, '_blank')}
+          onClick={() => window.open(miConnector.documentationUrl, '_blank', 'noopener,noreferrer')}
           endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
           sx={{ mt: 1.5 }}
         >
