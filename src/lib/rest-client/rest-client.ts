@@ -465,7 +465,7 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
         limit: params.limit + buffer,
       });
       result.packages = excludeHidden(result.packages);
-      result.count -= HIDDEN_PACKAGES.size;
+      result.count = Math.max(0, result.count - HIDDEN_PACKAGES.size);
       result.packages = result.packages.slice(0, params.limit);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       result.limit = params.limit;

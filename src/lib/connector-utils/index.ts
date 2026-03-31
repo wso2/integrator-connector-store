@@ -10,5 +10,6 @@ export {
   sortConnectors,
   METADATA_FALLBACK,
   HIDDEN_PACKAGES,
+  getConnectorDocsUrl,
 } from './connector-utils';
 export type { SortOption } from './connector-utils';
