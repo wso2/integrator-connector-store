@@ -543,6 +543,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   'workday.businessprocess': 'Workday Business Process',
   'workday.coreaccounting': 'Workday Core Accounting',
   wordpress: 'WordPress',
+  worldbank: 'World Bank',
   worldtimeapi: 'World Time API',
   'wso2.apim.catalog': 'WSO2 API Manager Catalog',
   'wso2.controlplane': 'WSO2 Control Plane',
