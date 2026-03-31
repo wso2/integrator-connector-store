@@ -458,14 +458,23 @@ export async function searchPackages(params: SearchParams): Promise<SearchRespon
       // No search, non-name sort: use server-side pagination for performance.
       // Hidden packages (~20 out of 800+) are filtered client-side after fetching.
       // Overfetch by the hidden list size to compensate for any removed in this page.
-      // Total count is adjusted globally by HIDDEN_PACKAGES.size for consistent pagination.
+      // Total count is adjusted by actual hidden packages found, not the full set size.
       const buffer = HIDDEN_PACKAGES.size;
+      const fetchLimit = params.limit + buffer;
       const result = await executeSingleSearch({
         ...combinations[0],
-        limit: params.limit + buffer,
+        limit: fetchLimit,
       });
+      const beforeCount = result.packages.length;
       result.packages = excludeHidden(result.packages);
-      result.count = Math.max(0, result.count - HIDDEN_PACKAGES.size);
+      const hiddenInPage = beforeCount - result.packages.length;
+      // If we fetched all results, we know the exact hidden count.
+      // Otherwise, estimate proportionally from the page sample.
+      const totalHidden =
+        beforeCount === 0 || result.count <= fetchLimit
+          ? hiddenInPage
+          : Math.round((hiddenInPage / beforeCount) * result.count);
+      result.count = Math.max(0, result.count - totalHidden);
       result.packages = result.packages.slice(0, params.limit);
       result.packages = sortMergedPackages(result.packages, params.sort, params.query);
       result.limit = params.limit;
