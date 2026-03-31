@@ -227,6 +227,19 @@ function buildSolrQuery(
   }
 
   /**
+   * Build keyword filter clauses from a value that may contain spaces and &.
+   * Solr tokenizes keyword fields on spaces, so "CRM & Sales" must be sent as
+   * multiple keyword: clauses (one per word, excluding &) to match correctly.
+   */
+  function buildKeywordClauses(prefix: string, value: string): string[] {
+    const words = value
+      .split(/[\s&]+/)
+      .filter(Boolean)
+      .map((w) => escapeLuceneValue(w));
+    return words.map((w) => `keyword:${prefix}${w}`);
+  }
+
+  /**
    * Escape Solr query special characters
    * Escapes: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
    * Also handles leading/trailing whitespace
@@ -244,24 +257,21 @@ function buildSolrQuery(
   // Add area filter (required with AND operator)
   if (params.areas && params.areas.length > 0) {
     params.areas.forEach((area) => {
-      const escaped = escapeLuceneValue(area);
-      filters.push(`keyword:Area/${escaped}`);
+      filters.push(...buildKeywordClauses('Area/', area));
     });
   }
 
   // Add vendor filter (required with AND operator)
   if (params.vendors && params.vendors.length > 0) {
     params.vendors.forEach((vendor) => {
-      const escaped = escapeLuceneValue(vendor);
-      filters.push(`keyword:Vendor/${escaped}`);
+      filters.push(...buildKeywordClauses('Vendor/', vendor));
     });
   }
 
   // Add type filter (required with AND operator)
   if (params.types && params.types.length > 0) {
     params.types.forEach((type) => {
-      const escaped = escapeLuceneValue(type);
-      filters.push(`keyword:Type/${escaped}`);
+      filters.push(...buildKeywordClauses('Type/', type));
     });
   }
 
