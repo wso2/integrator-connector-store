@@ -2,6 +2,7 @@
   "name": "connector-store",
   "version": "1.0.0",
   "private": true,
+  "homepage": ".",
   "description": "WSO2 Integrator Connector Store - A web application for browsing and discovering Ballerina connectors",
   "scripts": {
     "dev": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",

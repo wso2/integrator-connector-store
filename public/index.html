@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Detect base path at runtime so the same build works at "/" (staging)
+      // and "/integration-platform/connectors/" (production).
+      (function () {
+        var path = window.location.pathname;
+        var base = path.replace(/\/connector\/.*$/, '');
+        if (base.charAt(base.length - 1) !== '/') base += '/';
+        document.write('<base href="' + base + '"/>');
+        window.__BASE_PATH__ = base.length > 1 ? base.replace(/\/$/, '') : '';
+      })();
+    </script>
     <meta charset="utf-8" />
     <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -33,7 +44,7 @@
       property="og:description"
       content="Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more."
     />
-    <meta property="og:image" content="/images/og-image.png" />
+    <meta property="og:image" content="%PUBLIC_URL%/images/og-image.png" />
     <meta property="og:site_name" content="WSO2 Integrator Connector Store" />
     <meta property="og:locale" content="en_US" />
 
@@ -48,7 +59,7 @@
       name="twitter:description"
       content="Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more."
     />
-    <meta name="twitter:image" content="/images/og-image.png" />
+    <meta name="twitter:image" content="%PUBLIC_URL%/images/og-image.png" />
     <meta name="twitter:creator" content="@wso2" />
 
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />

@@ -22,13 +22,22 @@ import { OxygenUIThemeProvider, extendTheme, OxygenTheme } from '@wso2/oxygen-ui
 import HomePage from './pages/HomePage';
 import ConnectorDetailPage from './pages/ConnectorDetailPage';
 
+declare global {
+  interface Window {
+    __BASE_PATH__?: string;
+  }
+}
+
 // Create a custom theme by extending the base OxygenTheme
 const theme = extendTheme(OxygenTheme);
 
 function App() {
   return (
     <OxygenUIThemeProvider themes={[{ key: 'default', label: 'Default', theme }]}>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Router
+        basename={window.__BASE_PATH__ || ''}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/connector/:org/:name" element={<ConnectorDetailPage />} />
