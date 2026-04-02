@@ -46,8 +46,8 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
                   component="img"
                   src={
                     effectiveMode === 'dark'
-                      ? '/images/WSO2-Integrator-white.svg'
-                      : '/images/WSO2-Integrator-black.svg'
+                      ? `${window.__BASE_PATH__ || ''}/images/WSO2-Integrator-white.svg`
+                      : `${window.__BASE_PATH__ || ''}/images/WSO2-Integrator-black.svg`
                   }
                   alt="WSO2 Integrator"
                   sx={{

@@ -191,7 +191,7 @@ export default function ConnectorDetailPage() {
       packageDetails.summary ||
       `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
     const url = `${window.location.origin}/connector/${org}/${name}/${version || packageDetails.version}`;
-    const imageUrl = `${window.location.origin}/images/og-image.png`;
+    const imageUrl = `${window.location.origin}${window.__BASE_PATH__ || ''}/images/og-image.png`;
 
     // Update document title
     document.title = pageTitle;
