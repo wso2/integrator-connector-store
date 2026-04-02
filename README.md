@@ -184,7 +184,7 @@ GENERATE_SITEMAP=true npm run build
 # Or generate sitemap separately
 npm run generate-sitemap
 
-# Set production domain (optional, defaults to https://example.com)
+# Override production domain if needed (defaults to https://wso2.com/integration-platform/connectors)
 SITE_URL=https://yourdomain.com npm run generate-sitemap
 ```
 

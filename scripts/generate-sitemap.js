@@ -25,9 +25,7 @@ if (typeof fetch === 'undefined') {
 }
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
-// Use environment variable or default placeholder
-// Set this via: SITE_URL=https://yourdomain.com npm run generate-sitemap
-const BASE_URL = process.env.SITE_URL || 'https://example.com'; // CHANGE THIS to your production domain
+const BASE_URL = process.env.SITE_URL || 'https://wso2.com/integration-platform/connectors';
 
 async function fetchAllPackages() {
   const batchSize = 100;
@@ -137,12 +135,8 @@ function generateSitemap(packages) {
 async function main() {
   try {
     // Validate BASE_URL
-    if (BASE_URL === 'https://example.com') {
-      console.warn('⚠️  WARNING: Using placeholder domain "https://example.com"');
-      console.warn(
-        '⚠️  Set your domain via: SITE_URL=https://yourdomain.com npm run generate-sitemap'
-      );
-      console.warn('');
+    if (process.env.SITE_URL) {
+      console.log(`Using custom SITE_URL: ${BASE_URL}`);
     }
 
     // Fetch all packages
