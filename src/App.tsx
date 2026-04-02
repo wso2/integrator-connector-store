@@ -21,6 +21,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { OxygenUIThemeProvider, extendTheme, OxygenTheme } from '@wso2/oxygen-ui';
 import HomePage from './pages/HomePage';
 import ConnectorDetailPage from './pages/ConnectorDetailPage';
+import SitemapPage from './pages/SitemapPage';
 
 declare global {
   interface Window {
@@ -39,6 +40,7 @@ function App() {
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <Routes>
+          <Route path="/sitemap.xml" element={<SitemapPage />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/connector/:org/:name" element={<ConnectorDetailPage />} />
           <Route path="/connector/:org/:name/:version" element={<ConnectorDetailPage />} />
