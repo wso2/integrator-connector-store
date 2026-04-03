@@ -636,7 +636,8 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
     types.add(metadata.type);
   });
 
-  // Remove "Other" from types — it's a client-side fallback, not an API keyword
+  // Hide "Other" from the Type filter — connectors with Type/Other or no Type tag
+  // should still appear in results but not be filterable by type
   types.delete(METADATA_FALLBACK);
 
   return {

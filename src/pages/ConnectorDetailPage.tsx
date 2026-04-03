@@ -243,7 +243,7 @@ export default function ConnectorDetailPage() {
 
     // Cleanup: restore default title when component unmounts
     return () => {
-      document.title = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
+      document.title = 'WSO2 Integrator Connector Store';
     };
   }, [packageDetails, displayName, org, name, version]);
 
