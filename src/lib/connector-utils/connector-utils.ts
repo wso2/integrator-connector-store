@@ -636,6 +636,9 @@ export function extractFilterOptions(connectors: BallerinaPackage[]): FilterOpti
     types.add(metadata.type);
   });
 
+  // Remove "Other" from types — it's a client-side fallback, not an API keyword
+  types.delete(METADATA_FALLBACK);
+
   return {
     areas: Array.from(areas).sort(),
     vendors: Array.from(vendors).sort(),
