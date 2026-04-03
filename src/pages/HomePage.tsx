@@ -412,7 +412,7 @@ export default function HomePage() {
 
   // Update meta tags dynamically based on search/filters
   useEffect(() => {
-    let pageTitle = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
+    let pageTitle = 'WSO2 Integrator Connector Store';
     let description =
       'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
 
