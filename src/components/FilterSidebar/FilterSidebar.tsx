@@ -28,7 +28,7 @@ import {
   AccordionDetails,
   Paper,
 } from '@wso2/oxygen-ui';
-import { ChevronDown } from '@wso2/oxygen-ui-icons-react';
+import { ChevronRight } from '@wso2/oxygen-ui-icons-react';
 import { FilterOptions } from '@/types/connector';
 import SearchBar from '@/components/SearchBar';
 
@@ -99,7 +99,7 @@ export default function FilterSidebar({
           }}
         >
           <AccordionSummary
-            expandIcon={<ChevronDown size={16} />}
+            expandIcon={<ChevronRight size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
                 transition: 'transform 0.2s',
@@ -180,7 +180,7 @@ export default function FilterSidebar({
           }}
         >
           <AccordionSummary
-            expandIcon={<ChevronDown size={16} />}
+            expandIcon={<ChevronRight size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
                 transition: 'transform 0.2s',
@@ -261,7 +261,7 @@ export default function FilterSidebar({
           }}
         >
           <AccordionSummary
-            expandIcon={<ChevronDown size={16} />}
+            expandIcon={<ChevronRight size={16} />}
             sx={{
               '& .MuiAccordionSummary-expandIconWrapper': {
                 transition: 'transform 0.2s',

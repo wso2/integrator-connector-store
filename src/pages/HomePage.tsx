@@ -412,16 +412,16 @@ export default function HomePage() {
 
   // Update meta tags dynamically based on search/filters
   useEffect(() => {
-    let pageTitle = 'WSO2 Integrator Connector Store - Discover Ballerina & MI Connectors';
+    let pageTitle = 'WSO2 Integration Platform - Connectors and Pre-built Integrations';
     let description =
       'Discover and integrate with 600+ pre-built Ballerina & MI connectors for popular services and platforms. Browse connectors for AWS, Azure, Google Cloud, Salesforce, Twilio, and more.';
 
     if (debouncedQuery) {
-      pageTitle = `Search: "${debouncedQuery}" - WSO2 Integrator Connector Store`;
+      pageTitle = `Search: "${debouncedQuery}" - WSO2 Integration Platform - Connectors and Pre-built Integrations`;
       description = `Search results for "${debouncedQuery}" - Find Ballerina connectors matching your query.`;
     } else if (selectedAreas.length > 0 || selectedVendors.length > 0 || selectedTypes.length > 0) {
       const filters = [...selectedAreas, ...selectedVendors, ...selectedTypes];
-      pageTitle = `${filters.join(', ')} Connectors - WSO2 Integrator Connector Store`;
+      pageTitle = `${filters.join(', ')} Connectors - WSO2 Integration Platform - Connectors and Pre-built Integrations`;
       description = `Browse ${filters.join(', ')} connectors for Ballerina integration.`;
     }
 
