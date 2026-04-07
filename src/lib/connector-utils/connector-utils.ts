@@ -484,6 +484,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   openair: 'OpenAir',
   openfigi: 'OpenFIGI',
   openweathermap: 'OpenWeatherMap',
+  oracledb: 'Oracle DB',
   'oracledb.driver': 'OracleDB Driver',
   orbitcrm: 'Orbit CRM',
   pagerduty: 'PagerDuty',
