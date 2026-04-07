@@ -64,7 +64,9 @@ export async function fetchMIConnector(connectorName: string): Promise<MIConnect
 
     // Fall back to id suffix match if exact name match fails
     if (!matchingConnector) {
-      matchingConnector = connectors.find((c) => c.id.toLowerCase().endsWith(`-${trimmedSearchName}`));
+      matchingConnector = connectors.find((c) =>
+        c.id.toLowerCase().endsWith(`-${trimmedSearchName}`)
+      );
     }
 
     // Last resort: broad substring search

@@ -52,7 +52,7 @@ export default function Hero({ effectiveMode }: HeroProps) {
             }}
           >
             <Typography variant="h1" fontWeight="bold">
-              Connector Store
+              Connectors
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
               Discover pre-built connectors and accelerate integration across SaaS, legacy systems,
