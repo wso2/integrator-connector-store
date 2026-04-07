@@ -19,7 +19,6 @@
 import React from 'react';
 import { Box, ColorSchemeToggle, AppBar, Container, Toolbar } from '@wso2/oxygen-ui';
 
-
 interface WSO2HeaderProps {
   effectiveMode: 'light' | 'dark';
 }
@@ -40,7 +39,10 @@ export default function WSO2Header({ effectiveMode }: WSO2HeaderProps) {
         <Toolbar disableGutters sx={{ height: 64 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             {/* WSO2 Logo */}
-            <a href="https://wso2.com/integration-platform/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <a
+              href="https://wso2.com/integration-platform/"
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
                 <Box
                   component="img"
