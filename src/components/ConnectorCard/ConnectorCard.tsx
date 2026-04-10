@@ -16,7 +16,7 @@
  under the License.
 */
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Chip, Box, Divider, ButtonBase } from '@wso2/oxygen-ui';
 import { Download, Clock } from '@wso2/oxygen-ui-icons-react';
@@ -114,8 +114,24 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
     return connector.URL.replace(/^packages\//, '/connector/').replace(/\/[\d.]+$/, '/latest');
   }, [connector.name, connector.URL]);
 
-  // Check if summary is long enough to need truncation
-  const needsTruncation = connector.summary.length > 120;
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      setNeedsTruncation(el.scrollHeight > el.clientHeight);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [connector.summary]);
 
   return (
     <Card
@@ -235,15 +251,15 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
                 }}
               >
                 <Box
+                  ref={summaryRef}
                   sx={{
-                    ...(!isExpanded &&
-                      needsTruncation && {
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }),
+                    ...(!isExpanded && {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }),
                   }}
                 >
                   <ReactMarkdown

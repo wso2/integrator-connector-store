@@ -186,7 +186,7 @@ export default function ConnectorDetailPage() {
   useEffect(() => {
     if (!packageDetails) return;
 
-    const pageTitle = `${displayName} - WSO2 Integration Platform - Connectors and Pre-built Integrations`;
+    const pageTitle = `${displayName} - WSO2 Integration Platform Connectors and Pre-built Integrations`;
     const description =
       packageDetails.summary ||
       `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
@@ -243,7 +243,7 @@ export default function ConnectorDetailPage() {
 
     // Cleanup: restore default title when component unmounts
     return () => {
-      document.title = 'WSO2 Integration Platform - Connectors and Pre-built Integrations';
+      document.title = 'WSO2 Integration Platform Connectors and Pre-built Integrations';
     };
   }, [packageDetails, displayName, org, name, version]);
 
@@ -559,13 +559,32 @@ export default function ConnectorDetailPage() {
                 </Card>
               )}
 
-              <Box sx={{ minHeight: '100vh' }}>
+              <Box>
                 {overview && (
                   <Box component="section" sx={{ mb: 6 }}>
                     <MarkdownContent content={overview} effectiveMode={effectiveMode} />
                   </Box>
                 )}
               </Box>
+
+              {/* Trademark Disclaimer */}
+              <Divider sx={{ mt: 3 }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  py: 3,
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                  lineHeight: 1.6,
+                  maxWidth: 900,
+                }}
+              >
+                Third-party product names, logos, and trademarks referenced on this page are the
+                property of their respective owners. Their use here is solely for identifying
+                compatible services and integrations and does not imply affiliation with,
+                sponsorship by, or endorsement from the respective trademark holders.
+              </Typography>
             </Box>
 
             {/* Sticky Sidebar */}
@@ -593,29 +612,6 @@ export default function ConnectorDetailPage() {
               </Box>
             )}
           </Box>
-        </Container>
-      )}
-
-      {/* Trademark Disclaimer */}
-      {packageDetails && (
-        <Container maxWidth="xl">
-          <Divider sx={{ mt: 6 }} />
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              py: 3,
-              color: 'text.secondary',
-              fontStyle: 'italic',
-              lineHeight: 1.6,
-              maxWidth: 900,
-            }}
-          >
-            Third-party product names, logos, and trademarks referenced on this page are the
-            property of their respective owners. Their use here is solely for identifying compatible
-            services and integrations and does not imply affiliation with, sponsorship by, or
-            endorsement from the respective trademark holders.
-          </Typography>
         </Container>
       )}
 
