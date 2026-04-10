@@ -559,13 +559,32 @@ export default function ConnectorDetailPage() {
                 </Card>
               )}
 
-              <Box sx={{ minHeight: '100vh' }}>
+              <Box>
                 {overview && (
                   <Box component="section" sx={{ mb: 6 }}>
                     <MarkdownContent content={overview} effectiveMode={effectiveMode} />
                   </Box>
                 )}
               </Box>
+
+              {/* Trademark Disclaimer */}
+              <Divider sx={{ mt: 3 }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  py: 3,
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                  lineHeight: 1.6,
+                  maxWidth: 900,
+                }}
+              >
+                Third-party product names, logos, and trademarks referenced on this page are the
+                property of their respective owners. Their use here is solely for identifying
+                compatible services and integrations and does not imply affiliation with, sponsorship
+                by, or endorsement from the respective trademark holders.
+              </Typography>
             </Box>
 
             {/* Sticky Sidebar */}
@@ -596,28 +615,6 @@ export default function ConnectorDetailPage() {
         </Container>
       )}
 
-      {/* Trademark Disclaimer */}
-      {packageDetails && (
-        <Container maxWidth="xl">
-          <Divider sx={{ mt: 6 }} />
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              py: 3,
-              color: 'text.secondary',
-              fontStyle: 'italic',
-              lineHeight: 1.6,
-              maxWidth: 900,
-            }}
-          >
-            Third-party product names, logos, and trademarks referenced on this page are the
-            property of their respective owners. Their use here is solely for identifying compatible
-            services and integrations and does not imply affiliation with, sponsorship by, or
-            endorsement from the respective trademark holders.
-          </Typography>
-        </Container>
-      )}
 
       {/* Footer */}
       <Footer effectiveMode={effectiveMode} />
