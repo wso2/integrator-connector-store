@@ -582,8 +582,8 @@ export default function ConnectorDetailPage() {
               >
                 Third-party product names, logos, and trademarks referenced on this page are the
                 property of their respective owners. Their use here is solely for identifying
-                compatible services and integrations and does not imply affiliation with, sponsorship
-                by, or endorsement from the respective trademark holders.
+                compatible services and integrations and does not imply affiliation with,
+                sponsorship by, or endorsement from the respective trademark holders.
               </Typography>
             </Box>
 
@@ -614,7 +614,6 @@ export default function ConnectorDetailPage() {
           </Box>
         </Container>
       )}
-
 
       {/* Footer */}
       <Footer effectiveMode={effectiveMode} />
