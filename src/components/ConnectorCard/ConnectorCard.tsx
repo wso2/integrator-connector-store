@@ -119,9 +119,18 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
 
   useEffect(() => {
     const el = summaryRef.current;
-    if (el) {
+    if (!el) return;
+
+    const measure = () => {
       setNeedsTruncation(el.scrollHeight > el.clientHeight);
-    }
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+
+    return () => observer.disconnect();
   }, [connector.summary]);
 
   return (
