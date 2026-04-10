@@ -186,7 +186,7 @@ export default function ConnectorDetailPage() {
   useEffect(() => {
     if (!packageDetails) return;
 
-    const pageTitle = `${displayName} - WSO2 Integration Platform - Connectors and Pre-built Integrations`;
+    const pageTitle = `${displayName} - WSO2 Integration Platform Connectors and Pre-built Integrations`;
     const description =
       packageDetails.summary ||
       `${displayName} connector for Ballerina - Integrate with ${displayName} seamlessly.`;
@@ -243,7 +243,7 @@ export default function ConnectorDetailPage() {
 
     // Cleanup: restore default title when component unmounts
     return () => {
-      document.title = 'WSO2 Integration Platform - Connectors and Pre-built Integrations';
+      document.title = 'WSO2 Integration Platform Connectors and Pre-built Integrations';
     };
   }, [packageDetails, displayName, org, name, version]);
 
