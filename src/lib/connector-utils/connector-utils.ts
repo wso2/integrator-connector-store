@@ -212,6 +212,7 @@ const CONNECTOR_DOCS: Record<string, string> = {
   'aws.sns': `${DOCS_BASE}/communication/aws.sns/overview`,
   discord: `${DOCS_BASE}/communication/discord/overview`,
   'googleapis.gmail': `${DOCS_BASE}/communication/googleapis.gmail/overview`,
+  intercom: `${DOCS_BASE}/communication/intercom/overview`,
   slack: `${DOCS_BASE}/communication/slack/overview`,
   twilio: `${DOCS_BASE}/communication/twilio/overview`,
   'zoom.meetings': `${DOCS_BASE}/communication/zoom.meetings/overview`,
