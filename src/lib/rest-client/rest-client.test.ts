@@ -16,7 +16,12 @@
  under the License.
 */
 
-import { searchPackages, fetchFiltersProgressively, SearchParams } from './rest-client';
+import {
+  searchPackages,
+  fetchFiltersProgressively,
+  fetchLatestConnectorEntries,
+  SearchParams,
+} from './rest-client';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
@@ -258,6 +263,60 @@ describe('rest-client', () => {
 
       expect(onUpdate).toHaveBeenCalled();
       expect(storageMock.setItem).toHaveBeenCalledWith(FILTER_CACHE_KEY, expect.any(String));
+    });
+  });
+
+  describe('fetchLatestConnectorEntries', () => {
+    it('should return one latest entry per connector URL', async () => {
+      const countResponse = createMockApiResponse([], 3, 0, 1);
+      const batchResponse = {
+        packages: [
+          {
+            name: 'twilio',
+            version: '2.0.0',
+            URL: 'packages/ballerinax/twilio/2.0.0',
+            summary: 'Summary for twilio',
+            keywords: ['Type/Connector'],
+            icon: 'https://example.com/icon.png',
+            createdDate: '2026-01-15T00:00:00Z',
+            pullCount: 1000,
+          },
+          {
+            name: 'twilio',
+            version: '1.0.0',
+            URL: 'packages/ballerinax/twilio/1.0.0',
+            summary: 'Summary for twilio',
+            keywords: ['Type/Connector'],
+            icon: 'https://example.com/icon.png',
+            createdDate: '2025-01-15T00:00:00Z',
+            pullCount: 900,
+          },
+          {
+            name: 'slack',
+            version: '3.0.0',
+            URL: 'packages/ballerinax/slack/3.0.0',
+            summary: 'Summary for slack',
+            keywords: ['Type/Connector'],
+            icon: 'https://example.com/icon.png',
+            createdDate: '2026-02-01T00:00:00Z',
+            pullCount: 1200,
+          },
+        ],
+        count: 3,
+        offset: 0,
+        limit: 500,
+      };
+
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(countResponse) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(batchResponse) });
+
+      const result = await fetchLatestConnectorEntries();
+
+      expect(result).toEqual([
+        { org: 'ballerinax', packageName: 'twilio', createdDate: '2026-01-15T00:00:00Z' },
+        { org: 'ballerinax', packageName: 'slack', createdDate: '2026-02-01T00:00:00Z' },
+      ]);
     });
   });
 });

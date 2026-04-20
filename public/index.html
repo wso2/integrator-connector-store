@@ -6,7 +6,15 @@
       // and "/integration-platform/connectors/" (production).
       (function () {
         var path = window.location.pathname;
-        var base = path.replace(/\/connector\/.*$/, '');
+        var base = path;
+
+        if (/\/connector\/.*$/.test(path)) {
+          base = path.replace(/\/connector\/.*$/, '');
+        } else if (/\/sitemap\.xml$/.test(path)) {
+          base = path.replace(/\/sitemap\.xml$/, '');
+        }
+
+        if (!base) base = '/';
         if (base.charAt(base.length - 1) !== '/') base += '/';
         document.write('<base href="' + base + '"/>');
         window.__BASE_PATH__ = base.length > 1 ? base.replace(/\/$/, '') : '';

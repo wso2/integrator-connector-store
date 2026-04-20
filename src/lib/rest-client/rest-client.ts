@@ -64,6 +64,12 @@ export interface SearchResponse {
   limit: number;
 }
 
+export interface LatestConnectorEntry {
+  org: string;
+  packageName: string;
+  createdDate: string;
+}
+
 /**
  * Internal API response structure (before mapping)
  */
@@ -393,6 +399,23 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
   });
 }
 
+function extractConnectorIdentity(
+  pkg: Pick<BallerinaPackage, 'URL' | 'name'>
+): { org: string; packageName: string } | null {
+  const urlPath = pkg.URL.replace(/^packages\//, '').replace(/^\//, '');
+  const urlParts = urlPath.split('/').filter(Boolean);
+
+  if (urlParts.length >= 2) {
+    return { org: urlParts[0], packageName: urlParts[1] };
+  }
+
+  if (pkg.name) {
+    return { org: 'ballerinax', packageName: pkg.name };
+  }
+
+  return null;
+}
+
 /**
  * Filter packages to only those whose name or keywords contain the search query.
  * The API wildcard search matches across all fields (including summary), which
@@ -622,6 +645,63 @@ export async function fetchAllPackagesForFilters(
   cacheFilters(filters);
 
   return filters;
+}
+
+/**
+ * Fetch the latest connector pages for sitemap generation.
+ * Multiple package versions collapse into a single /latest URL per connector.
+ */
+export async function fetchLatestConnectorEntries(
+  orgName: string = 'ballerinax'
+): Promise<LatestConnectorEntry[]> {
+  const countResult = await executeSingleSearch({
+    offset: 0,
+    limit: 1,
+    sort: 'date-desc',
+    orgName,
+  });
+
+  if (countResult.count === 0) {
+    return [];
+  }
+
+  const batchSize = 500;
+  const batchPromises = [];
+
+  for (let offset = 0; offset < countResult.count; offset += batchSize) {
+    batchPromises.push(
+      executeSingleSearch({
+        offset,
+        limit: batchSize,
+        sort: 'date-desc',
+        orgName,
+      })
+    );
+  }
+
+  const batchResults = await Promise.all(batchPromises);
+  const latestEntries = new Map<string, LatestConnectorEntry>();
+
+  batchResults
+    .flatMap((result) => result.packages)
+    .filter((pkg) => !HIDDEN_PACKAGES.has(pkg.name))
+    .forEach((pkg) => {
+      const identity = extractConnectorIdentity(pkg);
+      if (!identity) {
+        return;
+      }
+
+      const key = `${identity.org}/${identity.packageName}`;
+      if (!latestEntries.has(key)) {
+        latestEntries.set(key, {
+          org: identity.org,
+          packageName: identity.packageName,
+          createdDate: pkg.createdDate,
+        });
+      }
+    });
+
+  return Array.from(latestEntries.values());
 }
 
 /**

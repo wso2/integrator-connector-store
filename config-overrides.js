@@ -1,6 +1,6 @@
 const path = require('path');
 
-module.exports = function override(config) {
+function overrideWebpack(config) {
   config.resolve.alias = {
     ...config.resolve.alias,
     '@': path.resolve(__dirname, 'src'),
@@ -27,4 +27,22 @@ module.exports = function override(config) {
   ];
 
   return config;
+}
+
+function overrideDevServer(configFunction) {
+  return function configureDevServer(proxy, allowedHost) {
+    const config = configFunction(proxy, allowedHost);
+
+    config.historyApiFallback = {
+      ...config.historyApiFallback,
+      disableDotRule: true,
+    };
+
+    return config;
+  };
+}
+
+module.exports = {
+  webpack: overrideWebpack,
+  devServer: overrideDevServer,
 };
