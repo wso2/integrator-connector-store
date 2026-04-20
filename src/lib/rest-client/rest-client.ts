@@ -402,7 +402,8 @@ async function executeSingleSearch(params: SearchParams): Promise<SearchResponse
 function extractConnectorIdentity(
   pkg: Pick<BallerinaPackage, 'URL' | 'name'>
 ): { org: string; packageName: string } | null {
-  const urlPath = pkg.URL.replace(/^packages\//, '').replace(/^\//, '');
+  const parsedUrl = new URL(pkg.URL, 'https://central.ballerina.io');
+  const urlPath = parsedUrl.pathname.replace(/^\/?packages\//, '').replace(/^\//, '');
   const urlParts = urlPath.split('/').filter(Boolean);
 
   if (urlParts.length >= 2) {

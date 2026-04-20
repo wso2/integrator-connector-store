@@ -1,5 +1,37 @@
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 const BASE_URL = 'https://wso2.com/integration-platform/connectors';
+const REQUEST_TIMEOUT_MS = 10000;
+const MAX_FETCH_RETRIES = 3;
+
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(url) {
+  let lastError;
+
+  for (let attempt = 0; attempt < MAX_FETCH_RETRIES; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch connector packages: HTTP ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < MAX_FETCH_RETRIES - 1) {
+        await delay(250 * 2 ** attempt);
+      }
+    }
+  }
+
+  throw lastError;
+}
 
 function escapeXml(str) {
   if (typeof str !== 'string') {
@@ -25,15 +57,21 @@ async function fetchAllPackages() {
     const sort = 'createdDate,DESC';
     const url = `${REST_ENDPOINT}?offset=${offset}&limit=${batchSize}&sort=${sort}&q=${encodeURIComponent(query)}&readme=false`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch connector packages: HTTP ${response.status}`);
+    const response = await fetchWithRetry(url);
+    const data = await response.json();
+    if (!Array.isArray(data.packages) || data.packages.length === 0) {
+      break;
     }
 
-    const data = await response.json();
     allPackages.push(...data.packages);
-    totalCount = data.count;
-    offset += batchSize;
+
+    if (Number.isFinite(data.count)) {
+      totalCount = data.count;
+    } else {
+      totalCount = offset + data.packages.length;
+    }
+
+    offset += data.packages.length;
   }
 
   return allPackages;

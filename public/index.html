@@ -10,8 +10,6 @@
 
         if (/\/connector\/.*$/.test(path)) {
           base = path.replace(/\/connector\/.*$/, '');
-        } else if (/\/sitemap\.xml$/.test(path)) {
-          base = path.replace(/\/sitemap\.xml$/, '');
         }
 
         if (!base) base = '/';
