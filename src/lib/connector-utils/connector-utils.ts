@@ -156,6 +156,7 @@ export const HIDDEN_PACKAGES = new Set<string>([
   'choreo',
   'client.config',
   'health.base',
+  'sap',
   'trigger.aayu.mftg.as2',
   'trigger.asb',
   'trigger.asgardeo',
