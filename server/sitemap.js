@@ -1,7 +1,9 @@
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 const BASE_URL = 'https://wso2.com/integration-platform/connectors';
-const REQUEST_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = Number(process.env.SITEMAP_REQUEST_TIMEOUT_MS) || 30000;
 const MAX_FETCH_RETRIES = 3;
+const BUILD_SITEMAP_FILE = require('path').join(__dirname, '..', 'build', 'sitemap.xml');
+const PUBLIC_SITEMAP_FILE = require('path').join(__dirname, '..', 'public', 'sitemap.xml');
 
 async function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,6 +46,20 @@ function escapeXml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
+}
+
+async function loadFallbackSitemapXml() {
+  const sitemapCandidates = [BUILD_SITEMAP_FILE, PUBLIC_SITEMAP_FILE];
+
+  for (const filePath of sitemapCandidates) {
+    try {
+      return await require('fs').promises.readFile(filePath, 'utf8');
+    } catch {
+      // Try the next fallback location.
+    }
+  }
+
+  return null;
 }
 
 async function fetchAllPackages() {
@@ -141,4 +157,5 @@ async function generateSitemapXml() {
 
 module.exports = {
   generateSitemapXml,
+  loadFallbackSitemapXml,
 };
