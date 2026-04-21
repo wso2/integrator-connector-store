@@ -26,6 +26,8 @@ if (typeof fetch === 'undefined') {
 
 const REST_ENDPOINT = 'https://api.central.ballerina.io/2.0/registry/search-packages';
 const BASE_URL = process.env.SITE_URL || 'https://wso2.com/integration-platform/connectors';
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const SITEMAP_PATH = path.join(PUBLIC_DIR, 'sitemap.xml');
 
 async function fetchAllPackages() {
   const batchSize = 100;
@@ -84,8 +86,9 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
-function generateSitemap(packages) {
+function buildSitemapUrls(packages) {
   const urls = [];
+  const seenConnectors = new Set();
 
   // Add homepage
   urls.push({
@@ -103,6 +106,13 @@ function generateSitemap(packages) {
 
     if (urlParts.length >= 2) {
       const [org, packageName] = urlParts;
+      const connectorKey = `${org}/${packageName}`;
+
+      if (seenConnectors.has(connectorKey)) {
+        return;
+      }
+
+      seenConnectors.add(connectorKey);
       urls.push({
         loc: `${BASE_URL}/connector/${org}/${packageName}/latest`,
         changefreq: 'weekly',
@@ -114,7 +124,10 @@ function generateSitemap(packages) {
     }
   });
 
-  // Generate XML
+  return urls;
+}
+
+function generateSitemap(urls) {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
@@ -149,18 +162,24 @@ async function main() {
 
     // Generate sitemap
     console.log('Generating sitemap...');
-    const sitemap = generateSitemap(packages);
+    const urls = buildSitemapUrls(packages);
+    const sitemap = generateSitemap(urls);
 
-    // Write to public folder
-    const publicDir = path.join(__dirname, '..', 'public');
-    const sitemapPath = path.join(publicDir, 'sitemap.xml');
-
-    fs.writeFileSync(sitemapPath, sitemap, 'utf8');
-    console.log(`✓ Sitemap generated successfully at: ${sitemapPath}`);
-    console.log(`✓ Total URLs: ${packages.length + 1}`); // +1 for homepage
+    fs.writeFileSync(SITEMAP_PATH, sitemap, 'utf8');
+    console.log(`✓ Sitemap generated successfully at: ${SITEMAP_PATH}`);
+    console.log(`✓ Total URLs: ${urls.length}`);
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    process.exit(1);
+
+    if (fs.existsSync(SITEMAP_PATH)) {
+      console.warn(`Using existing sitemap at: ${SITEMAP_PATH}`);
+      process.exit(0);
+    }
+
+    const fallbackSitemap = generateSitemap(buildSitemapUrls([]));
+    fs.writeFileSync(SITEMAP_PATH, fallbackSitemap, 'utf8');
+    console.warn(`Generated fallback sitemap at: ${SITEMAP_PATH}`);
+    process.exit(0);
   }
 }
 
