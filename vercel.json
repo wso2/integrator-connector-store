@@ -5,7 +5,7 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/(.*)",
+      "source": "/connector/(.*)",
       "destination": "/index.html"
     }
   ]
