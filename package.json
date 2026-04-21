@@ -4,6 +4,9 @@
   "private": true,
   "homepage": ".",
   "description": "WSO2 Integrator Connector Store - A web application for browsing and discovering Ballerina connectors",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",
     "start": "node server/index.js",

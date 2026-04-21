@@ -43,9 +43,15 @@ function shouldServeSpa(pathname) {
 function resolveStaticPath(pathname) {
   const decodedPath = decodeURIComponent(pathname);
   const relativePath = decodedPath.replace(/^\/+/, '');
-  const filePath = path.normalize(path.join(BUILD_DIR, relativePath));
+  const resolvedBuild = path.resolve(BUILD_DIR);
+  const filePath = path.resolve(resolvedBuild, relativePath);
+  const relativeToBuild = path.relative(resolvedBuild, filePath);
 
-  if (!filePath.startsWith(BUILD_DIR)) {
+  if (
+    relativeToBuild === '..' ||
+    relativeToBuild.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeToBuild)
+  ) {
     return null;
   }
 
