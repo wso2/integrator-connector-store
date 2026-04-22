@@ -333,10 +333,13 @@ function ConnectorCard({ connector, effectiveMode }: ConnectorCardProps) {
               <Chip
                 label={metadata.vendor}
                 size="small"
-                color="primary"
+                variant="outlined"
                 sx={{
                   fontSize: '0.7rem',
                   height: '24px',
+                  bgcolor: 'transparent',
+                  color: effectiveMode === 'dark' ? '#FFFFFF' : '#18181B',
+                  borderColor: effectiveMode === 'dark' ? '#52525B' : '#D1D5DB',
                   '& .MuiChip-label': {
                     textTransform: 'none',
                   },
