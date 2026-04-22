@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",
-    "start": "node server/index.js",
+    "start": "DISABLE_ESLINT_PLUGIN=true react-app-rewired start",
     "build": "DISABLE_ESLINT_PLUGIN=true react-app-rewired build",
     "prebuild": "sh scripts/prebuild.sh",
     "generate-sitemap": "node scripts/generate-sitemap.js",
