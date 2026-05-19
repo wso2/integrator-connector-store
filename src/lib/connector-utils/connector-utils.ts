@@ -174,7 +174,7 @@ export const HIDDEN_PACKAGES = new Set<string>([
   'trigger.twilio',
 ]);
 
-const DOCS_BASE = 'https://wso2.github.io/docs-integrator/docs/connectors/catalog';
+const DOCS_BASE = 'https://wso2.com/integration-platform/docs/connectors/catalog';
 
 /**
  * Package name to documentation URL path (category/package).
@@ -337,7 +337,9 @@ const CONNECTOR_DOCS: Record<string, string> = {
  * Returns the documentation URL for a connector, or undefined if none exists.
  */
 export function getConnectorDocsUrl(packageName: string): string | undefined {
-  return CONNECTOR_DOCS[packageName];
+  const url = CONNECTOR_DOCS[packageName];
+  if (!url) return undefined;
+  return url.endsWith('/') ? url : `${url}/`;
 }
 
 /**
