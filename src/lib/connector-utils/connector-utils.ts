@@ -610,17 +610,23 @@ export async function checkDerivedDocsUrl(packageName: string, url: string): Pro
   try {
     const cached = sessionStorage.getItem(cacheKey);
     if (cached !== null) return cached === 'true';
-  } catch { /* sessionStorage unavailable */ }
+  } catch {
+    /* sessionStorage unavailable */
+  }
 
   let valid = false;
   try {
     const response = await fetch(url, { method: 'HEAD' });
     valid = response.ok;
-  } catch { /* network failure or CORS error — treat as invalid */ }
+  } catch {
+    /* network failure or CORS error — treat as invalid */
+  }
 
   try {
     sessionStorage.setItem(cacheKey, String(valid));
-  } catch { /* sessionStorage unavailable or full */ }
+  } catch {
+    /* sessionStorage unavailable or full */
+  }
 
   return valid;
 }
