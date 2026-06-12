@@ -177,6 +177,30 @@ export const HIDDEN_PACKAGES = new Set<string>([
 const DOCS_BASE = 'https://wso2.com/integration-platform/docs/connectors/catalog';
 
 /**
+ * Maps the Area/ keyword value to the corresponding docs catalog category path segment.
+ * New connectors published with a standard Area/ keyword will have their doc URL
+ * auto-derived as: {DOCS_BASE}/{category}/{packageName}/connector-overview/
+ */
+const AREA_TO_CATEGORY: Record<string, string> = {
+  'AI & Machine Learning': 'ai-ml',
+  'Cloud & Infrastructure': 'cloud-infrastructure',
+  Communication: 'communication',
+  'CRM & Sales': 'crm-sales',
+  Database: 'database',
+  'Developer Tools': 'developer-tools',
+  'E-Commerce': 'ecommerce',
+  'ERP & Business Operations': 'erp-business',
+  'Finance & Accounting': 'finance-accounting',
+  Healthcare: 'healthcare',
+  HRMS: 'hrms',
+  'Marketing & Social Media': 'marketing-social',
+  Messaging: 'messaging',
+  'Productivity & Collaboration': 'productivity-collaboration',
+  'Security & Identity': 'security-identity',
+  'Storage & File Management': 'storage-file',
+};
+
+/**
  * Package name to documentation URL path (category/package).
  * Connectors in this map get a "Documentation" button instead of "View on Ballerina Central".
  */
@@ -265,6 +289,7 @@ const CONNECTOR_DOCS: Record<string, string> = {
   'guidewire.insnow': `${DOCS_BASE}/erp-business/guidewire.insnow/guidewire-insurancenow-connector-overview`,
   'ibm.ctg': `${DOCS_BASE}/erp-business/ibm.ctg/ibm-ctg-connector-overview`,
   sap: `${DOCS_BASE}/erp-business/sap/connector-overview`,
+  'sap.jco': `${DOCS_BASE}/erp-business/sap.jco/overview`,
   'sap.s4hana.api_sales_inquiry_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_inquiry_srv/sap-sales-inquiry-connector-overview`,
   'sap.s4hana.api_sales_order_simulation_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_order_simulation_srv/sap-sales-order-simulation-connector-overview`,
   'sap.s4hana.api_sales_order_srv': `${DOCS_BASE}/erp-business/sap.s4hana.api_sales_order_srv/sap-sales-order-connector-overview`,
@@ -335,11 +360,28 @@ const CONNECTOR_DOCS: Record<string, string> = {
 
 /**
  * Returns the documentation URL for a connector, or undefined if none exists.
+ *
+ * Resolution order:
+ * 1. CONNECTOR_DOCS hardcoded map (existing connectors with non-standard URL patterns)
+ * 2. Auto-derived from Area/ keyword using the standard slug convention:
+ *    {DOCS_BASE}/{category}/{packageName}/connector-overview/
+ *    New connectors must be published with a known Area/ keyword and docs must follow this pattern.
  */
-export function getConnectorDocsUrl(packageName: string): string | undefined {
-  const url = CONNECTOR_DOCS[packageName];
-  if (!url) return undefined;
-  return url.endsWith('/') ? url : `${url}/`;
+export function getConnectorDocsUrl(packageName: string, keywords?: string[]): string | undefined {
+  const hardcoded = CONNECTOR_DOCS[packageName];
+  if (hardcoded) {
+    return hardcoded.endsWith('/') ? hardcoded : `${hardcoded}/`;
+  }
+
+  if (keywords) {
+    const area = keywords.find((k) => k.startsWith('Area/'))?.replace('Area/', '');
+    const category = area ? AREA_TO_CATEGORY[area] : undefined;
+    if (category) {
+      return `${DOCS_BASE}/${category}/${packageName}/connector-overview/`;
+    }
+  }
+
+  return undefined;
 }
 
 /**
@@ -547,6 +589,41 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   'wso2.controlplane': 'WSO2 Control Plane',
   'wso2.icp': 'WSO2 ICP',
 };
+
+/**
+ * Returns true if the connector has a manually verified entry in CONNECTOR_DOCS.
+ * Derived URLs (not in the map) must be validated via checkDerivedDocsUrl before use.
+ */
+export function isConnectorDocHardcoded(packageName: string): boolean {
+  return packageName in CONNECTOR_DOCS;
+}
+
+const DOCS_CHECK_CACHE_PREFIX = 'connector_docs_check_';
+
+/**
+ * Verifies that a derived docs URL resolves (HTTP 200) via a HEAD request.
+ * Results are cached in sessionStorage for the duration of the browser session.
+ * Returns false on network failure or CORS error (cross-origin dev environments).
+ */
+export async function checkDerivedDocsUrl(packageName: string, url: string): Promise<boolean> {
+  const cacheKey = `${DOCS_CHECK_CACHE_PREFIX}${packageName}`;
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached !== null) return cached === 'true';
+  } catch {}
+
+  let valid = false;
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    valid = response.ok;
+  } catch {}
+
+  try {
+    sessionStorage.setItem(cacheKey, String(valid));
+  } catch {}
+
+  return valid;
+}
 
 /**
  * Converts a package name to a display name.
