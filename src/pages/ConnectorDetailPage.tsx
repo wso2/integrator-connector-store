@@ -47,6 +47,8 @@ import {
   formatDaysSince,
   getDisplayName,
   getConnectorDocsUrl,
+  isConnectorDocHardcoded,
+  checkDerivedDocsUrl,
 } from '@/lib/connector-utils';
 import MarkdownContent from '@/components/MarkdownContent';
 import Footer from '@/components/Footer';
@@ -123,6 +125,7 @@ export default function ConnectorDetailPage() {
     name: string;
     documentationUrl?: string;
   } | null>(null);
+  const [docsUrl, setDocsUrl] = useState<string | undefined>(undefined);
 
   const effectiveMode = useMemo(() => {
     if (mode === 'system') {
@@ -165,6 +168,33 @@ export default function ConnectorDetailPage() {
     };
     loadPackageDetails();
   }, [org, name, version]);
+
+  useEffect(() => {
+    if (!packageDetails) {
+      setDocsUrl(undefined);
+      return;
+    }
+
+    const tentative = getConnectorDocsUrl(packageDetails.name, packageDetails.keywords);
+    if (!tentative) {
+      setDocsUrl(undefined);
+      return;
+    }
+
+    if (isConnectorDocHardcoded(packageDetails.name)) {
+      setDocsUrl(tentative);
+      return;
+    }
+
+    // Derived URL: verify it resolves before showing the Documentation button
+    let cancelled = false;
+    checkDerivedDocsUrl(packageDetails.name, tentative).then((valid) => {
+      if (!cancelled) setDocsUrl(valid ? tentative : undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [packageDetails]);
 
   const metadata = useMemo(
     () => (packageDetails ? parseConnectorMetadata(packageDetails.keywords) : null),
@@ -422,14 +452,12 @@ export default function ConnectorDetailPage() {
           <Divider sx={{ my: 2 }} />
         </>
       )}
-      {getConnectorDocsUrl(details.name) ? (
+      {docsUrl ? (
         <Button
           fullWidth
           variant="contained"
           color="primary"
-          onClick={() =>
-            window.open(getConnectorDocsUrl(details.name), '_blank', 'noopener,noreferrer')
-          }
+          onClick={() => window.open(docsUrl, '_blank', 'noopener,noreferrer')}
           endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
         >
           Documentation
