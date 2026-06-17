@@ -633,42 +633,37 @@ export function getDocumentedConnectors(): Promise<Set<string>> {
       /* localStorage unavailable */
     }
 
-    try {
-      const response = await fetch(DOCS_SITEMAP_URL);
-      const xml = await response.text();
+    // Let network/parse errors propagate so the outer .catch() can reset
+    // sitemapPromise and allow a retry on the next call.
+    const response = await fetch(DOCS_SITEMAP_URL);
+    const xml = await response.text();
 
-      // Extract package names from URLs like:
-      // .../connectors/catalog/{category}/{packageName}/connector-overview
-      const packageNames: string[] = [];
-      const regex = /connectors\/catalog\/[^/<]+\/([^/<]+)\/connector-overview/g;
-      let match;
-      while ((match = regex.exec(xml)) !== null) {
-        packageNames.push(match[1]);
-      }
-
-      try {
-        localStorage.setItem(
-          SITEMAP_CACHE_KEY,
-          JSON.stringify({ packageNames, timestamp: Date.now() })
-        );
-      } catch {
-        /* localStorage unavailable or full */
-      }
-
-      return new Set(packageNames);
-    } catch {
-      /* network failure or CORS error */
+    // Extract package names from URLs like:
+    // .../connectors/catalog/{category}/{packageName}/connector-overview
+    const packageNames: string[] = [];
+    const regex = /connectors\/catalog\/[^/<]+\/([^/<]+)\/connector-overview/g;
+    let match;
+    while ((match = regex.exec(xml)) !== null) {
+      packageNames.push(match[1]);
     }
 
-    return new Set();
+    try {
+      localStorage.setItem(
+        SITEMAP_CACHE_KEY,
+        JSON.stringify({ packageNames, timestamp: Date.now() })
+      );
+    } catch {
+      /* localStorage unavailable or full */
+    }
+
+    return new Set(packageNames);
   })();
 
-  // Reset on failure so the next call retries
-  sitemapPromise.catch(() => {
+  // Reset on failure so the next call retries, then return an empty set to callers
+  return sitemapPromise.catch((_e) => {
     sitemapPromise = null;
+    return new Set<string>();
   });
-
-  return sitemapPromise;
 }
 
 /**
