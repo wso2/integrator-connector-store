@@ -356,6 +356,7 @@ const CONNECTOR_DOCS: Record<string, string> = {
   'aws.s3': `${DOCS_BASE}/storage-file/aws.s3/aws-s3-connector-overview`,
   azure_storage_service: `${DOCS_BASE}/storage-file/azure_storage_service/overview`,
   'microsoft.onedrive': `${DOCS_BASE}/storage-file/microsoft.onedrive/microsoft-onedrive-connector-overview`,
+  'microsoft.sharepoint.pages': `${DOCS_BASE}/storage-file/microsoft.sharepoint.pages/connector-overview`,
 };
 
 /**
@@ -598,37 +599,76 @@ export function isConnectorDocHardcoded(packageName: string): boolean {
   return packageName in CONNECTOR_DOCS;
 }
 
-const DOCS_CHECK_CACHE_PREFIX = 'connector_docs_check_';
+const SITEMAP_CACHE_KEY = 'connector_docs_sitemap';
+const SITEMAP_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+const DOCS_SITEMAP_URL = `${DOCS_BASE.replace('/connectors/catalog', '')}/sitemap.xml`;
+
+interface SitemapCache {
+  packageNames: string[];
+  timestamp: number;
+}
+
+// Module-level promise deduplicates concurrent calls during the same page session
+let sitemapPromise: Promise<Set<string>> | null = null;
 
 /**
- * Verifies that a derived docs URL resolves (HTTP 200) via a HEAD request.
- * Results are cached in sessionStorage for the duration of the browser session.
- * Returns false on network failure or CORS error (cross-origin dev environments).
+ * Returns the set of connector package names that have published docs pages,
+ * determined by parsing the docs sitemap. Result is cached in localStorage for
+ * 6 hours so subsequent calls within that window are instant.
+ * Falls back to an empty set on network failure or CORS error.
  */
-export async function checkDerivedDocsUrl(packageName: string, url: string): Promise<boolean> {
-  const cacheKey = `${DOCS_CHECK_CACHE_PREFIX}${packageName}`;
-  try {
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached !== null) return cached === 'true';
-  } catch {
-    /* sessionStorage unavailable */
-  }
+export function getDocumentedConnectors(): Promise<Set<string>> {
+  if (sitemapPromise) return sitemapPromise;
 
-  let valid = false;
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    valid = response.ok;
-  } catch {
-    /* network failure or CORS error — treat as invalid */
-  }
+  sitemapPromise = (async (): Promise<Set<string>> => {
+    try {
+      const cached = localStorage.getItem(SITEMAP_CACHE_KEY);
+      if (cached) {
+        const { packageNames, timestamp }: SitemapCache = JSON.parse(cached);
+        if (Date.now() - timestamp < SITEMAP_CACHE_TTL) {
+          return new Set(packageNames);
+        }
+      }
+    } catch {
+      /* localStorage unavailable */
+    }
 
-  try {
-    sessionStorage.setItem(cacheKey, String(valid));
-  } catch {
-    /* sessionStorage unavailable or full */
-  }
+    try {
+      const response = await fetch(DOCS_SITEMAP_URL);
+      const xml = await response.text();
 
-  return valid;
+      // Extract package names from URLs like:
+      // .../connectors/catalog/{category}/{packageName}/connector-overview
+      const packageNames: string[] = [];
+      const regex = /connectors\/catalog\/[^/<]+\/([^/<]+)\/connector-overview/g;
+      let match;
+      while ((match = regex.exec(xml)) !== null) {
+        packageNames.push(match[1]);
+      }
+
+      try {
+        localStorage.setItem(
+          SITEMAP_CACHE_KEY,
+          JSON.stringify({ packageNames, timestamp: Date.now() })
+        );
+      } catch {
+        /* localStorage unavailable or full */
+      }
+
+      return new Set(packageNames);
+    } catch {
+      /* network failure or CORS error */
+    }
+
+    return new Set();
+  })();
+
+  // Reset on failure so the next call retries
+  sitemapPromise.catch(() => {
+    sitemapPromise = null;
+  });
+
+  return sitemapPromise;
 }
 
 /**
