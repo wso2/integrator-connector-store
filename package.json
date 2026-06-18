@@ -84,7 +84,9 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@wso2/oxygen-ui$": "<rootDir>/src/__mocks__/@wso2/oxygen-ui.js",
+      "^@wso2/oxygen-ui-icons-react$": "<rootDir>/node_modules/@wso2/oxygen-ui-icons-react/dist/index.cjs"
     }
   }
 }
