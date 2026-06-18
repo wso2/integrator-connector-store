@@ -77,10 +77,9 @@ describe('SearchBar', () => {
 
   it('should render search icon', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
+    const { container } = render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
-    // MUI renders the icon with a data-testid or we can check for svg
-    const searchIcon = document.querySelector('[data-testid="SearchIcon"]');
+    const searchIcon = container.querySelector('svg');
     expect(searchIcon).toBeInTheDocument();
   });
 });

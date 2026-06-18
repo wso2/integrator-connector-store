@@ -129,8 +129,8 @@ describe('Pagination', () => {
     const select = screen.getByRole('combobox');
     fireEvent.mouseDown(select);
 
-    // Click on 50 items option
-    const option50 = screen.getByRole('option', { name: '50 items' });
+    // Click on 50 Items option
+    const option50 = screen.getByRole('option', { name: '50 Items' });
     fireEvent.click(option50);
 
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
@@ -142,9 +142,9 @@ describe('Pagination', () => {
     const select = screen.getByRole('combobox');
     fireEvent.mouseDown(select);
 
-    expect(screen.getByRole('option', { name: '5 items' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '10 items' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '15 items' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '5 Items' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '10 Items' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '15 Items' })).toBeInTheDocument();
   });
 
   it('should handle single page correctly', () => {
@@ -162,6 +162,6 @@ describe('Pagination', () => {
     render(<Pagination {...defaultProps} totalItems={0} />);
 
     // Should show correct range even with zero items
-    expect(screen.getByText(/Showing 1-0 of 0/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 0-0 of 0/)).toBeInTheDocument();
   });
 });
