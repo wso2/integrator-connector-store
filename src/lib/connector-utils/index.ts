@@ -12,6 +12,6 @@ export {
   HIDDEN_PACKAGES,
   getConnectorDocsUrl,
   isConnectorDocHardcoded,
-  checkDerivedDocsUrl,
+  getDocumentedConnectors,
 } from './connector-utils';
 export type { SortOption } from './connector-utils';

@@ -48,7 +48,7 @@ import {
   getDisplayName,
   getConnectorDocsUrl,
   isConnectorDocHardcoded,
-  checkDerivedDocsUrl,
+  getDocumentedConnectors,
 } from '@/lib/connector-utils';
 import MarkdownContent from '@/components/MarkdownContent';
 import Footer from '@/components/Footer';
@@ -125,7 +125,8 @@ export default function ConnectorDetailPage() {
     name: string;
     documentationUrl?: string;
   } | null>(null);
-  const [docsUrl, setDocsUrl] = useState<string | undefined>(undefined);
+  // null = sitemap check in progress, string = confirmed URL, undefined = no docs
+  const [docsUrl, setDocsUrl] = useState<string | null | undefined>(null);
 
   const effectiveMode = useMemo(() => {
     if (mode === 'system') {
@@ -169,9 +170,15 @@ export default function ConnectorDetailPage() {
     loadPackageDetails();
   }, [org, name, version]);
 
+  // Prefetch sitemap in parallel with fetchPackageDetails so it's ready (or cached)
+  // by the time package details finish loading.
+  useEffect(() => {
+    getDocumentedConnectors().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!packageDetails) {
-      setDocsUrl(undefined);
+      setDocsUrl(null);
       return;
     }
 
@@ -181,16 +188,22 @@ export default function ConnectorDetailPage() {
       return;
     }
 
+    // Hardcoded entries are manually verified — no sitemap check needed
     if (isConnectorDocHardcoded(packageDetails.name)) {
       setDocsUrl(tentative);
       return;
     }
 
-    // Derived URL: verify it resolves before showing the Documentation button
+    // Derived URL: confirm it's in the published sitemap before showing the button
+    setDocsUrl(null);
     let cancelled = false;
-    checkDerivedDocsUrl(packageDetails.name, tentative).then((valid) => {
-      if (!cancelled) setDocsUrl(valid ? tentative : undefined);
-    });
+    getDocumentedConnectors()
+      .then((documented) => {
+        if (!cancelled) setDocsUrl(documented.has(packageDetails.name) ? tentative : undefined);
+      })
+      .catch(() => {
+        if (!cancelled) setDocsUrl(undefined);
+      });
     return () => {
       cancelled = true;
     };
@@ -452,7 +465,12 @@ export default function ConnectorDetailPage() {
           <Divider sx={{ my: 2 }} />
         </>
       )}
-      {docsUrl ? (
+      {docsUrl === null ? (
+        <Button fullWidth variant="contained" color="primary" disabled>
+          <CircularProgress size={14} sx={{ mr: 1 }} />
+          Documentation
+        </Button>
+      ) : docsUrl ? (
         <Button
           fullWidth
           variant="contained"
