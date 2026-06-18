@@ -77,9 +77,9 @@ describe('SearchBar', () => {
 
   it('should render search icon', () => {
     const onChange = jest.fn();
-    render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
+    const { container } = render(<SearchBar value="" onChange={onChange} effectiveMode="light" />);
 
-    const searchIcon = document.querySelector('svg');
+    const searchIcon = container.querySelector('svg');
     expect(searchIcon).toBeInTheDocument();
   });
 });
