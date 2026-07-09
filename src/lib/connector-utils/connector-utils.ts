@@ -157,6 +157,7 @@ export const HIDDEN_PACKAGES = new Set<string>([
   'client.config',
   'health.base',
   'sap',
+  'sap.businessone',
   'trigger.aayu.mftg.as2',
   'trigger.asb',
   'trigger.asgardeo',
