@@ -554,7 +554,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   'wso2.icp': 'WSO2 ICP',
 };
 
-const SITEMAP_CACHE_KEY = 'connector_docs_sitemap';
+const SITEMAP_CACHE_KEY = 'connector_docs_sitemap_v2';
 const SITEMAP_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 const DOCS_SITEMAP_URL = `${DOCS_BASE.replace('/connectors/catalog', '')}/sitemap.xml`;
 
@@ -592,7 +592,7 @@ let sitemapPromise: Promise<Map<string, string>> | null = null;
 export function getConnectorDocsUrlMap(): Promise<Map<string, string>> {
   if (sitemapPromise) return sitemapPromise;
 
-  sitemapPromise = (async (): Promise<Map<string, string>> => {
+  const fetchPromise = (async (): Promise<Map<string, string>> => {
     try {
       const cached = localStorage.getItem(SITEMAP_CACHE_KEY);
       if (cached) {
@@ -638,11 +638,13 @@ export function getConnectorDocsUrlMap(): Promise<Map<string, string>> {
     return docsUrlMap;
   })();
 
-  // Reset on failure so the next call retries, then return an empty map to callers
-  return sitemapPromise.catch((_e) => {
+  // Reset on failure so the next call retries; store the wrapped promise itself so
+  // concurrent callers hitting the guard above also receive the empty-map fallback.
+  sitemapPromise = fetchPromise.catch((_e) => {
     sitemapPromise = null;
     return new Map<string, string>();
   });
+  return sitemapPromise;
 }
 
 /**
