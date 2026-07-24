@@ -47,8 +47,7 @@ import {
   formatDaysSince,
   getDisplayName,
   getConnectorDocsUrl,
-  isConnectorDocHardcoded,
-  getDocumentedConnectors,
+  getConnectorDocsUrlMap,
 } from '@/lib/connector-utils';
 import MarkdownContent from '@/components/MarkdownContent';
 import Footer from '@/components/Footer';
@@ -173,7 +172,7 @@ export default function ConnectorDetailPage() {
   // Prefetch sitemap in parallel with fetchPackageDetails so it's ready (or cached)
   // by the time package details finish loading.
   useEffect(() => {
-    getDocumentedConnectors().catch(() => {});
+    getConnectorDocsUrlMap().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -182,24 +181,19 @@ export default function ConnectorDetailPage() {
       return;
     }
 
-    const tentative = getConnectorDocsUrl(packageDetails.name, packageDetails.keywords);
-    if (!tentative) {
-      setDocsUrl(undefined);
+    // Manual override — used only for the rare case the sitemap can't resolve
+    const hardcoded = getConnectorDocsUrl(packageDetails.name);
+    if (hardcoded) {
+      setDocsUrl(hardcoded);
       return;
     }
 
-    // Hardcoded entries are manually verified — no sitemap check needed
-    if (isConnectorDocHardcoded(packageDetails.name)) {
-      setDocsUrl(tentative);
-      return;
-    }
-
-    // Derived URL: confirm it's in the published sitemap before showing the button
+    // General case: look up the connector's actual docs URL from the sitemap
     setDocsUrl(null);
     let cancelled = false;
-    getDocumentedConnectors()
-      .then((documented) => {
-        if (!cancelled) setDocsUrl(documented.has(packageDetails.name) ? tentative : undefined);
+    getConnectorDocsUrlMap()
+      .then((docsUrlMap) => {
+        if (!cancelled) setDocsUrl(docsUrlMap.get(packageDetails.name) ?? undefined);
       })
       .catch(() => {
         if (!cancelled) setDocsUrl(undefined);

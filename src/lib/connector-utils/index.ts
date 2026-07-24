@@ -11,7 +11,6 @@ export {
   METADATA_FALLBACK,
   HIDDEN_PACKAGES,
   getConnectorDocsUrl,
-  isConnectorDocHardcoded,
-  getDocumentedConnectors,
+  getConnectorDocsUrlMap,
 } from './connector-utils';
 export type { SortOption } from './connector-utils';

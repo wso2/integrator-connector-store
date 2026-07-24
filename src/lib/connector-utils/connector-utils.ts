@@ -178,32 +178,10 @@ export const HIDDEN_PACKAGES = new Set<string>([
 const DOCS_BASE = 'https://wso2.com/integration-platform/docs/connectors/catalog';
 
 /**
- * Maps the Area/ keyword value to the corresponding docs catalog category path segment.
- * New connectors published with a standard Area/ keyword will have their doc URL
- * auto-derived as: {DOCS_BASE}/{category}/{packageName}/connector-overview/
- */
-const AREA_TO_CATEGORY: Record<string, string> = {
-  'AI & Machine Learning': 'ai-ml',
-  'Cloud & Infrastructure': 'cloud-infrastructure',
-  Communication: 'communication',
-  'CRM & Sales': 'crm-sales',
-  Database: 'database',
-  'Developer Tools': 'developer-tools',
-  'E-Commerce': 'ecommerce',
-  'ERP & Business Operations': 'erp-business',
-  'Finance & Accounting': 'finance-accounting',
-  Healthcare: 'healthcare',
-  HRMS: 'hrms',
-  'Marketing & Social Media': 'marketing-social',
-  Messaging: 'messaging',
-  'Productivity & Collaboration': 'productivity-collaboration',
-  'Security & Identity': 'security-identity',
-  'Storage & File Management': 'storage-file',
-};
-
-/**
  * Package name to documentation URL path (category/package).
  * Connectors in this map get a "Documentation" button instead of "View on Ballerina Central".
+ * Reserved for rare cases the sitemap-driven discovery in getConnectorDocsUrlMap() can't
+ * resolve on its own; new connectors should NOT need an entry here (see that function).
  */
 const CONNECTOR_DOCS: Record<string, string> = {
   // AI & Machine Learning
@@ -361,29 +339,13 @@ const CONNECTOR_DOCS: Record<string, string> = {
 };
 
 /**
- * Returns the documentation URL for a connector, or undefined if none exists.
- *
- * Resolution order:
- * 1. CONNECTOR_DOCS hardcoded map (existing connectors with non-standard URL patterns)
- * 2. Auto-derived from Area/ keyword using the standard slug convention:
- *    {DOCS_BASE}/{category}/{packageName}/connector-overview/
- *    New connectors must be published with a known Area/ keyword and docs must follow this pattern.
+ * Returns the manually-overridden documentation URL for a connector, or undefined
+ * if it isn't in CONNECTOR_DOCS. Use getConnectorDocsUrlMap() for the general case —
+ * this is only for the rare exceptions that map covers.
  */
-export function getConnectorDocsUrl(packageName: string, keywords?: string[]): string | undefined {
+export function getConnectorDocsUrl(packageName: string): string | undefined {
   const hardcoded = CONNECTOR_DOCS[packageName];
-  if (hardcoded) {
-    return hardcoded.endsWith('/') ? hardcoded : `${hardcoded}/`;
-  }
-
-  if (keywords) {
-    const area = keywords.find((k) => k.startsWith('Area/'))?.replace('Area/', '');
-    const category = area ? AREA_TO_CATEGORY[area] : undefined;
-    if (category) {
-      return `${DOCS_BASE}/${category}/${packageName}/connector-overview/`;
-    }
-  }
-
-  return undefined;
+  return hardcoded ? (hardcoded.endsWith('/') ? hardcoded : `${hardcoded}/`) : undefined;
 }
 
 /**
@@ -592,42 +554,51 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   'wso2.icp': 'WSO2 ICP',
 };
 
-/**
- * Returns true if the connector has a manually verified entry in CONNECTOR_DOCS.
- * Derived URLs (not in the map) must be validated via checkDerivedDocsUrl before use.
- */
-export function isConnectorDocHardcoded(packageName: string): boolean {
-  return packageName in CONNECTOR_DOCS;
-}
-
-const SITEMAP_CACHE_KEY = 'connector_docs_sitemap';
+const SITEMAP_CACHE_KEY = 'connector_docs_sitemap_v2';
 const SITEMAP_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 const DOCS_SITEMAP_URL = `${DOCS_BASE.replace('/connectors/catalog', '')}/sitemap.xml`;
 
 interface SitemapCache {
-  packageNames: string[];
+  entries: [string, string][];
   timestamp: number;
 }
 
+/**
+ * Picks the canonical "overview" page URL out of every docs URL published for one
+ * package folder (e.g. overview, example, setup-guide, action-reference). The final
+ * slug isn't predictable (connector-overview, overview, or a fully custom name — see
+ * CONNECTOR_DOCS for examples), so when there's more than one page we prefer whichever
+ * slug contains "overview"; a lone page is assumed to be the overview page itself.
+ */
+function pickOverviewUrl(urls: string[]): string | undefined {
+  if (urls.length === 1) return urls[0];
+  return urls.find((url) => /overview/i.test(url.split('/').filter(Boolean).pop() ?? ''));
+}
+
 // Module-level promise deduplicates concurrent calls during the same page session
-let sitemapPromise: Promise<Set<string>> | null = null;
+let sitemapPromise: Promise<Map<string, string>> | null = null;
 
 /**
- * Returns the set of connector package names that have published docs pages,
- * determined by parsing the docs sitemap. Result is cached in localStorage for
- * 6 hours so subsequent calls within that window are instant.
- * Falls back to an empty set on network failure or CORS error.
+ * Returns a map of package name -> documentation URL, built by parsing every
+ * .../connectors/catalog/{category}/{packageName}/{slug} URL in the docs sitemap.
+ * The package-name folder is the stable, load-bearing part of the URL; the trailing
+ * slug is whatever the docs team names the page and can change per-connector or over
+ * time, so it's never assumed or pattern-matched — only read back from the sitemap
+ * itself (see pickOverviewUrl). This means newly published connectors are picked up
+ * automatically with no code change, even if the docs site's slug convention shifts.
+ * Result is cached in localStorage for 6 hours. Falls back to an empty map on
+ * network failure or CORS error.
  */
-export function getDocumentedConnectors(): Promise<Set<string>> {
+export function getConnectorDocsUrlMap(): Promise<Map<string, string>> {
   if (sitemapPromise) return sitemapPromise;
 
-  sitemapPromise = (async (): Promise<Set<string>> => {
+  const fetchPromise = (async (): Promise<Map<string, string>> => {
     try {
       const cached = localStorage.getItem(SITEMAP_CACHE_KEY);
       if (cached) {
-        const { packageNames, timestamp }: SitemapCache = JSON.parse(cached);
+        const { entries, timestamp }: SitemapCache = JSON.parse(cached);
         if (Date.now() - timestamp < SITEMAP_CACHE_TTL) {
-          return new Set(packageNames);
+          return new Map(entries);
         }
       }
     } catch {
@@ -639,32 +610,41 @@ export function getDocumentedConnectors(): Promise<Set<string>> {
     const response = await fetch(DOCS_SITEMAP_URL);
     const xml = await response.text();
 
-    // Extract package names from URLs like:
-    // .../connectors/catalog/{category}/{packageName}/connector-overview
-    const packageNames: string[] = [];
-    const regex = /connectors\/catalog\/[^/<]+\/([^/<]+)\/connector-overview/g;
+    const urlsByPackage = new Map<string, string[]>();
+    const regex = /https:\/\/[^\s<]*\/connectors\/catalog\/[^/<]+\/([^/<]+)\/[^/<\s]+/g;
     let match;
     while ((match = regex.exec(xml)) !== null) {
-      packageNames.push(match[1]);
+      const [url, packageName] = match;
+      const urls = urlsByPackage.get(packageName) ?? [];
+      urls.push(url);
+      urlsByPackage.set(packageName, urls);
+    }
+
+    const docsUrlMap = new Map<string, string>();
+    for (const [packageName, urls] of urlsByPackage) {
+      const overviewUrl = pickOverviewUrl(urls);
+      if (overviewUrl) docsUrlMap.set(packageName, overviewUrl);
     }
 
     try {
       localStorage.setItem(
         SITEMAP_CACHE_KEY,
-        JSON.stringify({ packageNames, timestamp: Date.now() })
+        JSON.stringify({ entries: Array.from(docsUrlMap.entries()), timestamp: Date.now() })
       );
     } catch {
       /* localStorage unavailable or full */
     }
 
-    return new Set(packageNames);
+    return docsUrlMap;
   })();
 
-  // Reset on failure so the next call retries, then return an empty set to callers
-  return sitemapPromise.catch((_e) => {
+  // Reset on failure so the next call retries; store the wrapped promise itself so
+  // concurrent callers hitting the guard above also receive the empty-map fallback.
+  sitemapPromise = fetchPromise.catch((_e) => {
     sitemapPromise = null;
-    return new Set<string>();
+    return new Map<string, string>();
   });
+  return sitemapPromise;
 }
 
 /**
